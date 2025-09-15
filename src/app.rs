@@ -1,12 +1,12 @@
 use iced::{Alignment, Background, Border, Color, Element, Length, Task, widget::{button, column, container, pick_list, row, scrollable, text, text_input}};
 
 use crate::messages::{Channel, Msg};
-use crate::util::{combine_hex, hex_for_name, hex_to_rgb, name_for_hex};
 use crate::widgets::color_wheel::ColorWheel;
 use rust_colors::sanitize_hex2;
 
 use iced::border::Radius;
-
+use crate::hex::{combine_hex, hex_for_name, name_for_hex};
+use crate::rgb::hex_to_rgb;
 
 #[derive(Default)]
 pub struct App {
@@ -28,7 +28,10 @@ impl App {
             Msg::RChanged(s) => self.rr = sanitize_hex2(&s),
             Msg::GChanged(s) => self.gg = sanitize_hex2(&s),
             Msg::BChanged(s) => self.bb = sanitize_hex2(&s),
-
+            Msg::CopyHex(h) => {
+                self.status = format!("Copied {h} to clipboard");
+                return iced::clipboard::write(h);
+            }
             Msg::WheelChanged(ch, v) => {
                 let hh = format!("{v:02X}");
                 match ch {

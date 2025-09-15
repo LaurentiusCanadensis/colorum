@@ -18,4 +18,6 @@ pub enum Msg {
     PickedName(String),
     // misc
     Clear,
+    CopyHex(String)
 }
+

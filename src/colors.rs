@@ -1,5 +1,5 @@
-use crate::util::{Rgb, hex_to_rgb};
-use rust_colors::{dist2, normalize_hex};
+use crate::rgb::*;
+use crate::hex::*;
 
 /// Full CSS Level 4/X11 named color list (140 entries).
 /// Each entry is (`#RRGGBB`, "name").

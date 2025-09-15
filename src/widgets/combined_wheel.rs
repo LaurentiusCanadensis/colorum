@@ -2,7 +2,6 @@ use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::{column, container, row, text};
 use iced::{Color, Element, Length, Point, Rectangle, mouse};
-
 use crate::messages::{Channel, Msg};
 
 pub fn combined_wheel_card(r: u8, g: u8, b: u8) -> Element<'static, Msg> {
