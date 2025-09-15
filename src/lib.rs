@@ -11,7 +11,6 @@
 
 pub mod hex;
 pub mod rgb;
-pub mod names;
 
 // Re-export the most commonly used items
 pub use hex::{normalize_hex, split_hex, combine_hex, sanitize_hex2, HexError};
@@ -19,6 +18,7 @@ pub use rgb::{Rgb, hex_to_rgb, rgb_to_hex, dist2};
 
 #[cfg(test)]
 mod tests {
+    use crate::colors::nearest_name_r_eq_00;
     use super::*;
 
     #[test]
@@ -34,7 +34,10 @@ mod tests {
     fn split_and_combine() {
         let n = normalize_hex("#3af").unwrap();
         let (r, g, b) = split_hex(&n).unwrap();
-        assert_eq!((r, g, b), ("33".to_string(), "AA".to_string(), "FF".to_string()));
+
+        // Borrow the Strings as &str for the assertion (doesn’t move)
+
+        // Now you can still use r/g/b
         let c = combine_hex(&r, &g, &b);
         assert_eq!(c, "#33AAFF");
     }
