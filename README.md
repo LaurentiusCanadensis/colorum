@@ -5,7 +5,6 @@ It includes UI‑free helpers (normalize/split/combine sanitization, RGB struct 
 
 ---
 
-![img.png](img.png)
 
 ## Features
 
@@ -137,7 +136,7 @@ fn main() -> iced::Result {
 
 ## Screenshots
 
-*(Optional) Add screenshots or GIFs here.*
+![img.png](img.png)
 
 ---
 
