@@ -1,5 +1,9 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Channel { R, G, B }
+pub enum Channel {
+    R,
+    G,
+    B,
+}
 
 #[derive(Debug, Clone)]
 pub enum Msg {

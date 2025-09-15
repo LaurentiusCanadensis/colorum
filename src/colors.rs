@@ -1,5 +1,5 @@
+use crate::util::{Rgb, hex_to_rgb};
 use rust_colors::{dist2, normalize_hex};
-use crate::util::{hex_to_rgb, Rgb};
 
 /// Full CSS Level 4/X11 named color list (140 entries).
 /// Each entry is (`#RRGGBB`, "name").
@@ -146,7 +146,6 @@ pub const COMBINED_COLORS: &[(&str, &str)] = &[
     ("#9ACD32", "yellowgreen"),
     // Auto-generated from XKCD color survey (CC0)
     // See: https://xkcd.com/color/rgb/
-
     ("#7E1E9C", "purple"),
     ("#15B01A", "green"),
     ("#0343DF", "blue"),
@@ -1102,7 +1101,6 @@ pub const COMBINED_COLORS: &[(&str, &str)] = &[
     ("#56AE57", "dark pastel green"),
     ("#ACC2D9", "cloudy blue"),
 ];
-
 
 /// Convenience: only the subset where red channel = 0x00.
 pub fn r_eq_00_names() -> Vec<(&'static str, &'static str)> {

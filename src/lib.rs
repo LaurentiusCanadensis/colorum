@@ -13,13 +13,13 @@ pub mod hex;
 pub mod rgb;
 
 // Re-export the most commonly used items
-pub use hex::{normalize_hex, split_hex, combine_hex, sanitize_hex2, HexError};
-pub use rgb::{Rgb, hex_to_rgb, rgb_to_hex, dist2};
+pub use hex::{HexError, combine_hex, normalize_hex, sanitize_hex2, split_hex};
+pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 #[cfg(test)]
 mod tests {
-    use crate::colors::nearest_name_r_eq_00;
     use super::*;
+    use crate::colors::nearest_name_r_eq_00;
 
     #[test]
     fn normalize_variants() {
@@ -44,7 +44,11 @@ mod tests {
 
     #[test]
     fn roundtrip_rgb() {
-        let rgb = Rgb { r: 0x12, g: 0x34, b: 0x56 };
+        let rgb = Rgb {
+            r: 0x12,
+            g: 0x34,
+            b: 0x56,
+        };
         let h = rgb_to_hex(rgb);
         assert_eq!(h, "#123456");
         let back = hex_to_rgb(&h).unwrap();

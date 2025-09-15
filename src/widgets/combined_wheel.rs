@@ -1,9 +1,9 @@
-use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::canvas::stroke;
-use iced::{Color, Element, Length, Point, Rectangle, mouse};
+use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::{column, container, row, text};
+use iced::{Color, Element, Length, Point, Rectangle, mouse};
 
-use crate::messages::{Msg, Channel};
+use crate::messages::{Channel, Msg};
 
 pub fn combined_wheel_card(r: u8, g: u8, b: u8) -> Element<'static, Msg> {
     let wheel = CombinedWheel::new(r, g, b);
@@ -20,13 +20,14 @@ pub fn combined_wheel_card(r: u8, g: u8, b: u8) -> Element<'static, Msg> {
                 text(format!("G: {:02X}", g)),
                 text("  "),
                 text(format!("B: {:02X}", b)),
-            ].spacing(8),
+            ]
+            .spacing(8),
         ]
-            .spacing(8)
-            .width(Length::Fixed(300.0))
+        .spacing(8)
+        .width(Length::Fixed(300.0)),
     )
-        .padding(6)
-        .into()
+    .padding(6)
+    .into()
 }
 
 #[derive(Default)]
@@ -43,7 +44,12 @@ pub struct CombinedWheel {
 
 impl CombinedWheel {
     pub fn new(r: u8, g: u8, b: u8) -> Self {
-        Self { r, g, b, ring_cache: canvas::Cache::new() }
+        Self {
+            r,
+            g,
+            b,
+            ring_cache: canvas::Cache::new(),
+        }
     }
 }
 
@@ -58,72 +64,81 @@ impl Program<Msg> for CombinedWheel {
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        let geom = self.ring_cache.draw(renderer, bounds.size(), |frame: &mut Frame| {
-            let center = Point::new(bounds.width / 2.0, bounds.height / 2.0);
-            let outer_radius = bounds.width.min(bounds.height) * 0.45;
+        let geom = self
+            .ring_cache
+            .draw(renderer, bounds.size(), |frame: &mut Frame| {
+                let center = Point::new(bounds.width / 2.0, bounds.height / 2.0);
+                let outer_radius = bounds.width.min(bounds.height) * 0.45;
 
-            let ring_thickness = outer_radius * 0.18;
-            let gap = ring_thickness * 0.08;
+                let ring_thickness = outer_radius * 0.18;
+                let gap = ring_thickness * 0.08;
 
-            let r_outer = outer_radius;
-            let r_mid   = r_outer - (ring_thickness + gap);
-            let r_inner = r_mid   - (ring_thickness + gap);
+                let r_outer = outer_radius;
+                let r_mid = r_outer - (ring_thickness + gap);
+                let r_inner = r_mid - (ring_thickness + gap);
 
-            let paint_ring = |frame: &mut Frame, radius: f32, tint: Color| {
-                for i in 0..360 {
-                    let t = i as f32 / 360.0;
-                    let val = (t * 255.0).round() as u8;
-                    let col = Color {
-                        r: tint.r * (val as f32 / 255.0),
-                        g: tint.g * (val as f32 / 255.0),
-                        b: tint.b * (val as f32 / 255.0),
-                        a: 1.0,
-                    };
-                    let a0 = (i as f32).to_radians();
-                    let a1 = ((i + 1) as f32).to_radians();
+                let paint_ring = |frame: &mut Frame, radius: f32, tint: Color| {
+                    for i in 0..360 {
+                        let t = i as f32 / 360.0;
+                        let val = (t * 255.0).round() as u8;
+                        let col = Color {
+                            r: tint.r * (val as f32 / 255.0),
+                            g: tint.g * (val as f32 / 255.0),
+                            b: tint.b * (val as f32 / 255.0),
+                            a: 1.0,
+                        };
+                        let a0 = (i as f32).to_radians();
+                        let a1 = ((i + 1) as f32).to_radians();
 
-                    let r_out = radius + ring_thickness / 2.0;
-                    let r_inn = radius - ring_thickness / 2.0;
+                        let r_out = radius + ring_thickness / 2.0;
+                        let r_inn = radius - ring_thickness / 2.0;
 
-                    let p0 = polar(center, r_inn, a0);
-                    let p1 = polar(center, r_out, a0);
-                    let p2 = polar(center, r_out, a1);
-                    let p3 = polar(center, r_inn, a1);
+                        let p0 = polar(center, r_inn, a0);
+                        let p1 = polar(center, r_out, a0);
+                        let p2 = polar(center, r_out, a1);
+                        let p3 = polar(center, r_inn, a1);
 
-                    let path = Path::new(|b| {
-                        b.move_to(p0);
-                        b.line_to(p1);
-                        b.line_to(p2);
-                        b.line_to(p3);
-                        b.close();
-                    });
-                    frame.fill(&path, col);
-                }
-            };
+                        let path = Path::new(|b| {
+                            b.move_to(p0);
+                            b.line_to(p1);
+                            b.line_to(p2);
+                            b.line_to(p3);
+                            b.close();
+                        });
+                        frame.fill(&path, col);
+                    }
+                };
 
-            // Rings
-            paint_ring(frame, r_outer, Color::from_rgb(1.0, 0.0, 0.0)); // R
-            paint_ring(frame, r_mid,   Color::from_rgb(0.0, 1.0, 0.0)); // G
-            paint_ring(frame, r_inner, Color::from_rgb(0.0, 0.0, 1.0)); // B
+                // Rings
+                paint_ring(frame, r_outer, Color::from_rgb(1.0, 0.0, 0.0)); // R
+                paint_ring(frame, r_mid, Color::from_rgb(0.0, 1.0, 0.0)); // G
+                paint_ring(frame, r_inner, Color::from_rgb(0.0, 0.0, 1.0)); // B
 
-            // Center combined circle
-            let radius = (r_inner - ring_thickness - gap).max(20.0);
-            let circle = Path::circle(center, radius);
-            let combined = Color::from_rgb8(self.r, self.g, self.b);
-            frame.fill(&circle, combined);
+                // Center combined circle
+                let radius = (r_inner - ring_thickness - gap).max(20.0);
+                let circle = Path::circle(center, radius);
+                let combined = Color::from_rgb8(self.r, self.g, self.b);
+                frame.fill(&circle, combined);
 
-            // Thumbs
-            let thumb = |frame: &mut Frame, radius: f32, value: u8| {
-                let angle = (value as f32 / 255.0) * std::f32::consts::TAU;
-                let pos = polar(center, radius, angle);
-                let circ = Path::circle(pos, 6.0);
-                frame.fill(&circ, Color::BLACK);
-                frame.stroke(&circ, Stroke { width: 2.0, style: stroke::Style::Solid(Color::WHITE), ..Default::default() });
-            };
-            thumb(frame, r_outer, self.r);
-            thumb(frame, r_mid,   self.g);
-            thumb(frame, r_inner, self.b);
-        });
+                // Thumbs
+                let thumb = |frame: &mut Frame, radius: f32, value: u8| {
+                    let angle = (value as f32 / 255.0) * std::f32::consts::TAU;
+                    let pos = polar(center, radius, angle);
+                    let circ = Path::circle(pos, 6.0);
+                    frame.fill(&circ, Color::BLACK);
+                    frame.stroke(
+                        &circ,
+                        Stroke {
+                            width: 2.0,
+                            style: stroke::Style::Solid(Color::WHITE),
+                            ..Default::default()
+                        },
+                    );
+                };
+                thumb(frame, r_outer, self.r);
+                thumb(frame, r_mid, self.g);
+                thumb(frame, r_inner, self.b);
+            });
 
         vec![geom]
     }
@@ -134,7 +149,11 @@ impl Program<Msg> for CombinedWheel {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> mouse::Interaction {
-        if cursor.is_over(bounds) { mouse::Interaction::Pointer } else { mouse::Interaction::default() }
+        if cursor.is_over(bounds) {
+            mouse::Interaction::Pointer
+        } else {
+            mouse::Interaction::default()
+        }
     }
 
     fn update(
@@ -154,17 +173,23 @@ impl Program<Msg> for CombinedWheel {
         let gap = ring_thickness * 0.08;
 
         let r_outer = outer_radius;
-        let r_mid   = r_outer - (ring_thickness + gap);
-        let r_inner = r_mid   - (ring_thickness + gap);
+        let r_mid = r_outer - (ring_thickness + gap);
+        let r_inner = r_mid - (ring_thickness + gap);
 
-        let in_band = |dist: f32, radius: f32| dist >= (radius - ring_thickness / 2.0)
-            && dist <= (radius + ring_thickness / 2.0);
+        let in_band = |dist: f32, radius: f32| {
+            dist >= (radius - ring_thickness / 2.0) && dist <= (radius + ring_thickness / 2.0)
+        };
 
         let which_ring = |dist: f32| -> Option<Channel> {
-            if in_band(dist, r_outer) { Some(Channel::R) }
-            else if in_band(dist, r_mid) { Some(Channel::G) }
-            else if in_band(dist, r_inner) { Some(Channel::B) }
-            else { None }
+            if in_band(dist, r_outer) {
+                Some(Channel::R)
+            } else if in_band(dist, r_mid) {
+                Some(Channel::G)
+            } else if in_band(dist, r_inner) {
+                Some(Channel::B)
+            } else {
+                None
+            }
         };
 
         let v = iced::Vector::new(pos.x - center.x, pos.y - center.y);
@@ -172,7 +197,9 @@ impl Program<Msg> for CombinedWheel {
 
         let compute_val = || {
             let mut angle = v.y.atan2(v.x);
-            if angle < 0.0 { angle += std::f32::consts::TAU; }
+            if angle < 0.0 {
+                angle += std::f32::consts::TAU;
+            }
             let t = angle / std::f32::consts::TAU;
             (t * 255.0).round().clamp(0.0, 255.0) as u8
         };
