@@ -1,31 +1,39 @@
+
 # rust_colors
 
-A tiny Rust library **and** Iced widget for working with hex colors made from three 2‑digit hex channels (RR, GG, BB).  
-It includes UI‑free helpers (normalize/split/combine sanitization, RGB struct + conversions, nearest named color) and a **concentric RGB wheel** widget that you can drop into any Iced app.
+A tiny Rust library **and** Iced widget for working with hex colors made from three 2-digit hex channels (RR, GG, BB).  
+It includes UI-free helpers (normalize/split/combine sanitization, RGB struct + conversions, nearest named color) and a **concentric RGB wheel** widget that you can drop into any Iced app.
 
 ---
 
 
 ## Features
 
-- **Hex utilities**  
-  - `normalize_hex`: supports `#RGB`, `#RRGGBB`, `#RRGGBBAA` → `#RRGGBB`  
-  - `split_hex` / `combine_hex` (3× two‑hex into one)  
+- **Hex utilities**
+  - `normalize_hex`: supports `#RGB`, `#RRGGBB`, `#RRGGBBAA` → `#RRGGBB`
+  - `split_hex` / `combine_hex` (3× two-hex into one)
   - `sanitize_hex2`: keep **at most** two uppercase hex digits
-- **RGB utilities**  
-  - `Rgb { r, g, b }` struct  
-  - `hex_to_rgb` / `rgb_to_hex`  
+- **RGB utilities**
+  - `Rgb { r, g, b }` struct
+  - `hex_to_rgb` / `rgb_to_hex`
   - `dist2` (Euclidean distance squared)
-- **Color names**  
-  - `COMBINED_COLORS: &[(&'static str /*#RRGGBB*/, &'static str /*name*/)]`  
+- **Color names**
+  - `COMBINED_COLORS: &[(&'static str /*#RRGGBB*/, &'static str /*name*/)]`
   - `nearest_name_r_eq_00("#RRGGBB") -> (&'static str, &'static str, u32)`
   - `hex_for_name` / `name_for_hex`
-- **Iced widget: concentric RGB wheel**  
-  - Three rings (R outer, G middle, B inner) + center swatch  
-  - Drag while mouse is pressed; text inputs stay in sync  
-  - Center shows `#RRGGBB`, **nearest color name** (star **★** if exact)  
-  - Click center to **copy** hex to clipboard  
+- **Iced widget: concentric RGB wheel**
+  - Three rings (R outer, G middle, B inner) + center swatch
+  - Drag while mouse is pressed; text inputs stay in sync
+  - Center shows `#RRGGBB`, **nearest color name** (star **★** if exact)
+  - Click center to **copy** hex to clipboard
   - Optional search/dropdown for names
+- **Optional datasets via Cargo features**
+  - `national-colors` → adds large palette of national/flag colors
+  - `github-colors` → adds GitHub community palettes
+  - `full` → enables both
+
+⚠️ **Warning:**  
+Enabling `github-colors` will make **runtime slower** because the tables are very large. If you only need core palettes (XKCD, Pantone, Hindi, Persian), skip these features.
 
 ---
 
@@ -160,3 +168,16 @@ If you use the widget:
 ## License
 
 MIT © 2025 LaurentiusCanadensis
+
+
+
+
+## Installation
+
+Add to your `Cargo.toml`:
+
+```toml
+[dependencies]
+rust_colors = { git = "https://github.com/LaurentiusCanadensis/rust_colors" }
+# If you're using the widget, add iced too:
+iced = { version = "0.13", features = ["wgpu", "clipboard"] }

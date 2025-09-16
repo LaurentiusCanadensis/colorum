@@ -132,7 +132,7 @@ pub static COMBINED_COLORS: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(
 
     // Conditionally add GitHub colors
     #[cfg(feature = "github-colors")]
-    let it = base.chain(GITHUB_COLORS.iter().copied());
+    let it = base.chain(COLORS_GITHUB.iter().copied());
 
     #[cfg(not(feature = "github-colors"))]
     let it = base;

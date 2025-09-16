@@ -3,6 +3,9 @@ name = "rust_colors"
 version = "0.2.0"
 edition = "2024"
 
+[features]
+github-colors = []
+
 [dependencies]
 phf = { version = "0.11.3", features = ["macros"] }
 iced = { version = "0.13", features = ["advanced", "canvas"] }
