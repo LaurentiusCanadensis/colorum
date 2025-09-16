@@ -9,21 +9,27 @@
 //! Re-exports for convenient use: `normalize_hex`, `split_hex`, `combine_hex`,
 //! `sanitize_hex2`, `Rgb`, `hex_to_rgb`, `rgb_to_hex`, `dist2`,
 //! `R_EQ_00_HEX_TO_NAME`, `nearest_name_r_eq_00`, `ColorWheel`.
+pub mod colors; // your color table / nearest lookup stays as-is
 pub mod hex;
+pub mod hindi_colors;
+pub mod messages;
+pub mod pantone_colors;
+pub mod persian_colors;
+
+pub mod github_colors;
 pub mod rgb;
-pub mod colors;    // your color table / nearest lookup stays as-is
-pub mod widgets;   // if you expose the iced widgets
-pub mod messages;  // if the widgets use Msg/Channel
+pub mod widgets; // if you expose the iced widgets
+// if the widgets use Msg/Channel
 
 // Re-exports (updated)
-pub use hex::{HexError, combine_hex, normalize_hex, sanitize_hex2, split_hex, hex_for_name, name_for_hex};
+pub use hex::{
+    HexError, combine_hex, hex_for_name, name_for_hex, normalize_hex, sanitize_hex2, split_hex,
+};
 pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 // If you want these at the root:
 pub use colors::{COMBINED_COLORS, nearest_name_r_eq_00};
-pub use messages::{Msg, Channel};
-
-
+pub use messages::{Channel, Msg};
 
 #[cfg(test)]
 mod tests {
@@ -34,13 +40,13 @@ mod tests {
         assert_eq!(normalize_hex("#3af").unwrap(), "#33AAFF");
         assert_eq!(normalize_hex("#33aaff").unwrap(), "#33AAFF");
         assert_eq!(normalize_hex("#33AAFFCC").unwrap(), "#33AAFF"); // strips alpha
-        assert!(normalize_hex("33AAFF").is_err());  // must start with '#'
-        assert!(normalize_hex("#33AA").is_err());   // #RGBA not supported
+        assert!(normalize_hex("33AAFF").is_err()); // must start with '#'
+        assert!(normalize_hex("#33AA").is_err()); // #RGBA not supported
     }
 
     #[test]
     fn split_and_combine() {
-        let n = normalize_hex("#3af").unwrap();           // -> #33AAFF
+        let n = normalize_hex("#3af").unwrap(); // -> #33AAFF
         let (r, g, b) = split_hex(&n).unwrap();
         assert_eq!((r.as_str(), g.as_str(), b.as_str()), ("33", "AA", "FF"));
 
@@ -50,7 +56,11 @@ mod tests {
 
     #[test]
     fn roundtrip_rgb() {
-        let rgb = Rgb { r: 0x12, g: 0x34, b: 0x56 };
+        let rgb = Rgb {
+            r: 0x12,
+            g: 0x34,
+            b: 0x56,
+        };
         let h = rgb_to_hex(rgb);
         assert_eq!(h, "#123456");
         let back = hex_to_rgb(&h).unwrap();

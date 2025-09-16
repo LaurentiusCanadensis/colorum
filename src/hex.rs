@@ -93,8 +93,8 @@ pub fn sanitize_hex2(mut s: &str) -> String {
 }
 
 /* -------------------------
-   Name lookups (moved from util.rs)
-   ------------------------- */
+Name lookups (moved from util.rs)
+------------------------- */
 
 /// Find hex for a given color `name` (case-insensitive) from `colors::COMBINED_COLORS`.
 pub fn hex_for_name(name: &str) -> Option<&'static str> {

@@ -7,6 +7,10 @@ pub enum Channel {
 
 #[derive(Debug, Clone)]
 pub enum Msg {
+    QueryChanged(String),
+    PickChanged(String),
+    CenterClicked, // ⬅️ new
+
     // text inputs
     RChanged(String),
     GChanged(String),
@@ -18,6 +22,6 @@ pub enum Msg {
     PickedName(String),
     // misc
     Clear,
-    CopyHex(String)
+    CopyHex(String),
+    OriginPicked(crate::colors::Origin), // <— NEW
 }
-

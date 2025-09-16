@@ -1,8 +1,8 @@
+use crate::messages::{Channel, Msg};
 use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::{column, container, row, text};
 use iced::{Color, Element, Length, Point, Rectangle, mouse};
-use crate::messages::{Channel, Msg};
 
 pub fn combined_wheel_card(r: u8, g: u8, b: u8) -> Element<'static, Msg> {
     let wheel = CombinedWheel::new(r, g, b);
@@ -207,6 +207,19 @@ impl Program<Msg> for CombinedWheel {
 
         match event {
             canvas::Event::Mouse(iced::mouse::Event::ButtonPressed(iced::mouse::Button::Left)) => {
+                // --- ⬇️ NEW: center click (copy) radius ---
+                // This is the radius of the solid inner disk (inside the B ring).
+                // Adjust the factor if your visual inner disk is a bit larger/smaller.
+                let inner_copy_radius = r_inner - (ring_thickness / 2.0 + gap); // inside edge of the B ring
+                // Optional: shrink slightly so a click near the edge doesn't count as center
+                let inner_copy_radius = inner_copy_radius * 0.92;
+
+                if dist <= inner_copy_radius {
+                    // Clicked the center
+                    return (Captured, Some(Msg::CenterClicked));
+                }
+                // --- ⬆️ NEW ---
+
                 if let Some(ch) = which_ring(dist) {
                     state.dragging = Some(ch);
                     let val = compute_val();
