@@ -17,8 +17,10 @@ pub mod pantone_colors;
 pub mod persian_colors;
 
 pub mod github_colors;
+mod national_colors;
 pub mod rgb;
-pub mod widgets; // if you expose the iced widgets
+pub mod widgets;
+// if you expose the iced widgets
 // if the widgets use Msg/Channel
 
 // Re-exports (updated)

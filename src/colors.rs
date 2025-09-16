@@ -1,5 +1,7 @@
 use crate::hex::*;
 use crate::hindi_colors::COLORS_HINDI;
+use crate::national_colors::COLORS_NATIONAL;
+
 use crate::pantone_colors::*;
 use crate::persian_colors::*;
 use crate::rgb::*;
@@ -21,19 +23,21 @@ pub enum Origin {
     XKCD,
     #[cfg(feature = "github-colors")]
     GitHub,
+    National,
 }
 
 impl Display for Origin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             Origin::All => "all",
-            Origin::Css => "css",
-            Origin::Hindi => "hindi",
-            Origin::Persian => "persian",
-            Origin::Pantone => "pantone",
+            Origin::Css => "Css",
+            Origin::Hindi => "Hindi",
+            Origin::Persian => "Persian",
+            Origin::Pantone => "Pantone",
             #[cfg(feature = "github-colors")]
             Origin::GitHub => "github",
             Origin::XKCD => "Xkcd",
+            Origin::National => "National",
         };
         f.write_str(s)
     }
@@ -74,6 +78,8 @@ pub fn colors_for(origin: Origin) -> ColorsFor {
         Origin::Hindi => ColorsFor::Slice(COLORS_HINDI),
         Origin::Persian => ColorsFor::Slice(COLORS_PERSIAN),
         Origin::Pantone => ColorsFor::Slice(COLORS_PANTONE),
+        Origin::National => ColorsFor::Slice(COLORS_NATIONAL.as_slice()),
+
         Origin::All => {
             if !COLORS_ALL_FALLBACK.is_empty() {
                 ColorsFor::Slice(COLORS_ALL_FALLBACK)
@@ -85,6 +91,8 @@ pub fn colors_for(origin: Origin) -> ColorsFor {
                 v.extend_from_slice(COLORS_HINDI);
                 v.extend_from_slice(COLORS_PERSIAN);
                 v.extend_from_slice(COLORS_PANTONE);
+                v.extend_from_slice(COLORS_NATIONAL.as_slice());
+
                 #[cfg(feature = "github-colors")]
                 v.extend_from_slice(COLORS_GITHUB);
 
@@ -117,6 +125,8 @@ pub static COMBINED_COLORS: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(
     let base = COLORS_PERSIAN
         .iter()
         .copied()
+        .chain(COLORS_XKCD.iter().copied())
+        .chain(COLORS_NATIONAL.iter().copied())
         .chain(COLORS_HINDI.iter().copied())
         .chain(COLORS_PANTONE.iter().copied());
 

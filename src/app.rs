@@ -9,7 +9,9 @@ use iced::{Alignment, Element, Length, Task, clipboard};
 #[cfg(feature = "github-colors")]
 use crate::github_colors::COLORS_GITHUB;
 use crate::hindi_colors::COLORS_HINDI;
+use crate::national_colors;
 use crate::pantone_colors::COLORS_PANTONE;
+use national_colors::COLORS_NATIONAL;
 use persian_colors::COLORS_PERSIAN;
 use rust_colors::{COMBINED_COLORS, persian_colors};
 
@@ -160,6 +162,7 @@ impl App {
                 Origin::Pantone,
                 Origin::Hindi,
                 Origin::Persian,
+                Origin::National,
             ];
             #[cfg(feature = "github-colors")]
             {
@@ -278,5 +281,6 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
         Origin::Css => COLORS_XKCD,
+        Origin::National => COLORS_NATIONAL.as_slice(),
     }
 }
