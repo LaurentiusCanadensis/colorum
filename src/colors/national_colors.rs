@@ -9,12 +9,14 @@ use std::collections::BTreeSet;
 /// Sort key: (case-insensitive name, then hex).
 pub static COLORS_NATIONAL: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
     // 1) chain base + supplement
-    let iter = COLORS_NATIONAL_UNORDERED.iter().copied().chain(COLORS_NATIONAL_UNORDERED.iter().copied());
+    let iter = COLORS_NATIONAL_UNORDERED
+        .iter()
+        .copied()
+        .chain(COLORS_NATIONAL_UNORDERED.iter().copied());
 
     // 2) normalize (trim whitespace)
-    let mut v: Vec<(&'static str, &'static str)> = iter
-        .map(|(hex, name)| (hex.trim(), name.trim()))
-        .collect();
+    let mut v: Vec<(&'static str, &'static str)> =
+        iter.map(|(hex, name)| (hex.trim(), name.trim())).collect();
 
     // 3) exact de-duplication by (hex, name)
     let mut seen: BTreeSet<(String, String)> = BTreeSet::new();
@@ -589,9 +591,8 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#FCD116", "Saint Vincent and the Grenadines Yellow"),
     ("#009E60", "Saint Vincent and the Grenadines Green"),
     ("#0072CE", "Saint Vincent and the Grenadines Blue"),
-
-// Add a small supplement for commonly missing countries.
-// (Feel free to extend this list later.)
+    // Add a small supplement for commonly missing countries.
+    // (Feel free to extend this list later.)
     // South Asia / Indian Ocean
     ("#FF9933", "Sri Lanka Saffron"),
     ("#006A4E", "Sri Lanka Green"),
@@ -603,22 +604,19 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#F7E017", "Brunei Yellow"),
     ("#000000", "Brunei Black"),
     ("#FFFFFF", "Brunei White"),
-    ("#0000FF", "Timor-Leste Blue"),   // coat usage; flag: red/yellow/black
+    ("#0000FF", "Timor-Leste Blue"), // coat usage; flag: red/yellow/black
     ("#DA291C", "Timor-Leste Red"),
     ("#000000", "Timor-Leste Black"),
     ("#F8C300", "Timor-Leste Yellow"),
-
     // East Asia
     ("#024FA2", "North Korea Blue"),
     ("#ED1C27", "North Korea Red"),
     ("#FFFFFF", "North Korea White"),
-
     // Europe
     ("#0057A4", "Belarus Blue"),
     ("#D22730", "Belarus Red"),
     ("#009E49", "Belarus Green"),
     ("#FFFFFF", "Belarus White"),
-
     // Central / North Africa
     ("#10AF2A", "Eritrea Green"),
     ("#EF2B2D", "Eritrea Red"),
@@ -649,7 +647,6 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#000000", "Angola Black"),
     ("#CC092F", "Angola Red"),
     ("#F7D417", "Angola Yellow"),
-
     // West Africa
     ("#008751", "Benin Green"),
     ("#FCD116", "Benin Yellow"),
@@ -670,7 +667,6 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#CE1126", "Cape Verde Red"),
     ("#006233", "Mauritania Green"),
     ("#FFC61E", "Mauritania Gold"),
-
     // Central Africa
     ("#003082", "Central African Republic Blue"),
     ("#FFFFFF", "Central African Republic White"),
@@ -680,7 +676,6 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#009543", "Republic of the Congo Green"),
     ("#FCD116", "Republic of the Congo Yellow"),
     ("#DC241F", "Republic of the Congo Red"),
-
     // Caribbean / Americas
     ("#00267F", "Barbados Blue"),
     ("#FFC726", "Barbados Gold"),
@@ -700,4 +695,3 @@ pub const COLORS_NATIONAL_UNORDERED: &[(&str, &str)] = &[
     ("#FFFFFF", "Suriname White"),
     ("#ECC81D", "Suriname Yellow"),
 ];
-

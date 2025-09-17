@@ -1,28 +1,54 @@
-//! rust_colors: helpers and widgets for hex colors via three 2-hex channels.
-//!
-//! Modules:
-//! - `hex`: normalize `#RGB`/`#RRGGBB`/`#RRGGBBAA`, split/combine, sanitize 2-hex
-//! - `rgb`: `Rgb` struct + hex/struct conversions + distance
-//! - `colors`: named colors (incl. R=00 set) + nearest lookup
-//! - `widgets`: iced GUI widgets (color wheel, combined wheel, etc.)
-//!
-//! Re-exports for convenient use: `normalize_hex`, `split_hex`, `combine_hex`,
-//! `sanitize_hex2`, `Rgb`, `hex_to_rgb`, `rgb_to_hex`, `dist2`,
-//! `R_EQ_00_HEX_TO_NAME`, `nearest_name_r_eq_00`, `ColorWheel`.
-pub mod colors_helper; // your color table / nearest lookup stays as-is
+//! Library entry for `rust_colors`
+//! - Re-exports core modules so call sites can `use rust_colors::*`.
+//! - Provides `run_app()` that `main.rs` can call to start the Iced app.
+
+#![forbid(unsafe_code)]
+
+pub mod colors;         // src/colors/
+pub mod colors_helper;  // src/colors_helper/
 pub mod hex;
-pub mod hindi_colors;
-pub mod messages;
-pub mod pantone_colors;
-pub mod persian_colors;
-
-pub mod github_colors;
-mod national_colors;
 pub mod rgb;
-pub mod widgets;
-// if you expose the iced widgets
-// if the widgets use Msg/Channel
+pub mod messages;
 
+// If you keep top-level widgets separate from ui/widgets, expose them here.
+// Prefer folding them into `ui::widgets` long-term.
+pub mod widgets;
+
+// ---- Re-exports for ergonomics ---------------------------------------------
+
+// Common search/selection surface the UI uses
+pub use colors_helper::{Origin, dropdown_results_for_ui, best_first_for_ui};
+
+// Frequently used color tables (optional, but convenient)
+pub use colors::{
+    css::COLORS_CSS,
+    xkcd::COLORS_XKCD,
+    persian_colors::COLORS_PERSIAN,
+    pantone_colors::COLORS_PANTONE,
+    hindi_colors::COLORS_HINDI,
+    national_colors::COLORS_NATIONAL,
+};
+
+#[cfg(feature = "github-colors")]
+pub use colors::github_colors::COLORS_GITHUB;
+
+// ---- App runner glue for main.rs -------------------------------------------
+
+use iced::Result as IcedResult;
+
+/// Run the Iced application with default settings.
+///
+/// Typical `main.rs`:
+/// ```
+/// fn main() -> iced::Result {
+///     rust_colors::run_app()
+/// }
+/// ```
+
+// ---- App module -------------------------------------------------------------
+// Expecting `src/app.rs` to define `pub struct App;` that implements
+// `iced::Application`. If your app lives under `src/app/mod.rs`, keep `mod app;`.
+pub mod app;
 // Re-exports (updated)
 pub use hex::{
     HexError, combine_hex, hex_for_name, name_for_hex, normalize_hex, sanitize_hex2, split_hex,
@@ -30,7 +56,7 @@ pub use hex::{
 pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 // If you want these at the root:
-pub use colors_helper::{COMBINED_COLORS, nearest_name_r_eq_00};
+pub use colors_helper::{COMBINED_COLORS};
 pub use messages::{Channel, Msg};
 
 #[cfg(test)]

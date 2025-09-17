@@ -9,9 +9,8 @@ pub enum Channel {
 pub enum Msg {
     QueryChanged(String),
     PickChanged(String),
-    CenterClicked, // ⬅️ new
-    PickedName(&'static str),   // was String
-
+    CenterClicked,            // ⬅️ new
+    PickedName(&'static str), // was String
 
     // text inputs
     RChanged(String),

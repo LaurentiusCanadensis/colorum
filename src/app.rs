@@ -1,19 +1,12 @@
 // src/app.rs
-use crate::colors_helper::{self, COLORS_XKCD, Origin};
+use crate::colors_helper::{self, COLORS_PANTONE, COMBINED_COLORS, Origin};
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
-use iced::widget::{button, column, container, pick_list, PickList, row, scrollable, text, text_input};
-use iced::{Alignment, Element, Length, Task, clipboard, Theme, Renderer};
-
-#[cfg(feature = "github-colors")]
-use crate::github_colors::COLORS_GITHUB;
-use crate::hindi_colors::COLORS_HINDI;
-use crate::national_colors;
-use crate::pantone_colors::COLORS_PANTONE;
-use national_colors::COLORS_NATIONAL;
-use persian_colors::COLORS_PERSIAN;
-use rust_colors::{COMBINED_COLORS, persian_colors};
+use iced::widget::{
+    PickList, button, column, container, pick_list, row, scrollable, text, text_input,
+};
+use iced::{Alignment, Element, Length, Renderer, Task, Theme, clipboard};
 
 #[derive(Default)]
 pub struct App {
@@ -58,8 +51,6 @@ impl App {
                 self.bb = sanitize_hex2(&s);
                 Task::none()
             }
-
-
 
             Msg::WheelChanged(ch, v) => {
                 let hh = format!("{v:02X}");
@@ -167,31 +158,39 @@ impl App {
 
         // Keep selected if still present
         let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
-            filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur))
+            filtered_names
+                .iter()
+                .copied()
+                .find(|s| s.eq_ignore_ascii_case(cur))
         });
 
         // --- Origins dropdown stays the same ---
         let origins_list = {
             let mut v = vec![
-                Origin::All, Origin::Css, Origin::XKCD, Origin::Pantone,
-                Origin::Hindi, Origin::Persian, Origin::National,
+                Origin::All,
+                Origin::Css,
+                Origin::XKCD,
+                Origin::Pantone,
+                Origin::Hindi,
+                Origin::Persian,
+                Origin::National,
             ];
             #[cfg(feature = "github-colors")]
-            { v.push(Origin::GitHub); }
+            {
+                v.push(Origin::GitHub);
+            }
             v
         };
 
-
         let on_origin: fn(Origin) -> Msg = Msg::OriginPicked;
 
-        let origin_dd: PickList<Origin, Vec<Origin>, Origin, Msg, Theme, Renderer> =
-            pick_list(
-                origins_list,                  // Vec<Origin>
-                Some(self.selected_origin),    // Option<Origin>
-                on_origin,                     // fn(Origin) -> Msg
-            )
-                .placeholder("Origin")
-                .width(Length::Shrink);
+        let origin_dd: PickList<Origin, Vec<Origin>, Origin, Msg, Theme, Renderer> = pick_list(
+            origins_list,               // Vec<Origin>
+            Some(self.selected_origin), // Option<Origin>
+            on_origin,                  // fn(Origin) -> Msg
+        )
+        .placeholder("Origin")
+        .width(Length::Shrink);
 
         // --- Controls ---
         let search_box: iced::widget::TextInput<'_, Msg, Theme, Renderer> =
@@ -206,10 +205,12 @@ impl App {
         let filtered_names: Vec<&'static str> = self.filtered_names();
 
         // selected_opt: Option<&'static str>
-        let selected_opt: Option<&'static str> = self
-            .selected_name
-            .as_deref()
-            .and_then(|cur| filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur)));
+        let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
+            filtered_names
+                .iter()
+                .copied()
+                .find(|s| s.eq_ignore_ascii_case(cur))
+        });
 
         // Tell the compiler exactly what the on_select fn is:
         let on_select: fn(&'static str) -> Msg = Msg::PickedName;
@@ -219,7 +220,10 @@ impl App {
 
         // Keep selected if still present
         let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
-            filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur))
+            filtered_names
+                .iter()
+                .copied()
+                .find(|s| s.eq_ignore_ascii_case(cur))
         });
 
         // --- Origins dropdown unchanged ---
@@ -227,7 +231,6 @@ impl App {
             let mut v = vec![
                 Origin::All,
                 Origin::Css,
-
                 Origin::XKCD,
                 Origin::Pantone,
                 Origin::Hindi,
@@ -235,7 +238,9 @@ impl App {
                 Origin::National,
             ];
             #[cfg(feature = "github-colors")]
-            { v.push(Origin::GitHub); }
+            {
+                v.push(Origin::GitHub);
+            }
             v
         };
         let origin_dd = pick_list(origins_list, Some(self.selected_origin), Msg::OriginPicked)
@@ -258,18 +263,16 @@ impl App {
             selected_opt,           // Option<&'static str>
             on_select,              // fn(&'static str) -> Msg
         )
-            .placeholder({
-                // Nice hint for heavy sets
-                use crate::colors_helper::{is_heavy_origin, HEAVY_MIN_QUERY};
-                if is_heavy_origin(self.selected_origin) && self.search.trim().len() < HEAVY_MIN_QUERY {
-                    "Type at least 2 letters…"
-                } else {
-                    "Select a color"
-                }
-            })
-            .width(Length::Fill);
-
-
+        .placeholder({
+            // Nice hint for heavy sets
+            use crate::colors_helper::{HEAVY_MIN_QUERY, is_heavy_origin};
+            if is_heavy_origin(self.selected_origin) && self.search.trim().len() < HEAVY_MIN_QUERY {
+                "Type at least 2 letters…"
+            } else {
+                "Select a color"
+            }
+        })
+        .width(Length::Fill);
 
         // Constrain controls to a nice max width but allow shrinking.
         let stacked_controls = container(
@@ -318,8 +321,10 @@ impl App {
 
 impl App {
     fn filtered_names(&self) -> Vec<&'static str> {
-        use crate::colors_helper::{search_in_origin, TokenMode};
-        use crate::colors_helper::{origin_names, origin_rank, is_heavy_origin, HEAVY_MIN_QUERY, MAX_RESULTS};
+        use crate::colors_helper::{
+            HEAVY_MIN_QUERY, MAX_RESULTS, is_heavy_origin, origin_names, origin_rank,
+        };
+        use crate::colors_helper::{TokenMode, search_in_origin};
 
         let q = self.search.trim();
 
@@ -336,7 +341,11 @@ impl App {
         }
 
         // Non-empty query → use token index
-        let mode = if q.contains(' ') { TokenMode::All } else { TokenMode::Any };
+        let mode = if q.contains(' ') {
+            TokenMode::All
+        } else {
+            TokenMode::Any
+        };
         let hits = search_in_origin(self.selected_origin, q, mode);
 
         // Keep names only
@@ -357,8 +366,6 @@ impl App {
 
 impl App {
     /// Filter names by origin *and* search, then sort alphabetically
-
-
 
     /// Get HEX for a name, *restricted to the active origin*.
     fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
@@ -395,9 +402,21 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
 
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
+use crate::colors::github_colors::COLORS_GITHUB;
+use crate::colors::persian_colors::COLORS_PERSIAN;
+use crate::colors::xkcd::COLORS_XKCD;
+
+use crate::colors::national_colors::COLORS_NATIONAL;
+
+use crate::colors::hindi_colors::COLORS_HINDI;
+//{COLORS_GITHUB, COLORS_HINDI, COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COMBINED_COLORS};
+
 // ---------- A) Exact name maps & pre-lowercased cache ----------
 pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
-    COMBINED_COLORS.iter().map(|(hex, name)| (*name, *hex)).collect()
+    COMBINED_COLORS
+        .iter()
+        .map(|(hex, name)| (*name, *hex))
+        .collect()
 });
 
 pub static COLORS_BY_NAME_LC: LazyLock<HashMap<String, &'static str>> = LazyLock::new(|| {
