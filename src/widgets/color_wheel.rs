@@ -1,4 +1,4 @@
-use crate::colors::COMBINED_COLORS;
+use crate::colors_helper::COMBINED_COLORS;
 use crate::messages::{Channel, Msg};
 use iced::border::Radius;
 use iced::widget::canvas::stroke;

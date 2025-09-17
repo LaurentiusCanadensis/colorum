@@ -1,5 +1,4 @@
 #[cfg(feature = "github-colors")]
-
 pub const COLORS_GITHUB: &[(&str, &str)] = &[
     ("#C93F38", "100 Mph"),
     ("#A59344", "18th Century Green"),

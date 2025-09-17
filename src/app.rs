@@ -1,10 +1,10 @@
 // src/app.rs
-use crate::colors::{self, COLORS_XKCD, Origin};
+use crate::colors_helper::{self, COLORS_XKCD, Origin};
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
-use iced::widget::{button, column, container, pick_list, row, scrollable, text, text_input};
-use iced::{Alignment, Element, Length, Task, clipboard};
+use iced::widget::{button, column, container, pick_list, PickList, row, scrollable, text, text_input};
+use iced::{Alignment, Element, Length, Task, clipboard, Theme, Renderer};
 
 #[cfg(feature = "github-colors")]
 use crate::github_colors::COLORS_GITHUB;
@@ -27,7 +27,18 @@ pub struct App {
     pub selected_origin: Origin,
     pub status: String,
 }
-
+impl App {
+    fn apply_selected_name(&mut self, name: &str) {
+        self.selected_name = Some(name.to_string());
+        if let Some(hex) = self.hex_for_name_in_origin(name) {
+            if let Some(rgb) = hex_to_rgb(hex) {
+                self.rr = format!("{:02X}", rgb.r);
+                self.gg = format!("{:02X}", rgb.g);
+                self.bb = format!("{:02X}", rgb.b);
+            }
+        }
+    }
+}
 impl App {
     pub fn title(&self) -> String {
         "rondel".into()
@@ -48,12 +59,7 @@ impl App {
                 Task::none()
             }
 
-            Msg::OriginPicked(o) => {
-                self.selected_origin = o;
-                let names = self.filtered_names();
-                self.selected_name = names.first().map(|s| (*s).to_string());
-                Task::none()
-            }
+
 
             Msg::WheelChanged(ch, v) => {
                 let hh = format!("{v:02X}");
@@ -66,30 +72,48 @@ impl App {
             }
 
             // Use one variant; keep this if your TextInput sends SearchChanged
+            Msg::OriginPicked(o) => {
+                self.selected_origin = o;
+                let names = self.filtered_names();
+                if let Some(first) = names.first() {
+                    self.apply_selected_name(first);
+                } else {
+                    // nothing to select (e.g., heavy origin + short query)
+                    self.selected_name = None;
+                }
+                Task::none()
+            }
+
             Msg::SearchChanged(s) => {
                 self.search = s;
                 let names = self.filtered_names();
-                self.selected_name = names.first().map(|s| (*s).to_string());
+                if let Some(first) = names.first() {
+                    self.apply_selected_name(first);
+                } else {
+                    // no matches for current query; keep previous RGB or clear selection:
+                    self.selected_name = None; // <- or comment this out if you want to keep old selection
+                }
                 Task::none()
             }
 
-            // If you still emit these, keep them; otherwise delete the variants.
             Msg::QueryChanged(s) => {
                 self.search = s;
                 let names = self.filtered_names();
-                self.selected_name = names.first().map(|s| (*s).to_string());
+                if let Some(first) = names.first() {
+                    self.apply_selected_name(first);
+                } else {
+                    self.selected_name = None;
+                }
                 Task::none()
             }
 
-            Msg::PickedName(name) | Msg::PickChanged(name) => {
-                self.selected_name = Some(name.clone());
-                if let Some(hex) = self.hex_for_name_in_origin(&name) {
-                    if let Some(rgb) = hex_to_rgb(hex) {
-                        self.rr = format!("{:02X}", rgb.r);
-                        self.gg = format!("{:02X}", rgb.g);
-                        self.bb = format!("{:02X}", rgb.b);
-                    }
-                }
+            Msg::PickedName(name) => {
+                self.apply_selected_name(name);
+                Task::none()
+            }
+
+            Msg::PickChanged(name) => {
+                self.apply_selected_name(&name);
                 Task::none()
             }
 
@@ -135,29 +159,75 @@ impl App {
         let slice = colors_for_origin(self.selected_origin);
 
         // --- filtered names (Vec<String>) ---
-        let mut filtered: Vec<String> = if self.search.trim().is_empty() {
-            slice.iter().map(|&(_hex, name)| name.to_string()).collect()
-        } else {
-            let q = self.search.to_lowercase();
-            slice
-                .iter()
-                .map(|&(_hex, name)| name.to_string())
-                .filter(|n| n.to_lowercase().contains(&q))
-                .collect()
-        };
-        filtered.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        // --- filtered names (FAST; uses indexed search via self.filtered_names) ---
+        // NOTE: make sure your `filtered_names()` calls `search_in_origin(...)`
+        // with TokenMode::Any/All as we discussed, not a per-item substring scan.
+        // --- filtered names (FAST; zero alloc on clear) ---
+        let filtered_names: Vec<&'static str> = self.filtered_names();
 
-        let selected_opt: Option<String> = self.selected_name.as_ref().and_then(|cur| {
-            filtered
-                .iter()
-                .find(|s| s.eq_ignore_ascii_case(cur))
-                .cloned()
+        // Keep selected if still present
+        let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
+            filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur))
         });
 
-        // --- Origins dropdown (kept compact) ---
+        // --- Origins dropdown stays the same ---
+        let origins_list = {
+            let mut v = vec![
+                Origin::All, Origin::Css, Origin::XKCD, Origin::Pantone,
+                Origin::Hindi, Origin::Persian, Origin::National,
+            ];
+            #[cfg(feature = "github-colors")]
+            { v.push(Origin::GitHub); }
+            v
+        };
+
+
+        let on_origin: fn(Origin) -> Msg = Msg::OriginPicked;
+
+        let origin_dd: PickList<Origin, Vec<Origin>, Origin, Msg, Theme, Renderer> =
+            pick_list(
+                origins_list,                  // Vec<Origin>
+                Some(self.selected_origin),    // Option<Origin>
+                on_origin,                     // fn(Origin) -> Msg
+            )
+                .placeholder("Origin")
+                .width(Length::Shrink);
+
+        // --- Controls ---
+        let search_box: iced::widget::TextInput<'_, Msg, Theme, Renderer> =
+            text_input("Search color name…", &self.search)
+                .on_input(Msg::SearchChanged)
+                .padding(6)
+                .size(16)
+                .width(Length::Fill);
+
+        // IMPORTANT: make pick_list generic over &str and message is Msg::PickedName(&'static str)
+        // filtered_names: Vec<&'static str>
+        let filtered_names: Vec<&'static str> = self.filtered_names();
+
+        // selected_opt: Option<&'static str>
+        let selected_opt: Option<&'static str> = self
+            .selected_name
+            .as_deref()
+            .and_then(|cur| filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur)));
+
+        // Tell the compiler exactly what the on_select fn is:
+        let on_select: fn(&'static str) -> Msg = Msg::PickedName;
+
+        // --- filtered names (FAST; lazy for heavy origins) ---
+        let filtered_names: Vec<&'static str> = self.filtered_names();
+
+        // Keep selected if still present
+        let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
+            filtered_names.iter().copied().find(|s| s.eq_ignore_ascii_case(cur))
+        });
+
+        // --- Origins dropdown unchanged ---
         let origins_list = {
             let mut v = vec![
                 Origin::All,
+                Origin::Css,
+
                 Origin::XKCD,
                 Origin::Pantone,
                 Origin::Hindi,
@@ -165,30 +235,41 @@ impl App {
                 Origin::National,
             ];
             #[cfg(feature = "github-colors")]
-            {
-                v.push(Origin::GitHub);
-            }
+            { v.push(Origin::GitHub); }
             v
         };
         let origin_dd = pick_list(origins_list, Some(self.selected_origin), Msg::OriginPicked)
             .placeholder("Origin")
             .width(Length::Shrink);
 
-        // --- Stacked controls under the wheel, responsive widths ---
-        // Use Fill within a narrow container so they shrink on small windows.
+        // --- Search box unchanged ---
         let search_box = text_input("Search color name…", &self.search)
             .on_input(Msg::SearchChanged)
             .padding(6)
             .size(16)
             .width(Length::Fill);
 
+        // --- Name dropdown ---
+        // Tell the compiler the callback type explicitly if needed:
+        let on_select: fn(&'static str) -> Msg = Msg::PickedName;
+
         let name_dd = pick_list(
-            filtered.clone(), // Vec<String>
-            selected_opt,     // Option<String>
-            Msg::PickedName,
+            filtered_names.clone(), // Vec<&'static str>
+            selected_opt,           // Option<&'static str>
+            on_select,              // fn(&'static str) -> Msg
         )
-        .placeholder("Select a color")
-        .width(Length::Fill);
+            .placeholder({
+                // Nice hint for heavy sets
+                use crate::colors_helper::{is_heavy_origin, HEAVY_MIN_QUERY};
+                if is_heavy_origin(self.selected_origin) && self.search.trim().len() < HEAVY_MIN_QUERY {
+                    "Type at least 2 letters…"
+                } else {
+                    "Select a color"
+                }
+            })
+            .width(Length::Fill);
+
+
 
         // Constrain controls to a nice max width but allow shrinking.
         let stacked_controls = container(
@@ -236,25 +317,52 @@ impl App {
 }
 
 impl App {
-    /// Filter names by origin *and* search, then sort alphabetically
     fn filtered_names(&self) -> Vec<&'static str> {
-        let set = colors::colors_for(self.selected_origin);
+        use crate::colors_helper::{search_in_origin, TokenMode};
+        use crate::colors_helper::{origin_names, origin_rank, is_heavy_origin, HEAVY_MIN_QUERY, MAX_RESULTS};
 
-        let mut names: Vec<&'static str> =
-            set.as_slice().iter().map(|&(_hex, name)| name).collect();
+        let q = self.search.trim();
 
-        let q = self.search.trim().to_lowercase();
-        if !q.is_empty() {
-            names.retain(|nm| nm.to_lowercase().contains(&q));
+        // HEAVY ORIGINS: when query is empty (or too short), return empty list to keep dropdown light
+        if is_heavy_origin(self.selected_origin) {
+            if q.len() < HEAVY_MIN_QUERY {
+                return Vec::new();
+            }
+        } else {
+            // LIGHT ORIGINS: empty query → precomputed, already sorted
+            if q.is_empty() {
+                return origin_names(self.selected_origin).to_vec(); // pointer copies only
+            }
         }
 
-        names.sort_unstable_by(|a, b| a.to_ascii_lowercase().cmp(&b.to_ascii_lowercase()));
+        // Non-empty query → use token index
+        let mode = if q.contains(' ') { TokenMode::All } else { TokenMode::Any };
+        let hits = search_in_origin(self.selected_origin, q, mode);
+
+        // Keep names only
+        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name).collect();
+
+        // Order by precomputed rank (no per-keystroke lowercase cost)
+        let rank = origin_rank(self.selected_origin);
+        names.sort_unstable_by_key(|n| rank.get(n).copied().unwrap_or(usize::MAX));
+
+        // Cap results so pick_list stays fast
+        if names.len() > MAX_RESULTS {
+            names.truncate(MAX_RESULTS);
+        }
+
         names
     }
+}
+
+impl App {
+    /// Filter names by origin *and* search, then sort alphabetically
+
+
 
     /// Get HEX for a name, *restricted to the active origin*.
     fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
-        let set = colors::colors_for(self.selected_origin);
+        let set = colors_helper::colors_for(self.selected_origin);
         set.as_slice()
             .iter()
             .find(|&&(_hex, nm)| nm.eq_ignore_ascii_case(name))
@@ -283,4 +391,195 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
         Origin::Css => COLORS_XKCD,
         Origin::National => COLORS_NATIONAL.as_slice(),
     }
+}
+
+use std::collections::{HashMap, HashSet};
+use std::sync::LazyLock;
+// ---------- A) Exact name maps & pre-lowercased cache ----------
+pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
+    COMBINED_COLORS.iter().map(|(hex, name)| (*name, *hex)).collect()
+});
+
+pub static COLORS_BY_NAME_LC: LazyLock<HashMap<String, &'static str>> = LazyLock::new(|| {
+    let mut m = HashMap::new();
+    for (hex, name) in COMBINED_COLORS.as_slice() {
+        m.insert(name.to_lowercase(), *hex);
+    }
+    m
+});
+
+pub struct ColorEntry {
+    pub hex: &'static str,
+    pub name: &'static str,
+    pub name_lc: String, // built once
+}
+
+pub static COLORS_LC: LazyLock<Vec<ColorEntry>> = LazyLock::new(|| {
+    COMBINED_COLORS
+        .iter()
+        .map(|(hex, name)| ColorEntry {
+            hex: *hex,
+            name: *name,
+            name_lc: name.to_lowercase(),
+        })
+        .collect()
+});
+
+// ---------- Tokenization ----------
+fn tokenize_lc(s: &str) -> impl Iterator<Item = String> + '_ {
+    s.split(|c: char| !c.is_alphanumeric())
+        .filter(|t| !t.is_empty())
+        .map(|t| t.to_lowercase())
+}
+
+// ---------- B) Token index (token -> sorted, deduped posting list) ----------
+// NOTE: store compact Box<[usize]> and pre-sort/dedup once.
+pub static NAME_TOKEN_INDEX: LazyLock<HashMap<String, Box<[usize]>>> = LazyLock::new(|| {
+    let mut idx: HashMap<String, Vec<usize>> = HashMap::new();
+
+    for (i, (_, name)) in COMBINED_COLORS.iter().enumerate() {
+        for tok in tokenize_lc(name) {
+            idx.entry(tok).or_default().push(i);
+        }
+    }
+
+    // Sort, dedup, shrink, then convert to Box<[usize]>
+    idx.into_iter()
+        .map(|(tok, mut v)| {
+            v.sort_unstable();
+            v.dedup();
+            v.shrink_to_fit();
+            (tok, v.into_boxed_slice())
+        })
+        .collect()
+});
+
+// ---------- Lookups ----------
+pub fn lookup_by_name(name: &str) -> Option<&'static str> {
+    COLORS_BY_NAME.get(name).copied()
+}
+
+pub fn lookup_by_name_ci(name: &str) -> Option<&'static str> {
+    COLORS_BY_NAME_LC.get(&name.to_lowercase()).copied()
+}
+
+// Fast substring search (case-insensitive, O(n) but no per-item lowercase)
+pub fn search_substring(query: &str) -> Vec<(&'static str, &'static str)> {
+    let q = query.to_lowercase();
+    COLORS_LC
+        .iter()
+        .filter(|e| e.name_lc.contains(&q))
+        .map(|e| (e.hex, e.name))
+        .collect()
+}
+
+// ---------- Helpers for sorted postings ----------
+#[inline]
+fn intersect_sorted_slices(a: &[usize], b: &[usize]) -> Vec<usize> {
+    let mut i = 0;
+    let mut j = 0;
+    let mut out = Vec::with_capacity(a.len().min(b.len()));
+
+    while i < a.len() && j < b.len() {
+        match a[i].cmp(&b[j]) {
+            std::cmp::Ordering::Less => i += 1,
+            std::cmp::Ordering::Greater => j += 1,
+            std::cmp::Ordering::Equal => {
+                out.push(a[i]);
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    out
+}
+
+#[inline]
+fn union_sorted_slices(a: &[usize], b: &[usize]) -> Vec<usize> {
+    let mut i = 0;
+    let mut j = 0;
+    // Upper bound is a.len() + b.len()
+    let mut out = Vec::with_capacity(a.len() + b.len());
+
+    while i < a.len() && j < b.len() {
+        match a[i].cmp(&b[j]) {
+            std::cmp::Ordering::Less => {
+                out.push(a[i]);
+                i += 1;
+            }
+            std::cmp::Ordering::Greater => {
+                out.push(b[j]);
+                j += 1;
+            }
+            std::cmp::Ordering::Equal => {
+                out.push(a[i]); // same value once
+                i += 1;
+                j += 1;
+            }
+        }
+    }
+    if i < a.len() {
+        out.extend_from_slice(&a[i..]);
+    }
+    if j < b.len() {
+        out.extend_from_slice(&b[j..]);
+    }
+    out
+}
+
+// ---------- Token search: ANY (OR) semantics, k-way union over sorted postings ----------
+pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
+    let mut postings: Vec<&[usize]> = Vec::new();
+
+    for tok in tokenize_lc(query) {
+        if let Some(list) = NAME_TOKEN_INDEX.get(&tok) {
+            postings.push(list);
+        }
+    }
+
+    if postings.is_empty() {
+        return Vec::new();
+    }
+
+    // Sort by length to improve merge locality
+    postings.sort_by_key(|p| p.len());
+
+    // Iteratively union the sorted lists
+    let mut result: Vec<usize> = postings[0].to_vec();
+    for p in postings.iter().skip(1) {
+        result = union_sorted_slices(&result, p);
+    }
+
+    result.into_iter().map(|i| COMBINED_COLORS[i]).collect()
+}
+
+// ---------- Token search: ALL (AND) semantics, intersect smallest lists first ----------
+pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
+    // Collect tokens and fetch postings
+    let mut lists: Vec<&[usize]> = {
+        let mut tmp = Vec::new();
+        for tok in tokenize_lc(query) {
+            match NAME_TOKEN_INDEX.get(&tok) {
+                Some(list) => tmp.push(list.as_ref()),
+                None => return Vec::new(), // missing token => no matches
+            }
+        }
+        if tmp.is_empty() {
+            return Vec::new();
+        }
+        tmp
+    };
+
+    // Intersect smallest first to keep intermediate sets tiny
+    lists.sort_by_key(|p| p.len());
+
+    let mut current: Vec<usize> = lists[0].to_vec();
+    for p in lists.iter().skip(1) {
+        if current.is_empty() {
+            break;
+        }
+        current = intersect_sorted_slices(&current, p);
+    }
+
+    current.into_iter().map(|i| COMBINED_COLORS[i]).collect()
 }

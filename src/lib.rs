@@ -9,7 +9,7 @@
 //! Re-exports for convenient use: `normalize_hex`, `split_hex`, `combine_hex`,
 //! `sanitize_hex2`, `Rgb`, `hex_to_rgb`, `rgb_to_hex`, `dist2`,
 //! `R_EQ_00_HEX_TO_NAME`, `nearest_name_r_eq_00`, `ColorWheel`.
-pub mod colors; // your color table / nearest lookup stays as-is
+pub mod colors_helper; // your color table / nearest lookup stays as-is
 pub mod hex;
 pub mod hindi_colors;
 pub mod messages;
@@ -30,7 +30,7 @@ pub use hex::{
 pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 // If you want these at the root:
-pub use colors::{COMBINED_COLORS, nearest_name_r_eq_00};
+pub use colors_helper::{COMBINED_COLORS, nearest_name_r_eq_00};
 pub use messages::{Channel, Msg};
 
 #[cfg(test)]

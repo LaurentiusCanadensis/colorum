@@ -10,6 +10,8 @@ pub enum Msg {
     QueryChanged(String),
     PickChanged(String),
     CenterClicked, // ⬅️ new
+    PickedName(&'static str),   // was String
+
 
     // text inputs
     RChanged(String),
@@ -19,9 +21,9 @@ pub enum Msg {
     WheelChanged(Channel, u8),
     // search/dropdown
     SearchChanged(String),
-    PickedName(String),
+    //PickedName(String),
     // misc
     Clear,
     CopyHex(String),
-    OriginPicked(crate::colors::Origin), // <— NEW
+    OriginPicked(crate::colors_helper::Origin), // <— NEW
 }

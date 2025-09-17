@@ -1,5 +1,5 @@
 mod app;
-mod colors;
+mod colors_helper;
 mod hex;
 mod messages;
 mod rgb;

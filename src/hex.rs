@@ -99,7 +99,7 @@ Name lookups (moved from util.rs)
 /// Find hex for a given color `name` (case-insensitive) from `colors::COMBINED_COLORS`.
 pub fn hex_for_name(name: &str) -> Option<&'static str> {
     let n = name.trim();
-    crate::colors::COMBINED_COLORS
+    crate::colors_helper::COMBINED_COLORS
         .iter()
         .find(|(_hex, nm)| nm.eq_ignore_ascii_case(n))
         .map(|(hex, _nm)| *hex)
@@ -108,7 +108,7 @@ pub fn hex_for_name(name: &str) -> Option<&'static str> {
 /// Find name for a given `hex` (case-insensitive) from `colors::COMBINED_COLORS`.
 pub fn name_for_hex(hex: &str) -> Option<&'static str> {
     let h = hex.trim();
-    crate::colors::COMBINED_COLORS
+    crate::colors_helper::COMBINED_COLORS
         .iter()
         .find(|(hx, _nm)| hx.eq_ignore_ascii_case(h))
         .map(|(_hx, nm)| *nm)
