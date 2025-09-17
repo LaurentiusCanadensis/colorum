@@ -369,6 +369,14 @@ pub fn search_in_origin(origin: Origin, query: &str, mode: TokenMode)
         return slice.to_vec();
     }
 
+    // Fast path: if All and query matches a CSS name exactly, return that immediately.
+    if matches!(origin, Origin::All) {
+        let qlc = q.to_lowercase();
+        if let Some((h, n)) = css_exact_match(&qlc) {
+            return vec![(h, n)];
+        }
+    }
+
     // Tokenize once
     let tokens: Vec<String> = tokenize_lc(q).collect();
 
@@ -642,21 +650,8 @@ pub fn search_substring(query: &str) -> Vec<(&'static str, &'static str)> {
         .collect();
 
     // Prefer exact name matches, then CSS origin, then alphabetical
-    out.sort_by(|&(h1, n1), &(h2, n2)| {
-        let e1 = is_exact_ci(n1, &qlc);
-        let e2 = is_exact_ci(n2, &qlc);
-        match (e1, e2) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => {
-                let p1 = origin_priority_of(h1, n1);
-                let p2 = origin_priority_of(h2, n2);
-                p1.cmp(&p2)
-                    .then_with(|| n1.to_ascii_lowercase().cmp(&n2.to_ascii_lowercase()))
-            }
-        }
-    });
-
+    sort_results_for_all(&qlc, &mut out);
+    if out.len() > MAX_RESULTS { out.truncate(MAX_RESULTS); }
     out
 }
 
@@ -706,6 +701,15 @@ fn sort_results_for_all(query_lc: &str, out: &mut Vec<(&'static str, &'static st
     out.extend(keyed.into_iter().map(|(_, pair)| pair));
 }
 
+fn css_exact_match(name_lc: &str) -> Option<(&'static str, &'static str)> {
+    for &(h, n) in COLORS_CSS.iter() {
+        if n.eq_ignore_ascii_case(name_lc) {
+            return Some((h, n));
+        }
+    }
+    None
+}
+
 // Global token searches over COMBINED_COLORS
 pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
     let mut postings: Vec<&[usize]> = Vec::new();
@@ -725,20 +729,8 @@ pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
 
     // Prefer exact name matches and CSS first for global (All) searches
     let qlc = query.to_lowercase();
-    out.sort_by(|&(h1, n1), &(h2, n2)| {
-        let e1 = is_exact_ci(n1, &qlc);
-        let e2 = is_exact_ci(n2, &qlc);
-        match (e1, e2) {
-            (true, false) => std::cmp::Ordering::Less,
-            (false, true) => std::cmp::Ordering::Greater,
-            _ => {
-                let p1 = origin_priority_of(h1, n1);
-                let p2 = origin_priority_of(h2, n2);
-                p1.cmp(&p2)
-                    .then_with(|| n1.to_ascii_lowercase().cmp(&n2.to_ascii_lowercase()))
-            }
-        }
-    });
+    sort_results_for_all(&qlc, &mut out);
+    if out.len() > MAX_RESULTS { out.truncate(MAX_RESULTS); }
     out
 }
 pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
