@@ -1,14 +1,14 @@
 //! Library entry for `rust_colors`
 //! - Re-exports core modules so call sites can `use rust_colors::*`.
-//! - Provides `run_app()` that `main.rs` can call to start the Iced app.
+//! - Provides `run_app()` that `main.rs` can call to start the Iced app_gui.
 
 #![forbid(unsafe_code)]
 
-pub mod colors;         // src/colors/
-pub mod colors_helper;  // src/colors_helper/
+pub mod colors; // src/colors/
+pub mod colors_helper; // src/colors_helper/
 pub mod hex;
-pub mod rgb;
 pub mod messages;
+pub mod rgb;
 
 // If you keep top-level widgets separate from ui/widgets, expose them here.
 // Prefer folding them into `ui::widgets` long-term.
@@ -17,16 +17,12 @@ pub mod widgets;
 // ---- Re-exports for ergonomics ---------------------------------------------
 
 // Common search/selection surface the UI uses
-pub use colors_helper::{Origin, dropdown_results_for_ui, best_first_for_ui};
+pub use colors_helper::{Origin, best_first_for_ui, dropdown_results_for_ui};
 
 // Frequently used color tables (optional, but convenient)
 pub use colors::{
-    css::COLORS_CSS,
-    xkcd::COLORS_XKCD,
-    persian_colors::COLORS_PERSIAN,
-    pantone_colors::COLORS_PANTONE,
-    hindi_colors::COLORS_HINDI,
-    national_colors::COLORS_NATIONAL,
+    css::COLORS_CSS, hindi_colors::COLORS_HINDI, national_colors::COLORS_NATIONAL,
+    pantone_colors::COLORS_PANTONE, persian_colors::COLORS_PERSIAN, xkcd::COLORS_XKCD,
 };
 
 #[cfg(feature = "github-colors")]
@@ -44,11 +40,10 @@ use iced::Result as IcedResult;
 ///     rust_colors::run_app()
 /// }
 /// ```
-
 // ---- App module -------------------------------------------------------------
-// Expecting `src/app.rs` to define `pub struct App;` that implements
-// `iced::Application`. If your app lives under `src/app/mod.rs`, keep `mod app;`.
-pub mod app;
+// Expecting `src/app_gui.rs` to define `pub struct App;` that implements
+// `iced::Application`. If your app_gui lives under `src/app_gui/mod.rs`, keep `mod app_gui;`.
+pub mod app_gui;
 // Re-exports (updated)
 pub use hex::{
     HexError, combine_hex, hex_for_name, name_for_hex, normalize_hex, sanitize_hex2, split_hex,
@@ -56,7 +51,7 @@ pub use hex::{
 pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 // If you want these at the root:
-pub use colors_helper::{COMBINED_COLORS};
+pub use colors_helper::COMBINED_COLORS;
 pub use messages::{Channel, Msg};
 
 #[cfg(test)]

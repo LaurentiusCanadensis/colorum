@@ -1,14 +1,14 @@
-mod app;
+mod app_gui;
 mod colors_helper;
 mod hex;
-mod messages;
+pub mod messages;
 mod rgb;
 mod widgets;
 
 pub mod colors;
 
 use crate::rgb::hex_to_rgb;
-use app::App;
+use app_gui::App;
 use iced::{Theme, application};
 
 use colors::*;
@@ -16,5 +16,6 @@ use colors::*;
 fn main() -> iced::Result {
     application(App::title, App::update, App::view)
         .theme(|_| Theme::Light)
+        .subscription(App::subscription)
         .run()
 }
