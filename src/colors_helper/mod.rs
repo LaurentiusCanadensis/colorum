@@ -12,11 +12,11 @@ pub use best_first_for_ui;
 
 // external color tables
 
-#[path = "../colors/css.rs"]
+#[path = "../colors/css_colors.rs"]
 mod css_colors;
 pub use css_colors::COLORS_CSS;
 
-#[path = "../colors/xkcd.rs"]
+#[path = "../colors/xkcd_colors.rs"]
 mod xkcd_colors;
 pub use xkcd_colors::COLORS_XKCD;
 

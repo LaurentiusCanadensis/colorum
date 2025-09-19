@@ -21,8 +21,8 @@ pub use colors_helper::{Origin, best_first_for_ui, dropdown_results_for_ui};
 
 // Frequently used color tables (optional, but convenient)
 pub use colors::{
-    css::COLORS_CSS, hindi_colors::COLORS_HINDI, national_colors::COLORS_NATIONAL,
-    pantone_colors::COLORS_PANTONE, persian_colors::COLORS_PERSIAN, xkcd::COLORS_XKCD,
+    css_colors::COLORS_CSS, hindi_colors::COLORS_HINDI, national_colors::COLORS_NATIONAL,
+    pantone_colors::COLORS_PANTONE, persian_colors::COLORS_PERSIAN, xkcd_colors::COLORS_XKCD,
 };
 
 pub use colors::brand_colors::COLORS_BRANDS;

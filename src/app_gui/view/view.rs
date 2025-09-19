@@ -1,4 +1,3 @@
-
 use crate::app_gui::App;
 use crate::colors_helper::Origin;
 use crate::messages::Msg;
@@ -67,7 +66,8 @@ impl App {
         let search_box = text_input("Search color name…", &self.query)
             .on_input(Msg::QueryChanged)
             .on_submit(Msg::PressedEnter)
-            .padding(8)
+            .padding(4)
+            .size(14)
             .width(Length::Fill);
 
         // Index-driven dropdown (no recompute here)
@@ -77,7 +77,7 @@ impl App {
             }
 
             let mut col = column![]
-                .spacing(2)
+                .spacing(1)
                 .padding(4)
                 .align_x(Alignment::Start)
                 .width(Length::Fill);
@@ -92,7 +92,7 @@ impl App {
                 };
 
                 let row_body = container(text(label))
-                    .padding([6, 8])
+                    .padding([4, 6])
                     .width(Length::Fill)
                     .style(move |_theme: &iced::Theme| {
                         if is_sel {
@@ -120,7 +120,7 @@ impl App {
 
             scrollable(col)
                 .id(app.dropdown_scroll_id.clone()) // <— required
-                .height(Length::Fixed(220.0))
+                .height(Length::Fixed(180.0))
                 .width(Length::Fill)
                 .into()
         }
@@ -132,18 +132,18 @@ impl App {
             column![
                 search_box, dropdown, // single dropdown only (index-driven)
             ]
-                .spacing(8)
+                .spacing(4)
                 .width(Length::Fill)
                 .align_x(Alignment::Center),
         )
-            .padding([4, 8])
+            .padding([2, 6])
             .width(Length::Fill)
             .align_x(Alignment::Center);
 
         // Keep the rest of your layout as you like:
         let clear_btn = iced::widget::button("Clear")
             .on_press(Msg::Clear)
-            .padding([8, 12]);
+            .padding([6, 10]);
 
         let content = column![
             container(wheel_view)
@@ -157,8 +157,8 @@ impl App {
                 .width(Length::Shrink),
         ]
             .align_x(Alignment::Center)
-            .spacing(12)
-            .padding([8, 8]);
+            .spacing(8)
+            .padding([6, 6]);
 
         scrollable(
             container(content)

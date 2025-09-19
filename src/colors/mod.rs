@@ -1,5 +1,5 @@
-pub mod css;
-pub mod xkcd;
+pub mod css_colors;
+pub mod xkcd_colors;
 
 pub mod github_colors;
 
