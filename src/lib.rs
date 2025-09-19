@@ -27,6 +27,7 @@ pub use colors::{
 
 #[cfg(feature = "github-colors")]
 pub use colors::github_colors::COLORS_GITHUB;
+pub use colors::brand_colors::COLORS_BRANDS;
 
 // ---- App runner glue for main.rs -------------------------------------------
 

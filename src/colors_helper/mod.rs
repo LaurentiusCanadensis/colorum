@@ -36,6 +36,11 @@ pub use national_colors::COLORS_NATIONAL;
 pub mod persian_colors;
 pub use persian_colors::COLORS_PERSIAN;
 
+
+#[path = "../colors/brand_colors.rs"]
+pub mod brand_colors;
+pub use brand_colors::COLORS_BRANDS;
+
 #[cfg(feature = "github-colors")]
 #[path = "../colors/github_colors.rs"]
 mod github_colors;
@@ -59,7 +64,7 @@ pub use ui::*;
 // ===== public knobs (kept where callers expect) =====
 pub const SUBSTRING_THRESHOLD: usize = 3;
 pub const HEAVY_MIN_QUERY: usize = 1;
-pub const MAX_RESULTS: usize = 40;
+pub const MAX_RESULTS: usize = 4000;
 
 // ===== origin facade (kept public) =====
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -74,6 +79,7 @@ pub enum Origin {
     #[cfg(feature = "github-colors")]
     GitHub,
     National,
+    Brands,
 }
 impl Hash for Origin {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -88,10 +94,12 @@ impl Display for Origin {
             Origin::Hindi => "Hindi",
             Origin::Persian => "Persian",
             Origin::Pantone => "Pantone",
-            #[cfg(feature = "github-colors")]
-            Origin::GitHub => "github",
             Origin::XKCD => "Xkcd",
             Origin::National => "National",
+            Origin::Brands => "Brands",
+            #[cfg(feature = "github-colors")]
+            Origin::GitHub => "github",
+
         };
         f.write_str(s)
     }

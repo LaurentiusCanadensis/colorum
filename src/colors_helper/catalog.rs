@@ -42,6 +42,8 @@ pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
         Origin::Hindi => COLORS_HINDI,
         Origin::Persian => COLORS_PERSIAN,
         Origin::National => COLORS_NATIONAL.as_slice(),
+        Origin::Brands => COLORS_BRANDS,
+
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
     }
@@ -56,6 +58,8 @@ pub fn colors_for(origin: Origin) -> ColorsFor {
         Origin::Pantone => ColorsFor::Slice(COLORS_PANTONE),
         Origin::Hindi => ColorsFor::Slice(COLORS_HINDI),
         Origin::Persian => ColorsFor::Slice(COLORS_PERSIAN),
+        Origin::Brands => ColorsFor::Slice(COLORS_BRANDS),
+
         Origin::National => ColorsFor::Slice(COLORS_NATIONAL.as_slice()),
         #[cfg(feature = "github-colors")]
         Origin::GitHub => ColorsFor::Slice(COLORS_GITHUB),
@@ -69,6 +73,8 @@ pub fn colors_for(origin: Origin) -> ColorsFor {
                 v.extend_from_slice(COLORS_PERSIAN);
                 v.extend_from_slice(COLORS_PANTONE);
                 v.extend_from_slice(COLORS_HINDI);
+                v.extend_from_slice(COLORS_BRANDS);
+
                 v.extend_from_slice(COLORS_NATIONAL.as_slice());
                 #[cfg(feature = "github-colors")]
                 v.extend_from_slice(COLORS_GITHUB);
@@ -86,6 +92,8 @@ pub static COMBINED_COLORS: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(
         .chain(COLORS_PERSIAN.iter().copied())
         .chain(COLORS_PANTONE.iter().copied())
         .chain(COLORS_HINDI.iter().copied())
+        .chain(COLORS_BRANDS.iter().copied())
+
         .chain(COLORS_NATIONAL.iter().copied());
     #[cfg(feature = "github-colors")]
     let it = base.chain(COLORS_GITHUB.iter().copied());
@@ -156,6 +164,9 @@ pub static ORIGIN_NAMES_NATIONAL: LazyLock<Box<[&'static str]>> =
 #[cfg(feature = "github-colors")]
 pub static ORIGIN_NAMES_GITHUB: LazyLock<Box<[&'static str]>> =
     LazyLock::new(|| build_sorted_names(Origin::GitHub));
+pub static ORIGIN_NAMES_BRANDS: LazyLock<Box<[&'static str]>> =
+    LazyLock::new(|| build_sorted_names(Origin::Brands));
+
 
 pub fn origin_names(origin: Origin) -> &'static [&'static str] {
     match origin {
@@ -166,6 +177,8 @@ pub fn origin_names(origin: Origin) -> &'static [&'static str] {
         Origin::Hindi => &ORIGIN_NAMES_HINDI,
         Origin::Persian => &ORIGIN_NAMES_PERSIAN,
         Origin::National => &ORIGIN_NAMES_NATIONAL,
+        Origin::Brands => &ORIGIN_NAMES_BRANDS,
+
         #[cfg(feature = "github-colors")]
         Origin::GitHub => &ORIGIN_NAMES_GITHUB,
     }
@@ -187,6 +200,9 @@ pub static ORIGIN_RANK_NATIONAL: LazyLock<HashMap<&'static str, usize>> =
     LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_NATIONAL));
 pub static ORIGIN_RANK_GITHUB: LazyLock<HashMap<&'static str, usize>> =
     LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_GITHUB));
+pub static ORIGIN_RANK_BRANDS: LazyLock<HashMap<&'static str, usize>> =
+    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_BRANDS));
+
 
 pub fn origin_rank(origin: Origin) -> &'static HashMap<&'static str, usize> {
     match origin {
@@ -197,6 +213,8 @@ pub fn origin_rank(origin: Origin) -> &'static HashMap<&'static str, usize> {
         Origin::Hindi => &ORIGIN_RANK_HINDI,
         Origin::Persian => &ORIGIN_RANK_PERSIAN,
         Origin::National => &ORIGIN_RANK_NATIONAL,
+        Origin::Brands => &ORIGIN_RANK_BRANDS,
+
         #[cfg(feature = "github-colors")]
         Origin::GitHub => &ORIGIN_RANK_GITHUB,
     }

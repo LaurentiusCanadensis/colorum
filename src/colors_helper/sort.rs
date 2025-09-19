@@ -24,7 +24,10 @@ pub fn origin_priority_of(hex: &str, name: &str) -> u8 {
     if COLORS_GITHUB.iter().any(|&(h, n)| h == hex && n == name) {
         return 6;
     }
-    7
+    if COLORS_BRANDS.iter().any(|&(h, n)| h == hex && n == name) {
+        return 7;
+    }
+    8
 }
 
 // coarser 3-bucket sort for dropdown: CSS (0), XKCD (1), Others (2)

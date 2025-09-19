@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 // src/app_gui.rs
-use crate::colors_helper::{self, COLORS_GITHUB, COLORS_HINDI, COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin};
+use crate::colors_helper::{self, COLORS_BRANDS, COLORS_CSS, COLORS_GITHUB, COLORS_HINDI, COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin};
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
@@ -150,7 +150,9 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
         Origin::Persian => COLORS_PERSIAN,
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
-        Origin::Css => COLORS_XKCD,
+        Origin::Css => COLORS_CSS,
+        Origin::Brands => COLORS_BRANDS,
+
         Origin::National => COLORS_NATIONAL.as_slice(),
     }
 }

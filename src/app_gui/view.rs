@@ -47,6 +47,8 @@ impl App {
                 Origin::Hindi,
                 Origin::Persian,
                 Origin::National,
+                Origin::Brands,
+
             ];
             #[cfg(feature = "github-colors")]
             {
@@ -153,4 +155,6 @@ impl App {
 
     }
 }
+
+
 
