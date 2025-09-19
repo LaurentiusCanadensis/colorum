@@ -1,6 +1,6 @@
 use crate::colors_helper::{
-    HEAVY_MIN_QUERY, MAX_RESULTS, TokenMode, is_heavy_origin,
-    origin_names, origin_rank, search_in_origin, Origin,
+    HEAVY_MIN_QUERY, MAX_RESULTS, Origin, TokenMode, is_heavy_origin, origin_names, origin_rank,
+    search_in_origin,
 };
 
 /// Build a filtered, ranked list of names for a given origin and query.
@@ -15,7 +15,11 @@ pub fn filtered_names_for_origin(origin: Origin, search: &str) -> Vec<&'static s
         return origin_names(origin).to_vec();
     }
 
-    let mode = if q.contains(' ') { TokenMode::All } else { TokenMode::Any };
+    let mode = if q.contains(' ') {
+        TokenMode::All
+    } else {
+        TokenMode::Any
+    };
     let mut v: Vec<&'static str> = search_in_origin(origin, q, mode)
         .into_iter()
         .map(|(_h, n)| n)

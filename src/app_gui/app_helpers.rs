@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::sync::LazyLock;
 // src/app_gui.rs
-use crate::colors_helper::{
-    self, COLORS_BRANDS, COLORS_CSS,  COLORS_HINDI, COLORS_ITALIANBRANDS,
-    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin,
-};
 #[cfg(feature = "github-colors")]
-use crate::colors_helper::{COLORS_GITHUB};
-    use crate::hex::{combine_hex, sanitize_hex2};
+use crate::colors_helper::COLORS_GITHUB;
+use crate::colors_helper::{
+    self, COLORS_BRANDS, COLORS_CSS, COLORS_HINDI, COLORS_ITALIANBRANDS, COLORS_NATIONAL,
+    COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin,
+};
+use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
 use iced::widget::{
@@ -364,8 +364,6 @@ use crate::app_gui::App;
 use iced::advanced::subscription;
 use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
-
-
 
 impl App {
     pub fn scroll_to_selected(&self) -> Task<Msg> {

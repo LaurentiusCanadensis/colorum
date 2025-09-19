@@ -228,6 +228,194 @@ where
     }
 }
 
+/// Props for embedding the search UI with the ColorWheel in any host app
+pub struct WheelSearchProps<'a> {
+    pub query: &'a str,
+    pub results_idx: &'a [usize],
+    pub sel_pos: Option<usize>,
+    pub base: &'a [(&'static str, &'static str)],
+    pub scroll_id: iced::widget::scrollable::Id,
+    pub on_query: fn(String) -> crate::messages::Msg,
+    pub on_enter: fn() -> crate::messages::Msg,
+    pub on_click_row: fn(usize) -> crate::messages::Msg,
+}
+
+fn greedy_wrap<'a>(text: &'a str, max_chars: usize, max_lines: usize) -> String {
+    if max_chars == 0 || max_lines == 0 {
+        return String::new();
+    }
+
+    let mut out: Vec<String> = Vec::with_capacity(max_lines);
+    let mut line = String::new();
+
+    for (i, word) in text.split_whitespace().enumerate() {
+        let sep = if i == 0 || line.is_empty() { "" } else { " " };
+        if line.len() + sep.len() + word.len() <= max_chars {
+            line.push_str(sep);
+            line.push_str(word);
+        } else {
+            if !line.is_empty() {
+                out.push(std::mem::take(&mut line));
+                if out.len() == max_lines {
+                    break;
+                }
+            }
+            // If single word longer than max, hard-truncate it
+            if word.len() > max_chars {
+                out.push(format!("{}…", &word[..max_chars.saturating_sub(1)]));
+            } else {
+                line.push_str(word);
+            }
+        }
+        if out.len() == max_lines {
+            break;
+        }
+    }
+
+    if !line.is_empty() && out.len() < max_lines {
+        out.push(line);
+    }
+
+    // If we exceeded lines, add ellipsis to the last one
+    if out.len() == max_lines
+        && text.split_whitespace().count() > out.iter().flat_map(|l| l.split_whitespace()).count()
+    {
+        if let Some(last) = out.last_mut() {
+            if !last.ends_with('…') {
+                last.push('…');
+            }
+        }
+    }
+
+    out.join("\n")
+}
+
+fn compute_typography(inner_radius: f32) -> (f32, f32, usize, usize) {
+    // Scale fonts with the wheel’s inner disc size.
+    // You can tweak these multipliers for taste.
+    let hex_size = (inner_radius * 0.12).clamp(12.0, 28.0);
+    let name_size = (inner_radius * 0.10).clamp(11.0, 24.0);
+
+    // Very rough average glyph width at ~16px is ~8px; scale to our size
+    let avg_w_hex = (hex_size / 16.0) * 8.0;
+    let avg_w_name = (name_size / 16.0) * 8.0;
+
+    // Let usable width be ~70% of diameter (avoid overflow, no clip)
+    let usable_w = inner_radius * 2.0 * 0.70;
+    let max_chars_hex = (usable_w / avg_w_hex).floor().max(8.0) as usize;
+    let max_chars_name = (usable_w / avg_w_name).floor().max(8.0) as usize;
+
+    // Allow up to 2 lines for the name
+    let max_lines_name = 2usize;
+    (hex_size, name_size, max_chars_hex, max_chars_name.min(40))
+}
+impl<F> ColorWheel<F>
+where
+    F: Fn(crate::messages::Channel, u8) -> crate::messages::Msg + Clone + 'static,
+{
+    /// Render wheel **plus** search + dropdown, using the host app's state/callbacks.
+    pub fn view_with_search_props<'a>(
+        self,
+        title: &'static str,
+        rr: &'a str,
+        gg: &'a str,
+        bb: &'a str,
+        props: WheelSearchProps<'a>,
+    ) -> iced::Element<'a, crate::messages::Msg> {
+        use crate::messages::Msg;
+        use iced::widget::container as container_widget;
+        use iced::widget::{Space, column, container, mouse_area, scrollable, text, text_input};
+        use iced::{Alignment, Background, Color, Length, Renderer, Theme};
+
+        // Core wheel (this consumes `self`, same as `view`)
+        let wheel_core: iced::Element<'a, Msg> = self.view(title, rr, gg, bb);
+
+        // Search box wired to your app callbacks
+        let search_box: iced::widget::TextInput<'a, Msg, Theme, Renderer> =
+            text_input("Search color name…", props.query)
+                .on_input(props.on_query)
+                .on_submit((props.on_enter)())
+                .padding(4)
+                .size(14)
+                .width(Length::Fill);
+
+        // Dropdown built from *indices* (no recompute here)
+        fn dropdown<'a>(props: &WheelSearchProps<'a>) -> iced::Element<'a, Msg> {
+            if props.results_idx.is_empty() {
+                return Space::with_height(0).into();
+            }
+
+            let mut col = column![]
+                .spacing(1)
+                .padding(4)
+                .align_x(Alignment::Start)
+                .width(Length::Fill);
+
+            for (row, &idx) in props.results_idx.iter().enumerate() {
+                let (hex, name) = props.base[idx];
+                let is_sel = props.sel_pos == Some(row);
+                let label = if is_sel {
+                    format!("▶ {}  {}", name, hex)
+                } else {
+                    format!("{}  {}", name, hex)
+                };
+
+                let row_body = container(text(label))
+                    .padding([4, 6])
+                    .width(Length::Fill)
+                    .style(move |_theme: &Theme| {
+                        if is_sel {
+                            container_widget::Style {
+                                background: Some(Background::Color(Color {
+                                    r: 0.20,
+                                    g: 0.40,
+                                    b: 0.80,
+                                    a: 0.20,
+                                })),
+                                border: iced::border::Border {
+                                    radius: 8.0.into(),
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            }
+                        } else {
+                            container_widget::Style::default()
+                        }
+                    });
+
+                let click = mouse_area(row_body).on_press((props.on_click_row)(row));
+                col = col.push(click);
+            }
+
+            scrollable(col)
+                .id(props.scroll_id.clone())
+                .height(Length::Fixed(180.0))
+                .width(Length::Fill)
+                .into()
+        }
+
+        // Stack: search box + (optional) dropdown
+        let mut stack = column![search_box]
+            .spacing(4)
+            .width(Length::Fill)
+            .align_x(Alignment::Center);
+
+        if !props.results_idx.is_empty() {
+            stack = stack.push(dropdown(&props));
+        }
+
+        container(
+            column![wheel_core, stack]
+                .spacing(8)
+                .align_x(Alignment::Center),
+        )
+        .padding([6, 6])
+        .width(Length::Fill)
+        .align_x(Alignment::Center)
+        .into()
+    }
+}
+
 impl<F> Program<Msg> for ColorWheel<F>
 where
     F: Fn(Channel, u8) -> Msg + Clone + 'static,
@@ -373,14 +561,40 @@ where
             Color::WHITE
         };
 
-        overlay.fill_text(canvas::Text {
-            content: label,
-            position: center,
-            color: text_color,
-            size: iced::Pixels(15.0),
-            horizontal_alignment: alignment::Horizontal::Center,
-            vertical_alignment: alignment::Vertical::Center,
-            ..Default::default()
+        // --- Wrapped center label (no clip, just width budget) ---
+        // Split the composed label into hex and name lines
+        let hex_str = label.lines().next().unwrap_or(&combined_hex);
+        let name_str = label.split_once('\n').map(|(_, n)| n).unwrap_or("");
+
+        // Scale typography to inner disc and wrap name to fit
+        let (hex_size, name_size, _max_hex, max_name) = compute_typography(inner_radius);
+        let wrapped_name = greedy_wrap(name_str, max_name, 2);
+
+        overlay.with_save(|frame| {
+            // No `frame.clip` available in this Iced version. We keep text within the
+            // inner disc by sizing/wrapping conservatively in `compute_typography`.
+
+            // HEX line (centered, slightly above)
+            frame.fill_text(canvas::Text {
+                content: hex_str.to_string(),
+                position: center + iced::Vector::new(0.0, -name_size * 0.6),
+                color: text_color,
+                size: iced::Pixels(hex_size),
+                horizontal_alignment: alignment::Horizontal::Center,
+                vertical_alignment: alignment::Vertical::Center,
+                ..Default::default()
+            });
+
+            // Wrapped name (centered, below)
+            frame.fill_text(canvas::Text {
+                content: wrapped_name,
+                position: center + iced::Vector::new(0.0, name_size * 0.25),
+                color: text_color,
+                size: iced::Pixels(name_size),
+                horizontal_alignment: alignment::Horizontal::Center,
+                vertical_alignment: alignment::Vertical::Top,
+                ..Default::default()
+            });
         });
 
         vec![rings, overlay.into_geometry()]

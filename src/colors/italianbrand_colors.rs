@@ -577,367 +577,289 @@ pub const COLORS_ITALIANBRANDS: &[(&str, &str)] = &[
     ("#e10600", "Dainese red"),
     ("#000000", "Dainese black"),
     ("#ffffff", "Dainese white"),
-
     // Dal Negro (playing cards)
     ("#e10600", "Dal Negro red"),
     ("#000000", "Dal Negro black"),
     ("#d4af37", "Dal Negro gold"),
-
     // Damiani (jewelry)
     ("#d4af37", "Damiani gold"),
     ("#000000", "Damiani black"),
     ("#f2e8d5", "Damiani ivory"),
-
     // Danieli
     ("#003a70", "Danieli blue"),
     ("#6e6e6e", "Danieli gray"),
     ("#000000", "Danieli black"),
-
     // Danieli Automation
     ("#003a70", "Danieli Automation blue"),
     ("#6e6e6e", "Danieli Automation gray"),
     ("#000000", "Danieli Automation black"),
-
     // De Cecco
     ("#0c3c78", "De Cecco blue"),
     ("#ffd100", "De Cecco yellow"),
     ("#ffffff", "De Cecco white"),
-
     // De Rosa (bicycles)
     ("#e10600", "De Rosa red"),
     ("#000000", "De Rosa black"),
     ("#ffffff", "De Rosa white"),
-
     // De Simon (buses)
     ("#003a70", "De Simon navy"),
     ("#c0c0c0", "De Simon silver"),
     ("#ffffff", "De Simon white"),
-
     // De Tomaso
     ("#00a3e0", "De Tomaso light blue"),
     ("#003a70", "De Tomaso blue"),
     ("#ffffff", "De Tomaso white"),
     ("#000000", "De Tomaso black"),
-
     // De'Longhi
     ("#003a70", "De'Longhi blue"),
     ("#ffffff", "De'Longhi white"),
-
     // Dell'Orto
     ("#e10600", "Dell'Orto red"),
     ("#000000", "Dell'Orto black"),
     ("#ffffff", "Dell'Orto white"),
-
     // Della Ferrera
     ("#7a0019", "Della Ferrera maroon"),
     ("#c0c0c0", "Della Ferrera silver"),
     ("#000000", "Della Ferrera black"),
-
     // Di Blasi Industriale
     ("#f36f21", "Di Blasi orange"),
     ("#003a70", "Di Blasi blue"),
     ("#000000", "Di Blasi black"),
-
     // Diadora
     ("#ffd100", "Diadora yellow"),
     ("#009639", "Diadora green"),
     ("#000000", "Diadora black"),
-
     // Diatto
     ("#003e7e", "Diatto blue"),
     ("#c0c0c0", "Diatto silver"),
     ("#000000", "Diatto black"),
-
     // Diesel
     ("#e2231a", "Diesel red"),
     ("#000000", "Diesel black"),
     ("#ffffff", "Diesel white"),
-
     // Divella
     ("#e41c23", "Divella red"),
     ("#ffd100", "Divella yellow"),
     ("#004c99", "Divella blue"),
     ("#ffffff", "Divella white"),
-
     // Dolce & Gabbana
     ("#000000", "Dolce & Gabbana black"),
     ("#ffffff", "Dolce & Gabbana white"),
     ("#d4af37", "Dolce & Gabbana gold"),
-
     // Ducati
     ("#e30a17", "Ducati red"),
     ("#000000", "Ducati black"),
     ("#ffffff", "Ducati white"),
-
     // Ducati Energia
     ("#003a70", "Ducati Energia blue"),
     ("#e10600", "Ducati Energia red"),
     ("#000000", "Ducati Energia black"),
-
     // Eca Sindel
     ("#003a70", "Eca Sindel blue"),
     ("#6e6e6e", "Eca Sindel gray"),
-
     // Edison
     ("#00a651", "Edison green"),
     ("#003a70", "Edison blue"),
     ("#f37021", "Edison orange"),
-
     // Eko guitars
     ("#00a651", "Eko green"),
     ("#000000", "Eko black"),
     ("#ffffff", "Eko white"),
-
     // Elena Mirò
     ("#000000", "Elena Mirò black"),
     ("#b7a99a", "Elena Mirò taupe"),
     ("#ffffff", "Elena Mirò white"),
-
     // Ellesse
     ("#ff6f00", "Ellesse orange"),
     ("#e10600", "Ellesse red"),
     ("#003a70", "Ellesse navy"),
     ("#ffffff", "Ellesse white"),
-
     // Enel
     ("#ff6f00", "Enel orange"),
     ("#ff3a5c", "Enel magenta"),
     ("#00a3e0", "Enel blue"),
-
     // Eni
     ("#ffd100", "Eni yellow"),
     ("#000000", "Eni black"),
     ("#e21d39", "Eni red"),
-
     // Erg
     ("#00a651", "ERG green"),
     ("#003399", "ERG blue"),
     ("#ffffff", "ERG white"),
-
     // Ermenegildo Zegna
     ("#2f2f2f", "Zegna charcoal"),
     ("#8e8a86", "Zegna gray"),
     ("#000000", "Zegna black"),
-
     // Erreà
     ("#ffcc00", "Erreà yellow"),
     ("#000000", "Erreà black"),
     ("#ffffff", "Erreà white"),
-
     // Eurotech
     ("#0057b8", "Eurotech blue"),
     ("#6e6e6e", "Eurotech gray"),
-
     // Extè
     ("#000000", "Extè black"),
     ("#ffffff", "Extè white"),
-
     // Fabbri Group
     ("#e10600", "Fabbri Group red"),
     ("#000000", "Fabbri Group black"),
     ("#6e6e6e", "Fabbri Group gray"),
-
     // Fabbrica Aeroplani Ing. O. Pomilio
     ("#003a70", "Pomilio navy"),
     ("#c0c0c0", "Pomilio silver"),
-
     // Fabbrica Ligure Automobili Genova (FLAG)
     ("#002b5b", "FLAG navy"),
     ("#c8102e", "FLAG red"),
-
     // Fabio Perini
     ("#007a3d", "Fabio Perini green"),
     ("#003a70", "Fabio Perini blue"),
-
     // Facchini Group
     ("#f36f21", "Facchini orange"),
     ("#003a70", "Facchini blue"),
-
     // Falc
     ("#003a70", "Falc blue"),
     ("#e10600", "Falc red"),
-
     // Falck Group
     ("#003a70", "Falck blue"),
     ("#008c45", "Falck green"),
     ("#6e6e6e", "Falck gray"),
-
     // FAMARS (firearms)
     ("#c8a45a", "FAMARS gold"),
     ("#6b4e3d", "FAMARS walnut"),
     ("#000000", "FAMARS black"),
-
     // Fantic Motor
     ("#e10600", "Fantic red"),
     ("#000000", "Fantic black"),
     ("#ffffff", "Fantic white"),
-
     // Farfisa
     ("#00a651", "Farfisa green"),
     ("#000000", "Farfisa black"),
     ("#ffffff", "Farfisa white"),
-
     // Fastweb
     ("#ffcc00", "Fastweb yellow"),
     ("#000000", "Fastweb black"),
-
     // Fazioli
     ("#c8a45a", "Fazioli gold"),
     ("#000000", "Fazioli black"),
-
     // Fedrigoni
     ("#003a70", "Fedrigoni blue"),
     ("#6e6e6e", "Fedrigoni gray"),
     ("#000000", "Fedrigoni black"),
-
     // Fendi
     ("#f9e300", "Fendi yellow"),
     ("#000000", "Fendi black"),
-
     // Ferrania
     ("#009688", "Ferrania teal"),
     ("#000000", "Ferrania black"),
-
     // Ferrari
     ("#d40000", "Ferrari red"),
     ("#ffeb00", "Ferrari yellow"),
     ("#000000", "Ferrari black"),
-
     // Ferrari Belotti
     ("#e10600", "Ferrari Belotti red"),
     ("#000000", "Ferrari Belotti black"),
-
     // Gianfranco Ferré
     ("#000000", "Gianfranco Ferré black"),
     ("#d4af37", "Gianfranco Ferré gold"),
-
     // Ferrero
     ("#d4af37", "Ferrero gold"),
     ("#603a18", "Ferrero brown"),
     ("#e41c23", "Ferrero red"),
-
     // Ferretti Group
     ("#001f3f", "Ferretti Group navy"),
     ("#c0c0c0", "Ferretti Group silver"),
     ("#ffffff", "Ferretti Group white"),
-
     // Ferrovie dello Stato Italiane
     ("#d61a1f", "FS Italiane red"),
     ("#6e6e6e", "FS Italiane gray"),
     ("#008c45", "FS Italiane green"),
-
     // Fiat Automobiles
     ("#a1000e", "Fiat red"),
     ("#c0c0c0", "Fiat silver"),
     ("#000000", "Fiat black"),
-
     // Fiat Ferroviaria
     ("#003a70", "Fiat Ferroviaria blue"),
     ("#6e6e6e", "Fiat Ferroviaria gray"),
-
     // Fiat Industrial
     ("#ffd100", "Fiat Industrial yellow"),
     ("#003399", "Fiat Industrial blue"),
-
     // Fiat Powertrain Technologies
     ("#003399", "FPT blue"),
     ("#6e6e6e", "FPT gray"),
-
     // Fiat (group)
     ("#a1000e", "Fiat group red"),
     ("#000000", "Fiat group black"),
-
     // Fila
     ("#002d72", "Fila navy"),
     ("#e2231a", "Fila red"),
     ("#ffffff", "Fila white"),
-
     // Filippi Boats
     ("#e10600", "Filippi Boats red"),
     ("#000000", "Filippi Boats black"),
     ("#ffffff", "Filippi Boats white"),
-
     // Fincantieri
     ("#001f3f", "Fincantieri navy"),
     ("#6e6e6e", "Fincantieri gray"),
-
     // Fiocchi Munizioni
     ("#b22222", "Fiocchi red"),
     ("#c8a45a", "Fiocchi gold"),
     ("#000000", "Fiocchi black"),
-
     // Fiol Prosecco
     ("#000000", "Fiol black"),
     ("#ffffff", "Fiol white"),
     ("#d4af37", "Fiol gold"),
-
     // Fioravanti (automotive design)
     ("#c8102e", "Fioravanti red"),
     ("#6e6e6e", "Fioravanti gray"),
-
     // Fiorucci
     ("#ff7f9f", "Fiorucci pink"),
     ("#e41c23", "Fiorucci red"),
     ("#000000", "Fiorucci black"),
-
     // Flexform
     ("#e10600", "Flexform red"),
     ("#000000", "Flexform black"),
     ("#6e6e6e", "Flexform gray"),
-
     // Fly Products
     ("#e10600", "Fly Products red"),
     ("#000000", "Fly Products black"),
-
     // Fly Synthesis
     ("#003a70", "Fly Synthesis blue"),
     ("#00a3e0", "Fly Synthesis light blue"),
-
     // Flying Legend
     ("#e10600", "Flying Legend red"),
     ("#003a70", "Flying Legend blue"),
-
     // Fondmetal (wheels)
     ("#000000", "Fondmetal black"),
     ("#c0c0c0", "Fondmetal silver"),
     ("#ffd100", "Fondmetal yellow"),
-
     // Franchi (firearms)
     ("#006241", "Franchi green"),
     ("#c8a45a", "Franchi gold"),
     ("#000000", "Franchi black"),
-
     // Franco Tosi Meccanica
     ("#003a70", "Franco Tosi blue"),
     ("#6e6e6e", "Franco Tosi gray"),
-
     // Fratelli Branca (Fernet-Branca)
     ("#007a7a", "Fratelli Branca teal"),
     ("#d4af37", "Fratelli Branca gold"),
     ("#6b4e3d", "Fratelli Branca brown"),
-
     // Fratelli Ceirano
     ("#7a0019", "Fratelli Ceirano maroon"),
     ("#000000", "Fratelli Ceirano black"),
-
     // Fratelli Nardi
     ("#003a70", "Fratelli Nardi blue"),
     ("#c0c0c0", "Fratelli Nardi silver"),
-
     // Frera
     ("#e10600", "Frera red"),
     ("#000000", "Frera black"),
-
     // Frette
     ("#b7a99a", "Frette taupe"),
     ("#f2e8d5", "Frette ivory"),
     ("#000000", "Frette black"),
-
     // Fulcrum Wheels
     ("#e10600", "Fulcrum red"),
     ("#000000", "Fulcrum black"),
     ("#ffffff", "Fulcrum white"),
-
     // Fulgor (appliances)
     ("#e10600", "Fulgor red"),
     ("#000000", "Fulgor black"),
@@ -947,1180 +869,878 @@ pub const COLORS_ITALIANBRANDS: &[(&str, &str)] = &[
     ("#000000", "Gaggia black"),
     ("#6e6e6e", "Gaggia gray"),
     ("#ffffff", "Gaggia white"),
-
     // Gancia
     ("#d71920", "Gancia red"),
     ("#d4af37", "Gancia gold"),
     ("#000000", "Gancia black"),
     ("#ffffff", "Gancia white"),
-
     // Garelli Motorcycles
     ("#e10600", "Garelli red"),
     ("#000000", "Garelli black"),
     ("#ffffff", "Garelli white"),
-
     // Garlando
     ("#0057b8", "Garlando blue"),
     ("#e10600", "Garlando red"),
     ("#ffffff", "Garlando white"),
-
     // Gas Jeans
     ("#002d72", "Gas Jeans navy"),
     ("#1f4e79", "Gas Jeans denim blue"),
     ("#000000", "Gas Jeans black"),
     ("#ffffff", "Gas Jeans white"),
-
     // GCDS
     ("#ff0000", "GCDS red"),
     ("#000000", "GCDS black"),
     ("#ffffff", "GCDS white"),
-
     // Geloso
     ("#e10600", "Geloso red"),
     ("#6e6e6e", "Geloso gray"),
     ("#000000", "Geloso black"),
-
     // Geox
     ("#000000", "Geox black"),
     ("#6e6e6e", "Geox gray"),
     ("#1a3c6a", "Geox blue"),
     ("#ffffff", "Geox white"),
-
     // Ghezzi & Brian
     ("#e10600", "Ghezzi & Brian red"),
     ("#000000", "Ghezzi & Brian black"),
     ("#c0c0c0", "Ghezzi & Brian silver"),
-
     // Giacomini
     ("#e2001a", "Giacomini red"),
     ("#000000", "Giacomini black"),
     ("#ffffff", "Giacomini white"),
-
     // Gilera
     ("#e10600", "Gilera red"),
     ("#000000", "Gilera black"),
     ("#ffffff", "Gilera white"),
-
     // Gio. Ansaldo & C.
     ("#003a70", "Gio. Ansaldo & C. blue"),
     ("#6e6e6e", "Gio. Ansaldo & C. gray"),
     ("#000000", "Gio. Ansaldo & C. black"),
-
     // Giulio Cocchi Spumanti
     ("#b22222", "Cocchi red"),
     ("#d4af37", "Cocchi gold"),
     ("#000000", "Cocchi black"),
     ("#ffffff", "Cocchi white"),
-
     // Giusto Manetti Battiloro
     ("#d4af37", "Giusto Manetti gold"),
     ("#000000", "Giusto Manetti black"),
     ("#8f8f8f", "Giusto Manetti gray"),
-
     // Givova
     ("#ff7f00", "Givova orange"),
     ("#003a70", "Givova navy"),
     ("#000000", "Givova black"),
     ("#ffffff", "Givova white"),
-
     // Goldoni
     ("#f36f21", "Goldoni orange"),
     ("#e10600", "Goldoni red"),
     ("#000000", "Goldoni black"),
-
     // Gravati
     ("#5c3a21", "Gravati leather brown"),
     ("#000000", "Gravati black"),
     ("#c8a45a", "Gravati gold"),
-
     // Graziano Trasmissioni
     ("#003a70", "Graziano blue"),
     ("#6e6e6e", "Graziano gray"),
     ("#000000", "Graziano black"),
-
     // Grecav
     ("#003399", "Grecav blue"),
     ("#6e6e6e", "Grecav gray"),
     ("#000000", "Grecav black"),
-
     // Grif Italia
     ("#00a3e0", "Grif Italia blue"),
     ("#6e6e6e", "Grif Italia gray"),
     ("#000000", "Grif Italia black"),
-
     // Grimaldi Group
     ("#003a70", "Grimaldi blue"),
     ("#ffffff", "Grimaldi white"),
     ("#000000", "Grimaldi black"),
-
     // Grivel (mountain climbing)
     ("#ffd100", "Grivel yellow"),
     ("#000000", "Grivel black"),
     ("#e10600", "Grivel red"),
-
     // Gruppo Riva
     ("#003a70", "Gruppo Riva blue"),
     ("#6e6e6e", "Gruppo Riva gray"),
     ("#000000", "Gruppo Riva black"),
-
     // Gucci
     ("#0b9444", "Gucci green"),
     ("#b1272c", "Gucci red"),
     ("#ebd8b7", "Gucci beige"),
     ("#000000", "Gucci black"),
-
     // Guerciotti
     ("#ffd100", "Guerciotti yellow"),
     ("#e10600", "Guerciotti red"),
     ("#000000", "Guerciotti black"),
     ("#ffffff", "Guerciotti white"),
-
     // Gufram
     ("#e10600", "Gufram red"),
     ("#ff5c8a", "Gufram pink"),
     ("#000000", "Gufram black"),
-
     // Hertz mobile audio
     ("#ff6f00", "Hertz orange"),
     ("#000000", "Hertz black"),
     ("#ffffff", "Hertz white"),
-
     // Hoepli
     ("#003a70", "Hoepli blue"),
     ("#000000", "Hoepli black"),
     ("#ffffff", "Hoepli white"),
-
     // ho-mobile
     ("#6f2dbd", "ho-mobile purple"),
     ("#d10070", "ho-mobile magenta"),
     ("#6e6e6e", "ho-mobile gray"),
     ("#ffffff", "ho-mobile white"),
-
     // Iceberg (fashion house)
     ("#000000", "Iceberg black"),
     ("#ffffff", "Iceberg white"),
     ("#00ff6a", "Iceberg neon green"),
-
     // Iliad
     ("#e00000", "Iliad red"),
     ("#000000", "Iliad black"),
     ("#ffffff", "Iliad white"),
-
     // Illy
     ("#c3002f", "Illy red"),
     ("#ffffff", "Illy white"),
     ("#000000", "Illy black"),
-
     // IMAM
     ("#003a70", "IMAM blue"),
     ("#6e6e6e", "IMAM gray"),
     ("#000000", "IMAM black"),
-
     // Indesit
     ("#0071ce", "Indesit blue"),
     ("#ffffff", "Indesit white"),
     ("#000000", "Indesit black"),
-
     // Industria Cartaria Pieretti
     ("#007a3d", "ICP green"),
     ("#003a70", "ICP blue"),
     ("#6e6e6e", "ICP gray"),
-
     // Infostrada
     ("#ff6f00", "Infostrada orange"),
     ("#000000", "Infostrada black"),
     ("#ffffff", "Infostrada white"),
-
     // Inglesina Baby
     ("#1a3c6a", "Inglesina blue"),
     ("#ffffff", "Inglesina white"),
     ("#6e6e6e", "Inglesina gray"),
-
     // Innocenti
     ("#e10600", "Innocenti red"),
     ("#000000", "Innocenti black"),
     ("#ffffff", "Innocenti white"),
-
     // Intermarine
     ("#001f3f", "Intermarine navy"),
     ("#6e6e6e", "Intermarine gray"),
     ("#ffffff", "Intermarine white"),
-
     // Intesa Sanpaolo
     ("#00724a", "Intesa Sanpaolo green"),
     ("#f37021", "Intesa Sanpaolo orange"),
     ("#00539b", "Intesa Sanpaolo blue"),
-
     // Intimissimi
     ("#000000", "Intimissimi black"),
     ("#ffffff", "Intimissimi white"),
-
     // IP (Italiana Petroli)
     ("#0060aa", "IP blue"),
     ("#ee7918", "IP orange"),
     ("#4f83bf", "IP azure"),
     ("#ffffff", "IP white"),
-
     // Iride Bicycles
     ("#00c2ff", "Iride cyan"),
     ("#000000", "Iride black"),
     ("#ffffff", "Iride white"),
-
     // Isabel Garcia (clothing)
     ("#000000", "Isabel Garcia black"),
     ("#d4af37", "Isabel Garcia gold"),
     ("#ffffff", "Isabel Garcia white"),
-
     // Iso (automobile)
     ("#e10600", "Iso red"),
     ("#003a70", "Iso blue"),
     ("#000000", "Iso black"),
-
     // Isotta Fraschini
     ("#0a2342", "Isotta Fraschini deep blue"),
     ("#c0c0c0", "Isotta Fraschini silver"),
     ("#000000", "Isotta Fraschini black"),
-
     // Itala
     ("#c8102e", "Itala red"),
     ("#000000", "Itala black"),
     ("#c0c0c0", "Itala silver"),
-
     // Italcementi
     ("#ffd100", "Italcementi yellow"),
     ("#000000", "Italcementi black"),
     ("#6e6e6e", "Italcementi gray"),
-
     // Italdesign Giugiaro
     ("#e10600", "Italdesign red"),
     ("#000000", "Italdesign black"),
     ("#6e6e6e", "Italdesign gray"),
     ("#f36f21", "Italdesign orange"),
-
     // Italian Line
     ("#001f3f", "Italian Line navy"),
     ("#ffffff", "Italian Line white"),
     ("#bf1b2c", "Italian Line red"),
-
     // Italjet
     ("#e10600", "Italjet red"),
     ("#000000", "Italjet black"),
     ("#ffffff", "Italjet white"),
-
     // Iveco
     ("#003399", "Iveco blue"),
     ("#6e6e6e", "Iveco gray"),
     ("#000000", "Iveco black"),
-
     // Kappa
     ("#e2231a", "Kappa red"),
     ("#002d72", "Kappa navy"),
     ("#000000", "Kappa black"),
     ("#ffffff", "Kappa white"),
-
     // Kartell
     ("#e10600", "Kartell red"),
     ("#000000", "Kartell black"),
     ("#ffffff", "Kartell white"),
-
     // Keglevich
     ("#0033cc", "Keglevich blue"),
     ("#ffffff", "Keglevich white"),
     ("#000000", "Keglevich black"),
-
     // Kena Mobile
     ("#ffc700", "Kena Mobile yellow"),
     ("#000000", "Kena Mobile black"),
     ("#ffffff", "Kena Mobile white"),
-
     // Kuota
     ("#000000", "Kuota black"),
     ("#e10600", "Kuota red"),
     ("#ffffff", "Kuota white"),
-
     // La Molisana
     ("#0c3c78", "La Molisana blue"),
     ("#ffffff", "La Molisana white"),
     ("#e41c23", "La Molisana red"),
-
     // Lagostina
     ("#c8102e", "Lagostina red"),
     ("#c0c0c0", "Lagostina silver"),
     ("#000000", "Lagostina black"),
-
     // Lamborghini
     ("#f7d417", "Lamborghini yellow"),
     ("#000000", "Lamborghini black"),
     ("#ffffff", "Lamborghini white"),
-
     // Lambretta
     ("#e10600", "Lambretta red"),
     ("#003a70", "Lambretta blue"),
     ("#000000", "Lambretta black"),
-
     // Lampre
     ("#d60096", "Lampre magenta"),
     ("#003399", "Lampre blue"),
     ("#8dc63f", "Lampre lime"),
-
     // Lancia
     ("#002c6c", "Lancia blue"),
     ("#000000", "Lancia black"),
     ("#ffffff", "Lancia white"),
-
     // Landi Renzo
     ("#005eb8", "Landi Renzo blue"),
     ("#6e6e6e", "Landi Renzo gray"),
     ("#000000", "Landi Renzo black"),
-
     // Landini (tractor)
     ("#00a3e0", "Landini blue"),
     ("#003a70", "Landini navy"),
     ("#000000", "Landini black"),
-
     // Larusmiani
     ("#001f3f", "Larusmiani navy"),
     ("#000000", "Larusmiani black"),
     ("#ffffff", "Larusmiani white"),
-
     // Lavazza
     ("#1a2343", "Lavazza blue"),
     ("#ffffff", "Lavazza white"),
     ("#000000", "Lavazza black"),
-
     // Laverda
     ("#f36f21", "Laverda orange"),
     ("#000000", "Laverda black"),
     ("#ffffff", "Laverda white"),
-
     // Laverda (harvesters)
     ("#f36f21", "Laverda Harvesters orange"),
     ("#6e6e6e", "Laverda Harvesters gray"),
     ("#000000", "Laverda Harvesters black"),
-
     // Lazzaroni
     ("#b22222", "Lazzaroni red"),
     ("#f2e6c9", "Lazzaroni beige"),
     ("#000000", "Lazzaroni black"),
-
     // Lechler
     ("#0057b8", "Lechler blue"),
     ("#00a651", "Lechler green"),
     ("#6e6e6e", "Lechler gray"),
-
     // Legea
     ("#e10600", "Legea red"),
     ("#002d72", "Legea navy"),
     ("#000000", "Legea black"),
     ("#ffffff", "Legea white"),
-
     // Leitner Group
     ("#003a70", "Leitner blue"),
     ("#6e6e6e", "Leitner gray"),
     ("#000000", "Leitner black"),
-
     // Leitwind
     ("#00a651", "Leitwind green"),
     ("#6e6e6e", "Leitwind gray"),
     ("#003a70", "Leitwind blue"),
-
     // Leonardo-Finmeccanica (Leonardo)
     ("#c3002f", "Leonardo red"),
     ("#6e6e6e", "Leonardo gray"),
     ("#000000", "Leonardo black"),
-
     // Levante (hosiery)
     ("#000000", "Levante black"),
     ("#d4af37", "Levante gold"),
     ("#ffffff", "Levante white"),
-
     // Lima (models)
     ("#e10600", "Lima red"),
     ("#000000", "Lima black"),
     ("#ffffff", "Lima white"),
-
     // Linkem
     ("#ff6f00", "Linkem orange"),
     ("#000000", "Linkem black"),
     ("#ffffff", "Linkem white"),
-
     // Angelo Litrico
     ("#003a70", "Angelo Litrico blue"),
     ("#000000", "Angelo Litrico black"),
     ("#ffffff", "Angelo Litrico white"),
-
     // Liu·Jo
     ("#000000", "Liu·Jo black"),
     ("#ffffff", "Liu·Jo white"),
-
     // Lofra
     ("#00a859", "Lofra green"),
     ("#000000", "Lofra black"),
     ("#c0c0c0", "Lofra silver"),
-
     // Lombardini
     ("#003a70", "Lombardini blue"),
     ("#6e6e6e", "Lombardini gray"),
     ("#000000", "Lombardini black"),
-
     // Longoni
     ("#a1000e", "Longoni red"),
     ("#000000", "Longoni black"),
     ("#c0c0c0", "Longoni silver"),
-
     // Lotto Sport Italia
     ("#e2231a", "Lotto red"),
     ("#000000", "Lotto black"),
     ("#ffffff", "Lotto white"),
-
     // Lucchini RS
     ("#003a70", "Lucchini RS blue"),
     ("#6e6e6e", "Lucchini RS gray"),
     ("#000000", "Lucchini RS black"),
-
     // Girolamo Luxardo
     ("#e41c23", "Luxardo red"),
     ("#d4af37", "Luxardo gold"),
     ("#000000", "Luxardo black"),
-
     // Luxottica
     ("#1d4f91", "Luxottica blue"),
     ("#000000", "Luxottica black"),
     ("#ffffff", "Luxottica white"),
-
-
-
     // ===== Additions: M → Z =====
     ("#0a2a66", "Macron navy"),
     ("#000000", "Macron black"),
     ("#ffffff", "Macron white"),
-
     ("#c0c0c0", "Maggiora silver"),
     ("#c8102e", "Maggiora red"),
     ("#000000", "Maggiora black"),
-
     ("#00a3e0", "Maire Tecnimont blue"),
     ("#003a70", "Maire Tecnimont navy"),
     ("#6e6e6e", "Maire Tecnimont gray"),
-
     ("#000000", "Majello black"),
     ("#8e8a86", "Majello gray"),
-
     ("#e10600", "Malaguti red"),
     ("#000000", "Malaguti black"),
     ("#ffffff", "Malaguti white"),
-
     ("#2f2f2f", "Malo charcoal"),
     ("#b7a99a", "Malo taupe"),
     ("#ffffff", "Malo white"),
-
     ("#e10600", "Malossi red"),
     ("#ffd100", "Malossi yellow"),
     ("#000000", "Malossi black"),
-
     ("#ffda00", "Mandarina Duck yellow"),
     ("#000000", "Mandarina Duck black"),
     ("#ffffff", "Mandarina Duck white"),
-
     ("#e10600", "Manfrotto red"),
     ("#000000", "Manfrotto black"),
     ("#ffffff", "Manfrotto white"),
-
     ("#007cc3", "Mapei blue"),
     ("#00529b", "Mapei deep blue"),
     ("#ffffff", "Mapei white"),
-
     ("#003a70", "Marcegaglia blue"),
     ("#6e6e6e", "Marcegaglia gray"),
     ("#000000", "Marcegaglia black"),
-
     ("#000000", "Mariella Burani black"),
     ("#d4af37", "Mariella Burani gold"),
     ("#ffffff", "Mariella Burani white"),
-
     ("#000000", "Marina Rinaldi black"),
     ("#b7a99a", "Marina Rinaldi taupe"),
     ("#ffffff", "Marina Rinaldi white"),
-
     ("#000000", "Marni black"),
     ("#a52a2a", "Marni brown red"),
     ("#f2e8d5", "Marni ivory"),
-
     ("#e10600", "Martin Motors red"),
     ("#000000", "Martin Motors black"),
     ("#c0c0c0", "Martin Motors silver"),
-
     ("#e10600", "Marzocchi red"),
     ("#000000", "Marzocchi black"),
     ("#ffffff", "Marzocchi white"),
-
     ("#002b5b", "Marzotto navy"),
     ("#c8a45a", "Marzotto gold"),
     ("#000000", "Marzotto black"),
-
     ("#e41c23", "Massimo Zanetti red"),
     ("#000000", "Massimo Zanetti black"),
-
     ("#000000", "Mateba black"),
     ("#6b4e3d", "Mateba walnut brown"),
     ("#c0c0c0", "Mateba steel"),
-
     ("#000000", "Max Mara black"),
     ("#b7a99a", "Max Mara taupe"),
     ("#ffffff", "Max Mara white"),
-
     ("#6b3f2a", "MCS leather brown"),
     ("#b03030", "MCS deep red"),
     ("#000000", "MCS black"),
-
     ("#e10600", "Mebetoys red"),
     ("#ffd100", "Mebetoys yellow"),
     ("#000000", "Mebetoys black"),
-
     ("#003a70", "Mecc Alte blue"),
     ("#6e6e6e", "Mecc Alte gray"),
-
     ("#003a70", "Meccanotecnica Riesi blue"),
     ("#6e6e6e", "Meccanotecnica Riesi gray"),
-
     ("#00a3e0", "Mediaset blue"),
     ("#003a70", "Mediaset navy"),
     ("#6e6e6e", "Mediaset gray"),
-
     ("#ff6f00", "Mediashopping orange"),
     ("#003a70", "Mediashopping blue"),
     ("#000000", "Mediashopping black"),
-
     ("#e30613", "Menarini red"),
     ("#003a70", "Menarini blue"),
     ("#000000", "Menarini black"),
-
     ("#1f4e79", "Mentos blue"),
     ("#53a7ea", "Mentos light blue"),
     ("#ffffff", "Mentos white"),
-
     ("#f36f21", "MER MEC orange"),
     ("#003a70", "MER MEC blue"),
     ("#000000", "MER MEC black"),
-
     ("#a61c2d", "Meridiana burgundy"),
     ("#f2e6c9", "Meridiana beige"),
     ("#000000", "Meridiana black"),
-
     ("#00a3e0", "Messagenet blue"),
     ("#000000", "Messagenet black"),
-
     ("#003399", "Metronapoli blue"),
     ("#ffd100", "Metronapoli yellow"),
     ("#000000", "Metronapoli black"),
-
     ("#003a70", "Milano Assicurazioni blue"),
     ("#6e6e6e", "Milano Assicurazioni gray"),
-
     ("#e10600", "Minarelli red"),
     ("#000000", "Minarelli black"),
     ("#ffffff", "Minarelli white"),
-
     ("#d6336c", "Missoni magenta"),
     ("#ff6f00", "Missoni orange"),
     ("#000000", "Missoni black"),
-
     ("#e10600", "Mivar red"),
     ("#000000", "Mivar black"),
-
     ("#c0c0c0", "Moka pot aluminum"),
     ("#000000", "Moka pot black"),
     ("#ffffff", "Moka pot white"),
-
     ("#000000", "Molinari (design) black"),
     ("#b7a99a", "Molinari (design) taupe"),
-
     ("#e10600", "Momo red"),
     ("#ffd100", "Momo yellow"),
     ("#000000", "Momo black"),
-
     ("#e10600", "Mondadori red"),
     ("#000000", "Mondadori black"),
-
     ("#003a70", "Mondial blue"),
     ("#ffffff", "Mondial white"),
     ("#000000", "Mondial black"),
-
     ("#002b5b", "Montegrappa navy"),
     ("#c8a45a", "Montegrappa gold"),
     ("#000000", "Montegrappa black"),
-
     ("#ff6f00", "Moon Boot orange"),
     ("#003a70", "Moon Boot blue"),
     ("#000000", "Moon Boot black"),
     ("#ffffff", "Moon Boot white"),
-
     ("#e10600", "Morbidelli red"),
     ("#000000", "Morbidelli black"),
-
     ("#c8102e", "Moretti Motor Company red"),
     ("#000000", "Moretti Motor Company black"),
-
     ("#000000", "Moschino black"),
     ("#d4af37", "Moschino gold"),
     ("#ffffff", "Moschino white"),
-
     ("#b40000", "Moto Guzzi red"),
     ("#c8a45a", "Moto Guzzi gold"),
     ("#000000", "Moto Guzzi black"),
-
     ("#e10600", "Moto Morini red"),
     ("#000000", "Moto Morini black"),
     ("#ffffff", "Moto Morini white"),
-
     ("#003a70", "Moto Rumi blue"),
     ("#ffffff", "Moto Rumi white"),
-
     ("#e10600", "Motobi red"),
     ("#000000", "Motobi black"),
     ("#ffffff", "Motobi white"),
-
     ("#e10600", "MV Agusta red"),
     ("#003a70", "MV Agusta blue"),
     ("#ffd100", "MV Agusta yellow"),
-
     ("#007a3d", "Nardi (agri) green"),
     ("#003a70", "Nardi (agri) blue"),
     ("#000000", "Nardi (agri) black"),
-
     ("#7a0019", "Nardi (carmaker) maroon"),
     ("#000000", "Nardi (carmaker) black"),
     ("#c0c0c0", "Nardi (carmaker) silver"),
-
     ("#000000", "Nardini black"),
     ("#f2e6c9", "Nardini parchment"),
     ("#6b4e3d", "Nardini brown"),
-
     ("#6b4e3d", "Natuzzi leather brown"),
     ("#000000", "Natuzzi black"),
     ("#b7a99a", "Natuzzi taupe"),
-
     ("#003a70", "Nebiolo Printech blue"),
     ("#6e6e6e", "Nebiolo Printech gray"),
-
     ("#000000", "Nina Ricci black"),
     ("#d4af37", "Nina Ricci gold"),
     ("#ffffff", "Nina Ricci white"),
-
     ("#e10600", "Nolan red"),
     ("#000000", "Nolan black"),
     ("#ffffff", "Nolan white"),
-
     ("#f6ad49", "Nonino orange"),
     ("#000000", "Nonino black"),
     ("#ffffff", "Nonino white"),
-
     ("#e10600", "Nordica red"),
     ("#000000", "Nordica black"),
     ("#ffffff", "Nordica white"),
-
     ("#00a3e0", "Nòverca blue"),
     ("#003a70", "Nòverca navy"),
     ("#000000", "Nòverca black"),
-
     ("#000000", "Off-White black"),
     ("#ffffff", "Off-White white"),
     ("#f2c500", "Off-White hazard yellow"),
-
     ("#0a2342", "Officina Stellare deep blue"),
     ("#c0c0c0", "Officina Stellare silver"),
     ("#000000", "Officina Stellare black"),
-
     ("#003a70", "Officine Meccaniche blue"),
     ("#000000", "Officine Meccaniche black"),
-
     ("#003399", "Cerutti blue"),
     ("#6e6e6e", "Cerutti gray"),
-
     ("#ffd100", "Officine Piccini yellow"),
     ("#003a70", "Officine Piccini blue"),
     ("#000000", "Officine Piccini black"),
-
     ("#003a70", "Olidata blue"),
     ("#6e6e6e", "Olidata gray"),
-
     ("#000000", "OMAS black"),
     ("#c8a45a", "OMAS gold"),
     ("#002b5b", "OMAS navy"),
-
     ("#c0c0c0", "Orsi silver"),
     ("#000000", "Orsi black"),
-
     ("#c8102e", "O.S.C.A. red"),
     ("#000000", "O.S.C.A. black"),
-
     ("#006241", "OTO Melara green"),
     ("#6e6e6e", "OTO Melara gray"),
     ("#000000", "OTO Melara black"),
-
     ("#000000", "OZ Group black"),
     ("#e10600", "OZ Group red"),
     ("#c0c0c0", "OZ Group silver"),
-
     ("#0a5ea8", "Paglieri blue"),
     ("#00a3e0", "Paglieri light blue"),
     ("#ffffff", "Paglieri white"),
-
     ("#ffd100", "Paioli yellow"),
     ("#000000", "Paioli black"),
-
     ("#001f3f", "Panerai navy"),
     ("#f2e8d5", "Panerai ivory"),
     ("#000000", "Panerai black"),
-
     ("#ffd100", "Panini yellow"),
     ("#0057b8", "Panini blue"),
     ("#e10600", "Panini red"),
-
     ("#007a3d", "Panna green"),
     ("#00a3e0", "Panna blue"),
     ("#ffffff", "Panna white"),
-
     ("#d4af37", "Pantofola d'Oro gold"),
     ("#000000", "Pantofola d'Oro black"),
     ("#ffffff", "Pantofola d'Oro white"),
-
     ("#7f3fbf", "Pastiglie Leone violet"),
     ("#f7a1c4", "Pastiglie Leone pink"),
     ("#d4af37", "Pastiglie Leone gold"),
-
     ("#006b3f", "Paton green"),
     ("#000000", "Paton black"),
     ("#ffffff", "Paton white"),
-
     ("#c8a45a", "Pedersoli gold"),
     ("#6b4e3d", "Pedersoli walnut"),
     ("#000000", "Pedersoli black"),
-
     ("#e10600", "Perazzi red"),
     ("#000000", "Perazzi black"),
     ("#ffffff", "Perazzi white"),
-
     ("#001f3f", "Perini Navi navy"),
     ("#c0c0c0", "Perini Navi silver"),
     ("#ffffff", "Perini Navi white"),
-
     ("#f6a800", "Perlini yellow"),
     ("#000000", "Perlini black"),
-
     ("#003a70", "Permasteelisa blue"),
     ("#6e6e6e", "Permasteelisa gray"),
-
     ("#6b4e3d", "Persol havana brown"),
     ("#000000", "Persol black"),
     ("#ffffff", "Persol white"),
-
     ("#003a70", "PFM Group blue"),
     ("#6e6e6e", "PFM Group gray"),
-
     ("#000000", "Phonocar black"),
     ("#ffd100", "Phonocar yellow"),
-
     ("#000000", "Pinarello black"),
     ("#e10600", "Pinarello red"),
     ("#ffffff", "Pinarello white"),
-
     ("#00a3e0", "Piquadro cyan"),
     ("#000000", "Piquadro black"),
-
     ("#006241", "Pircher green"),
     ("#6b4e3d", "Pircher brown"),
-
     ("#000000", "PMT Italia black"),
     ("#e10600", "PMT Italia red"),
-
     ("#000000", "Pocher black"),
     ("#d4af37", "Pocher gold"),
-
     ("#e10600", "Pogliaghi red"),
     ("#ffffff", "Pogliaghi white"),
     ("#000000", "Pogliaghi black"),
-
     ("#004c99", "Polini blue"),
     ("#ffffff", "Polini white"),
     ("#000000", "Polini black"),
-
     ("#c4622d", "Poltrona Frau saddle"),
     ("#b08968", "Poltrona Frau taupe"),
     ("#000000", "Poltrona Frau black"),
-
     ("#d9a38a", "Pomellato rose gold"),
     ("#000000", "Pomellato black"),
-
     ("#ffec00", "PosteMobile yellow"),
     ("#22409a", "PosteMobile blue"),
     ("#000000", "PosteMobile black"),
-
     ("#ffec00", "Postepay yellow"),
     ("#22409a", "Postepay blue"),
-
     ("#003a70", "Pro.Mecc blue"),
     ("#6e6e6e", "Pro.Mecc gray"),
-
     ("#006241", "Proraso green"),
     ("#b03030", "Proraso red"),
     ("#ffffff", "Proraso white"),
-
     ("#000000", "Altaneve black"),
     ("#d4af37", "Altaneve gold"),
     ("#ffffff", "Altaneve white"),
-
     ("#e6007e", "Prysmian magenta"),
     ("#000000", "Prysmian black"),
     ("#6e6e6e", "Prysmian gray"),
-
     ("#00c8c8", "Pucci turquoise"),
     ("#d6336c", "Pucci magenta"),
     ("#000000", "Pucci black"),
     ("#ffffff", "Pucci white"),
-
     ("#003a70", "Radici blue"),
     ("#00a651", "Radici green"),
     ("#6e6e6e", "Radici gray"),
-
     ("#001f3f", "Radio Marconi navy"),
     ("#6e6e6e", "Radio Marconi gray"),
-
     ("#e10600", "Rainbow red"),
     ("#ffd100", "Rainbow yellow"),
     ("#003a70", "Rainbow blue"),
-
     ("#0f5fa6", "Giovanni Rana blue"),
     ("#d4af37", "Giovanni Rana gold"),
     ("#ffffff", "Giovanni Rana white"),
-
     ("#003a70", "Reggiane blue"),
     ("#c0c0c0", "Reggiane silver"),
-
     ("#000000", "John Richmond black"),
     ("#ffffff", "John Richmond white"),
-
     ("#e10600", "Rivarossi red"),
     ("#000000", "Rivarossi black"),
-
     ("#7a0019", "S.P.A. maroon"),
     ("#000000", "S.P.A. black"),
-
     ("#e10600", "Sacmi red"),
     ("#000000", "Sacmi black"),
-
     ("#7a0019", "Saeco burgundy"),
     ("#6e6e6e", "Saeco gray"),
-
     ("#003a70", "Safilo blue"),
     ("#000000", "Safilo black"),
-
     ("#003a70", "SAI Ambrosini blue"),
     ("#c0c0c0", "SAI Ambrosini silver"),
-
     ("#f7a600", "Saipem orange"),
     ("#009688", "Saipem teal"),
     ("#000000", "Saipem black"),
-
     ("#e10600", "Salini Impregilo red"),
     ("#6e6e6e", "Salini Impregilo gray"),
-
     ("#7a0019", "Salvatore Ferragamo burgundy"),
     ("#d4af37", "Salvatore Ferragamo gold"),
     ("#000000", "Salvatore Ferragamo black"),
-
     ("#e10600", "SAME red"),
     ("#8dc63f", "Deutz-Fahr green"),
-
     ("#e10600", "San Carlo red"),
     ("#ffd100", "San Carlo yellow"),
-
     ("#003a70", "Sanfaustino blue"),
     ("#6e6e6e", "Sanfaustino gray"),
-
     ("#7a0019", "Santamaria maroon"),
     ("#000000", "Santamaria black"),
-
     ("#003a70", "SCAM blue"),
     ("#6e6e6e", "SCAM gray"),
-
     ("#006241", "Scappino green"),
     ("#d4af37", "Scappino gold"),
-
     ("#b22222", "SCAT red"),
     ("#000000", "SCAT black"),
-
     ("#003a70", "Seleco blue"),
     ("#000000", "Seleco black"),
-
     ("#c3002f", "Selex ES red"),
     ("#6e6e6e", "Selex ES gray"),
-
     ("#c3002f", "SELEX Sistemi Integrati red"),
     ("#6e6e6e", "SELEX Sistemi Integrati gray"),
-
     ("#000000", "Selle Royal black"),
     ("#6e6e6e", "Selle Royal gray"),
-
     ("#003a70", "Siae Microelettronica blue"),
     ("#6e6e6e", "Siae Microelettronica gray"),
-
     ("#003a70", "SIAI-Marchetti blue"),
     ("#c0c0c0", "SIAI-Marchetti silver"),
-
     ("#003a70", "Siata blue"),
     ("#c8102e", "Siata red"),
-
     ("#e10600", "SIDI red"),
     ("#000000", "SIDI black"),
     ("#00a651", "SIDI green"),
-
     ("#f36f21", "Siel orange"),
     ("#000000", "Siel black"),
-
     ("#0057b8", "Sigma-Tau blue"),
     ("#6e6e6e", "Sigma-Tau gray"),
-
     ("#e10600", "Silca red"),
     ("#000000", "Silca black"),
-
     ("#008c45", "Silvateam green"),
     ("#6e6e6e", "Silvateam gray"),
-
     ("#003a70", "Simmel Difesa blue"),
     ("#6e6e6e", "Simmel Difesa gray"),
-
     ("#00a651", "Simod green"),
     ("#000000", "Simod black"),
-
     ("#00a3e0", "SIP blue"),
     ("#000000", "SIP black"),
-
     ("#003a70", "SIVI blue"),
     ("#6e6e6e", "SIVI gray"),
-
     ("#e10600", "SLAM red"),
     ("#000000", "SLAM black"),
-
     ("#000000", "Smeg black"),
     ("#f3e5ab", "Smeg cream"),
     ("#6e6e6e", "Smeg gray"),
-
     ("#ff6f00", "Snaidero orange"),
     ("#000000", "Snaidero black"),
-
     ("#00a651", "Snam green"),
     ("#003a70", "Snam blue"),
-
     ("#003a70", "SNIA blue"),
     ("#6e6e6e", "SNIA gray"),
-
     ("#003a70", "Breda blue"),
     ("#000000", "Breda black"),
-
     ("#e10600", "Junior F.J.T.A. red"),
     ("#000000", "Junior F.J.T.A. black"),
-
     ("#c8102e", "STAR red"),
     ("#000000", "STAR black"),
-
     ("#0057b8", "Soilmec blue"),
     ("#6e6e6e", "Soilmec gray"),
-
     ("#e10600", "Somec red"),
     ("#000000", "Somec black"),
-
     ("#00a3a3", "Sorin teal"),
     ("#6e6e6e", "Sorin gray"),
-
     ("#e10600", "SPICA red"),
     ("#000000", "SPICA black"),
-
     ("#e10600", "Sportika red"),
     ("#003a70", "Sportika blue"),
     ("#000000", "Sportika black"),
-
     ("#e10600", "Standa red"),
     ("#000000", "Standa black"),
-
     ("#c8102e", "Stanguellini red"),
     ("#000000", "Stanguellini black"),
-
     ("#e10600", "Stappj red"),
     ("#ffd100", "Stappj yellow"),
-
     ("#e10600", "Sterilgarda red"),
     ("#003a70", "Sterilgarda blue"),
     ("#ffffff", "Sterilgarda white"),
-
     ("#00a3e0", "STET blue"),
     ("#6e6e6e", "STET gray"),
-
     ("#1c3f2b", "Stone Island olive"),
     ("#ffd100", "Stone Island yellow"),
     ("#000000", "Stone Island black"),
-
     ("#003a70", "Storero blue"),
     ("#6e6e6e", "Storero gray"),
-
     ("#6f2dbd", "Studiotorino purple"),
     ("#000000", "Studiotorino black"),
-
     ("#e10600", "Suomy red"),
     ("#000000", "Suomy black"),
     ("#ffffff", "Suomy white"),
-
     ("#002d72", "Superga navy"),
     ("#e2231a", "Superga red"),
     ("#ffffff", "Superga white"),
-
     ("#ff6f00", "Switchover Media orange"),
     ("#000000", "Switchover Media black"),
-
     ("#e10600", "Tanfoglio red"),
     ("#000000", "Tanfoglio black"),
-
     ("#d4af37", "Tavernello gold"),
     ("#006241", "Tavernello green"),
-
     ("#ffd100", "Technogym yellow"),
     ("#000000", "Technogym black"),
-
     ("#003399", "Tecnam blue"),
     ("#ffffff", "Tecnam white"),
-
     ("#ff6f00", "Tecnica orange"),
     ("#000000", "Tecnica black"),
-
     ("#003a70", "Teksid blue"),
     ("#6e6e6e", "Teksid gray"),
-
     ("#ffeb00", "Telepass yellow"),
     ("#003399", "Telepass blue"),
-
     ("#e10600", "Telespazio red"),
     ("#003a70", "Telespazio blue"),
-
     ("#ff6f00", "TeleTu orange"),
     ("#000000", "TeleTu black"),
     ("#ffffff", "TeleTu white"),
-
     ("#003a70", "Telit blue"),
     ("#000000", "Telit black"),
-
     ("#7a0019", "Temperino maroon"),
     ("#000000", "Temperino black"),
-
     ("#007a3d", "Terra Modena green"),
     ("#000000", "Terra Modena black"),
-
     ("#ff5c8a", "Think Pink magenta"),
     ("#000000", "Think Pink black"),
-
     ("#8fd9a8", "Tic Tac mint"),
     ("#ffffff", "Tic Tac white"),
-
     ("#003399", "Tirrenia blue"),
     ("#ffffff", "Tirrenia white"),
-
     ("#d10070", "Tiscali magenta"),
     ("#000000", "Tiscali black"),
-
     ("#007a3d", "Toscotec green"),
     ("#6e6e6e", "Toscotec gray"),
-
     ("#e10600", "Total red"),
     ("#003a70", "Total blue"),
-
     ("#9be000", "ToyWatch neon green"),
     ("#000000", "ToyWatch black"),
-
     ("#c8a45a", "A. Uberti gold"),
     ("#6b4e3d", "A. Uberti walnut"),
     ("#000000", "A. Uberti black"),
-
     ("#d4af37", "UnoAErre gold"),
     ("#000000", "UnoAErre black"),
-
     ("#ff6f00", "UPIM orange"),
     ("#000000", "UPIM black"),
-
     ("#c8102e", "Valentino red"),
     ("#000000", "Valentino black"),
-
     ("#e10600", "Valpadana red"),
     ("#000000", "Valpadana black"),
-
     ("#008c45", "Valsoia green"),
     ("#005eb8", "Valsoia blue"),
-
     ("#000000", "Valextra black"),
     ("#f2f2f2", "Valextra light gray"),
-
     ("#00a79d", "Venini teal"),
     ("#e10600", "Venini red"),
-
     ("#00d26a", "Very Mobile green"),
     ("#000000", "Very Mobile black"),
-
     ("#e10600", "Viberti red"),
     ("#000000", "Viberti black"),
-
     ("#f7d417", "Vibram yellow"),
     ("#000000", "Vibram black"),
-
     ("#000000", "Visconti black"),
     ("#c8a45a", "Visconti gold"),
-
     ("#003a70", "Viscount blue"),
     ("#6e6e6e", "Viscount gray"),
-
     ("#000000", "Vittoria black"),
     ("#e10600", "Vittoria red"),
-
     ("#003a70", "VM Motori blue"),
     ("#6e6e6e", "VM Motori gray"),
-
     ("#3a7ca5", "Voiello blue"),
     ("#d4af37", "Voiello gold"),
-
     ("#e60000", "Vodafone red"),
     ("#ffffff", "Vodafone white"),
-
     ("#003a70", "Vulcanair blue"),
     ("#6e6e6e", "Vulcanair gray"),
-
     ("#6e6e6e", "Vyrus gray"),
     ("#000000", "Vyrus black"),
     ("#e10600", "Vyrus red"),
-
     ("#e10600", "Weber red"),
     ("#000000", "Weber black"),
-
     ("#e10600", "Welcome Italia red"),
     ("#000000", "Welcome Italia black"),
-
     ("#7a0019", "Wilier Triestina burgundy"),
     ("#000000", "Wilier Triestina black"),
     ("#ffffff", "Wilier Triestina white"),
-
     ("#ff6f00", "Wind orange"),
     ("#000000", "Wind black"),
-
     ("#ff6f00", "Wind Tre orange"),
     ("#000000", "Wind Tre black"),
-
     ("#e10600", "Zamperla red"),
     ("#ffd100", "Zamperla yellow"),
     ("#003a70", "Zamperla blue"),
-
     ("#000000", "Zanotta black"),
     ("#6e6e6e", "Zanotta gray"),
-
     ("#ffd100", "Zanussi yellow"),
     ("#000000", "Zanussi black"),
-
-
     // Automotive & Motorsports
     ("#d40000", "Ferrari red"),
     ("#ffeb00", "Ferrari yellow"),
