@@ -9,16 +9,16 @@ pub fn origin_priority_of(hex: &str, name: &str) -> u8 {
         return 1;
     }
     if COLORS_PERSIAN.iter().any(|&(h, n)| h == hex && n == name) {
-        return 2;
+        return 5;
     }
     if COLORS_PANTONE.iter().any(|&(h, n)| h == hex && n == name) {
-        return 3;
+        return 2;
     }
     if COLORS_HINDI.iter().any(|&(h, n)| h == hex && n == name) {
-        return 4;
+        return 8;
     }
     if COLORS_NATIONAL.iter().any(|&(h, n)| h == hex && n == name) {
-        return 5;
+        return 4;
     }
     #[cfg(feature = "github-colors")]
     if COLORS_GITHUB.iter().any(|&(h, n)| h == hex && n == name) {
@@ -27,7 +27,14 @@ pub fn origin_priority_of(hex: &str, name: &str) -> u8 {
     if COLORS_BRANDS.iter().any(|&(h, n)| h == hex && n == name) {
         return 7;
     }
-    8
+
+    if COLORS_ITALIANBRANDS
+        .iter()
+        .any(|&(h, n)| h == hex && n == name)
+    {
+        return 3;
+    }
+    9
 }
 
 // coarser 3-bucket sort for dropdown: CSS (0), XKCD (1), Others (2)

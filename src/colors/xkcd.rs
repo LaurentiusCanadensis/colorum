@@ -1,6 +1,4 @@
 pub const COLORS_XKCD: &[(&str, &str)] = &[
-
-
     ("#7E1E9C", "purple"),
     ("#15B01A", "green"),
     ("#0343DF", "blue"),

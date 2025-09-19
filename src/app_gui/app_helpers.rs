@@ -1,13 +1,22 @@
-
 use std::collections::HashMap;
 use std::sync::LazyLock;
 // src/app_gui.rs
-use crate::colors_helper::{self, COLORS_BRANDS, COLORS_CSS, COLORS_GITHUB, COLORS_HINDI, COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin};
-use crate::hex::{combine_hex, sanitize_hex2};
+use crate::colors_helper::{
+    self, COLORS_BRANDS, COLORS_CSS,  COLORS_HINDI, COLORS_ITALIANBRANDS,
+    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin,
+};
+#[cfg(feature = "github-colors")]
+use crate::colors_helper::{COLORS_GITHUB};
+    use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
-use iced::widget::{PickList, button, column, container, pick_list, row, scrollable, text, text_input, Space, mouse_area};
-use iced::{Alignment, Background, Color, Element, Length, Renderer, Task, Theme, clipboard, border};
+use iced::widget::{
+    PickList, Space, button, column, container, mouse_area, pick_list, row, scrollable, text,
+    text_input,
+};
+use iced::{
+    Alignment, Background, Color, Element, Length, Renderer, Task, Theme, border, clipboard,
+};
 
 impl App {
     pub(crate) fn apply_selected_name(&mut self, name: &str) {
@@ -22,9 +31,9 @@ impl App {
     }
 
     fn view_dropdown(&self) -> iced::Element<Msg> {
-        use iced::widget::{column, container, scrollable, text, mouse_area, Space};
-        use iced::{Alignment, Background, Color, Length};
         use iced::border;
+        use iced::widget::{Space, column, container, mouse_area, scrollable, text};
+        use iced::{Alignment, Background, Color, Length};
 
         if self.results_idx.is_empty() {
             return Space::with_height(0).into();
@@ -57,7 +66,10 @@ impl App {
                                 b: 0.80,
                                 a: 0.20,
                             })),
-                            border: border::Border { radius: 8.0.into(), ..Default::default() },
+                            border: border::Border {
+                                radius: 8.0.into(),
+                                ..Default::default()
+                            },
                             ..Default::default()
                         }
                     } else {
@@ -75,7 +87,6 @@ impl App {
             .width(Length::Fill)
             .into()
     }
-
 
     pub(crate) fn filtered_names(&self) -> Vec<&'static str> {
         use crate::colors_helper::{
@@ -140,7 +151,6 @@ fn u8_from_hex2(s: &str) -> u8 {
     }
 }
 
-
 pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static str)] {
     match origin {
         Origin::All => COMBINED_COLORS.as_slice(),
@@ -152,6 +162,7 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
         Origin::GitHub => COLORS_GITHUB,
         Origin::Css => COLORS_CSS,
         Origin::Brands => COLORS_BRANDS,
+        Origin::ItalianBrands => COLORS_ITALIANBRANDS,
 
         Origin::National => COLORS_NATIONAL.as_slice(),
     }
@@ -191,7 +202,7 @@ pub static COLORS_LC: LazyLock<Vec<ColorEntry>> = LazyLock::new(|| {
 });
 
 // ---------- Tokenization ----------
-fn tokenize_lc(s: &str) -> impl Iterator<Item=String> + '_ {
+fn tokenize_lc(s: &str) -> impl Iterator<Item = String> + '_ {
     s.split(|c: char| !c.is_alphanumeric())
         .filter(|t| !t.is_empty())
         .map(|t| t.to_lowercase())
@@ -349,10 +360,10 @@ pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
     current.into_iter().map(|i| COMBINED_COLORS[i]).collect()
 }
 
+use crate::app_gui::App;
 use iced::advanced::subscription;
 use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
-use crate::app_gui::App;
 
 impl App {
     // add near your other imports in app_gui.rs
@@ -364,19 +375,19 @@ impl App {
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowDown)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowLeft)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowRight)
-            | iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => Some(Msg::KeyPressed(key)),
+            | iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => {
+                Some(Msg::KeyPressed(key))
+            }
             _ => None,
         })
     }
 }
 
 impl App {
-
-
     pub fn scroll_to_selected(&self) -> Task<Msg> {
         // Must match your dropdown widget:
         const VIEWPORT_H: f32 = 220.0; // .height(Length::Fixed(220.0))
-        const ROW_H: f32     = 30.0;   // ~ text + padding; tweak 28–32 if needed
+        const ROW_H: f32 = 30.0; // ~ text + padding; tweak 28–32 if needed
 
         let len = self.results_idx.len();
         if len == 0 {
@@ -387,9 +398,9 @@ impl App {
         let sel = self.sel_pos.unwrap_or(0).min(len - 1);
         let target_row = sel.saturating_sub(1);
 
-        let content_h  = (len as f32) * ROW_H;
+        let content_h = (len as f32) * ROW_H;
         let max_scroll = (content_h - VIEWPORT_H).max(0.0);
-        let desired_y  = (target_row as f32) * ROW_H;
+        let desired_y = (target_row as f32) * ROW_H;
 
         let rel_y = if max_scroll > 0.0 {
             (desired_y / max_scroll).clamp(0.0, 1.0)
@@ -402,7 +413,6 @@ impl App {
             iced::widget::scrollable::RelativeOffset { x: 0.0, y: rel_y },
         )
     }
-
 
     /// Rebuild the `base` list & index for the current origin.
     pub fn reindex_origin(&mut self) {
@@ -444,21 +454,32 @@ impl App {
             }
         }
 
-        self.sel_pos = if self.results_idx.is_empty() { None } else { Some(0) };
+        self.sel_pos = if self.results_idx.is_empty() {
+            None
+        } else {
+            Some(0)
+        };
     }
 
     pub fn move_selection(&mut self, delta: i32) {
         let len = self.results_idx.len() as i32;
-        if len == 0 { self.sel_pos = None; return; }
-        let cur  = self.sel_pos.unwrap_or(0) as i32;
+        if len == 0 {
+            self.sel_pos = None;
+            return;
+        }
+        let cur = self.sel_pos.unwrap_or(0) as i32;
         let next = (cur + delta).rem_euclid(len) as usize;
         self.sel_pos = Some(next);
     }
 
     /// Apply the currently selected row to the UI (wheel, fields, selected name)
     pub(crate) fn activate_selected(&mut self) {
-        let Some(row) = self.sel_pos else { return; };
-        if row >= self.results_idx.len() { return; }
+        let Some(row) = self.sel_pos else {
+            return;
+        };
+        if row >= self.results_idx.len() {
+            return;
+        }
         eprintln!("Enter pressed {:?}-> Self at this point is ", self.query);
 
         let idx = self.results_idx[row];

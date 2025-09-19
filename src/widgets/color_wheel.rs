@@ -1,3 +1,4 @@
+use crate::app_gui::App;
 use crate::colors_helper::COMBINED_COLORS;
 use crate::messages::{Channel, Msg};
 use iced::border::Radius;
@@ -123,6 +124,106 @@ where
             .align_x(Alignment::Center),
         )
         .padding(6)
+        .into()
+    }
+
+    /// Renders the wheel AND the old fast search + index-driven dropdown
+    /// as a single widget you can drop into your layout. It uses the
+    /// precomputed results in `App` (query, results_idx, sel_pos, base).
+    pub fn view_with_search<'a>(self, title: &'static str, app: &'a App) -> Element<'a, Msg> {
+        use iced::widget::{Space, column, container, mouse_area, scrollable, text};
+        use iced::{Alignment, Background, Color, Length, Renderer, Theme, border};
+
+        // Reuse the existing wheel view with current rr/gg/bb from App
+        let wheel_core: Element<'static, Msg> = self.view(title, &app.rr, &app.gg, &app.bb);
+        let show_dropdown = app.dropdown_open && !app.results_idx.is_empty();
+
+        // Search box (emits QueryChanged / PressedEnter) — NO filtering here
+        let search_box: iced::widget::TextInput<'a, Msg, Theme, Renderer> =
+            iced::widget::text_input("Search color name…", &app.query)
+                .on_input(Msg::QueryChanged)
+                .on_submit(Msg::PressedEnter)
+                .padding(8)
+                .width(Length::Fill);
+
+        // Index-driven dropdown (NO recompute here). Mirrors your old good code.
+        fn view_dropdown<'a>(app: &'a App) -> Element<'a, Msg> {
+            if app.results_idx.is_empty() {
+                return Space::with_height(0).into();
+            }
+
+            let mut col = column![]
+                .spacing(2)
+                .padding(4)
+                .align_x(Alignment::Start)
+                .width(Length::Fill);
+
+            for (row, &idx) in app.results_idx.iter().enumerate() {
+                let (hex, name) = app.base[idx];
+                let is_sel = app.sel_pos == Some(row);
+                let label = if is_sel {
+                    format!("▶ {}  {}", name, hex)
+                } else {
+                    format!("{}  {}", name, hex)
+                };
+
+                let row_body = container(text(label))
+                    .padding([6, 8])
+                    .width(Length::Fill)
+                    .style(move |_theme: &Theme| {
+                        if is_sel {
+                            iced::widget::container::Style {
+                                background: Some(Background::Color(Color {
+                                    r: 0.20,
+                                    g: 0.40,
+                                    b: 0.80,
+                                    a: 0.20,
+                                })),
+                                border: border::Border {
+                                    radius: 8.0.into(),
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            }
+                        } else {
+                            iced::widget::container::Style::default()
+                        }
+                    });
+
+                let click = mouse_area(row_body).on_press(Msg::DropdownClicked(row));
+                col = col.push(click);
+            }
+
+            scrollable(col)
+                .id(app.dropdown_scroll_id.clone())
+                .height(Length::Fixed(220.0))
+                .width(Length::Fill)
+                .into()
+        }
+
+        let dropdown: Option<Element<'a, Msg>> = if show_dropdown {
+            Some(view_dropdown(app))
+        } else {
+            None
+        };
+
+        let mut stack = column![search_box]
+            .spacing(8)
+            .width(Length::Fill)
+            .align_x(Alignment::Center);
+
+        if let Some(dd) = dropdown {
+            stack = stack.push(dd);
+        }
+
+        container(
+            column![wheel_core, stack,]
+                .spacing(12)
+                .align_x(Alignment::Center),
+        )
+        .padding([8, 8])
+        .width(Length::Fill)
+        .align_x(Alignment::Center)
         .into()
     }
 }

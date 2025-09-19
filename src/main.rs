@@ -1,3 +1,5 @@
+
+#![warn(dead_code, unused_imports, unused_mut, unused_variables)]
 mod app_gui;
 mod colors_helper;
 mod hex;
@@ -10,6 +12,7 @@ pub mod colors;
 use crate::rgb::hex_to_rgb;
 use app_gui::App;
 use iced::{Theme, application};
+use app_gui::view::view;
 
 use colors::*;
 

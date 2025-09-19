@@ -1,10 +1,10 @@
-use iced::keyboard::Key;
-use iced::keyboard::key::Named;
-use iced::{clipboard, Event, Task};
 use crate::app_gui::App;
 use crate::colors_helper::{Origin, sanitize_hex2};
 use crate::hex::combine_hex;
 use crate::messages::Msg;
+use iced::keyboard::Key;
+use iced::keyboard::key::Named;
+use iced::{Event, Task, clipboard};
 
 impl App {
     pub fn title(&self) -> String {
@@ -110,7 +110,7 @@ impl App {
 
             Msg::QueryChanged(q) => {
                 self.query = q;
-                self.rebuild_results();                 // sets sel_pos = Some(0) when non-empty
+                self.rebuild_results(); // sets sel_pos = Some(0) when non-empty
                 return self.scroll_to_selected();
             }
 
@@ -147,8 +147,8 @@ impl App {
                     _ => {}
                 }
                 if moved {
-                    self.activate_selected();          // wheel updates immediately
-                    return self.scroll_to_selected();  // pin in view
+                    self.activate_selected(); // wheel updates immediately
+                    return self.scroll_to_selected(); // pin in view
                 }
                 Task::none()
             }
@@ -160,12 +160,12 @@ impl App {
                 if row < self.results_idx.len() {
                     self.sel_pos = Some(row);
                     self.activate_selected();
-                    return self.scroll_to_selected();  // keep clicked item at top
+                    return self.scroll_to_selected(); // keep clicked item at top
                 }
                 Task::none()
             }
 
-            _ => { Task::none() }
+            _ => Task::none(),
         }
     }
 }

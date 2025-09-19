@@ -1,20 +1,12 @@
+use iced::widget::{Space, column, container, mouse_area, scrollable, text};
+use iced::{Alignment, Background, Color, Element, Length, Renderer, Theme, border};
 use std::collections::HashMap;
-
-
-use std::sync::LazyLock;
-// src/app_gui.rs
-use crate::colors_helper::{self, COLORS_GITHUB, COLORS_HINDI, COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin};
-use crate::hex::{combine_hex, sanitize_hex2};
-use crate::messages::Msg;
-use crate::rgb::hex_to_rgb;
-use iced::widget::{PickList, button, column, container, pick_list, row, scrollable, text, text_input, Space, mouse_area};
-use iced::{Alignment, Background, Color, Element, Length, Renderer, Task, Theme, clipboard, border};
 
 pub mod app_helpers;
 pub mod subscription;
-
 pub mod update;
 pub mod view;
+
 pub struct App {
     pub rr: String,
     pub gg: String,
@@ -23,25 +15,24 @@ pub struct App {
     pub search: String,
     pub selected_name: Option<String>,
 
-    pub selected_origin: Origin,
+    pub selected_origin: crate::colors_helper::Origin,
     pub status: String,
 
-    query: String,
+    pub query: String,
 
-    dropdown_scroll_id: scrollable::Id,
+    pub dropdown_scroll_id: scrollable::Id,
 
     // Index-driven dropdown state
-    base: Vec<(&'static str, &'static str)>,                  // current origin's slice (owned)
-    base_index_by_name: std::collections::HashMap<&'static str, usize>, // name -> index in `base`
-    results_idx: Vec<usize>,                                  // filtered result indices into `base`
-    sel_pos: Option<usize>,                                   // cursor position in `results_idx`
-    dropdown_open: bool
+    pub base: Vec<(&'static str, &'static str)>,
+    pub base_index_by_name: HashMap<&'static str, usize>,
+    pub results_idx: Vec<usize>,
+    pub sel_pos: Option<usize>,
+    pub dropdown_open: bool,
 }
-
 
 impl Default for App {
     fn default() -> Self {
-        let selected_origin = Origin::All; // or your preferred default
+        let selected_origin = crate::colors_helper::Origin::All;
 
         // materialize the current origin's list
         let base = crate::colors_helper::colors_for(selected_origin).to_vec();
@@ -53,16 +44,17 @@ impl Default for App {
         }
 
         Self {
-            // initialize all your existing fields here
-            // (examples — replace with your actual fields)
             rr: String::new(),
             gg: String::new(),
             bb: String::new(),
+
             search: String::new(),
             selected_name: None,
-            selected_origin: selected_origin, // or your desired default
-            status: "".to_string(),
-            query: "".to_string(),
+
+            selected_origin,
+            status: String::new(),
+
+            query: String::new(),
 
             base,
             base_index_by_name,
@@ -70,7 +62,6 @@ impl Default for App {
             sel_pos: None,
 
             dropdown_scroll_id: scrollable::Id::unique(),
-            // ...any other fields you have...
             dropdown_open: false,
         }
     }

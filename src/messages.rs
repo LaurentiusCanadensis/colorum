@@ -14,7 +14,7 @@ pub enum Msg {
     PickChanged(String),
     CenterClicked,            // ⬅️ new
     PickedName(&'static str), // was String
-    DropdownClicked(usize), // mouse click row (position in results list)
+    DropdownClicked(usize),   // mouse click row (position in results list)
 
     // text inputs
     RChanged(String),

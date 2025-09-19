@@ -57,6 +57,8 @@ static IDX_NATIONAL: LazyLock<HashMap<String, Box<[usize]>>> =
     LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::National)));
 static IDX_BRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
     LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Brands)));
+static IDX_ITALIANBRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
+    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::ItalianBrands)));
 
 #[cfg(feature = "github-colors")]
 static IDX_GITHUB: LazyLock<HashMap<String, Box<[usize]>>> =
@@ -72,6 +74,7 @@ fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
         Origin::Persian => &IDX_PERSIAN,
         Origin::National => &IDX_NATIONAL,
         Origin::Brands => &IDX_BRANDS,
+        Origin::ItalianBrands => &IDX_ITALIANBRANDS,
 
         #[cfg(feature = "github-colors")]
         Origin::GitHub => &IDX_GITHUB,
@@ -376,7 +379,7 @@ fn union_sorted_slices(a: &[usize], b: &[usize]) -> Vec<usize> {
 
 // tune these
 pub const HEAVY_MIN_QUERY: usize = 1; // require 1+ chars for heavy sets (so 2-letter inputs show)
-pub const MAX_RESULTS: usize = 40; // cap the dropdown size
+pub const MAX_RESULTS: usize = 4000; // cap the dropdown size
 #[inline]
 pub fn is_heavy_origin(origin: Origin) -> bool {
     match origin {

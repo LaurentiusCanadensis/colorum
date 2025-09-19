@@ -25,9 +25,9 @@ pub use colors::{
     pantone_colors::COLORS_PANTONE, persian_colors::COLORS_PERSIAN, xkcd::COLORS_XKCD,
 };
 
+pub use colors::brand_colors::COLORS_BRANDS;
 #[cfg(feature = "github-colors")]
 pub use colors::github_colors::COLORS_GITHUB;
-pub use colors::brand_colors::COLORS_BRANDS;
 
 // ---- App runner glue for main.rs -------------------------------------------
 
