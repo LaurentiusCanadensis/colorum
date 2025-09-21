@@ -8,6 +8,9 @@ pub mod update;
 pub mod view;
 
 pub struct App {
+    // lowercase cache for fast substring search (parallel to `base`)
+    base_names_lc: Vec<String>,
+
     pub rr: String,
     pub gg: String,
     pub bb: String,
@@ -28,6 +31,8 @@ pub struct App {
     pub results_idx: Vec<usize>,
     pub sel_pos: Option<usize>,
     pub dropdown_open: bool,
+    last_query: String,
+    last_results_idx: Vec<usize>,
 }
 
 impl Default for App {
@@ -42,27 +47,36 @@ impl Default for App {
         for (i, &(_h, n)) in base.iter().enumerate() {
             base_index_by_name.insert(n, i);
         }
-
-        Self {
+        let mut s = Self {
             rr: String::new(),
             gg: String::new(),
             bb: String::new(),
-
             search: String::new(),
             selected_name: None,
-
-            selected_origin,
+            selected_origin, // keep your existing value
             status: String::new(),
-
             query: String::new(),
 
-            base,
-            base_index_by_name,
+            // these three are important:
+            base,               // already built above from the default origin
+            base_index_by_name, // already built above
             results_idx: Vec::new(),
-            sel_pos: None,
+            last_query: String::new(),
+            last_results_idx: Vec::new(),
 
+            sel_pos: None,
             dropdown_scroll_id: scrollable::Id::unique(),
             dropdown_open: false,
-        }
+            base_names_lc: Vec::new(),
+            // ...include any other fields you have here unchanged...
+        };
+        // populate lowercase cache once at startup
+        s.base_names_lc = s
+            .base
+            .iter()
+            .map(|&(_h, n)| n.to_ascii_lowercase())
+            .collect();
+        s.repopulate_full_results();
+        s
     }
 }

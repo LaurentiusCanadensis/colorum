@@ -4,9 +4,11 @@ use std::sync::LazyLock;
 #[cfg(feature = "github-colors")]
 use crate::colors_helper::COLORS_GITHUB;
 use crate::colors_helper::{
-    self, COLORS_BRANDS, COLORS_CSS, COLORS_HINDI, COLORS_ITALIANBRANDS, COLORS_NATIONAL,
-    COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, Origin,
+    self, COLORS_BRANDS, COLORS_CSS, COLORS_HINDI, COLORS_ITALIANBRANDS, COLORS_METALS_FLAME,
+    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, MAX_RESULTS,
+    Origin,
 };
+
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
 use crate::rgb::hex_to_rgb;
@@ -30,7 +32,7 @@ impl App {
         }
     }
 
-    fn view_dropdown(&self) -> iced::Element<Msg> {
+    pub(crate) fn view_dropdown(&self) -> iced::Element<Msg> {
         use iced::border;
         use iced::widget::{Space, column, container, mouse_area, scrollable, text};
         use iced::{Alignment, Background, Color, Length};
@@ -88,7 +90,43 @@ impl App {
             .into()
     }
 
-    pub(crate) fn filtered_names(&self) -> Vec<&'static str> {
+    pub fn filtered_names(&self) -> Vec<&'static str> {
+        use crate::colors_helper::{
+            HEAVY_MIN_QUERY, MAX_RESULTS, TokenMode, is_heavy_origin, origin_names, origin_rank,
+            search_in_origin,
+        };
+
+        let q = self.search.trim();
+
+        if q.is_empty() {
+            // show full list when no query
+            return origin_names(self.selected_origin).to_vec();
+        }
+
+        if is_heavy_origin(self.selected_origin) && q.len() < HEAVY_MIN_QUERY {
+            // fallback: still show everything if user hasn’t typed enough
+            return origin_names(self.selected_origin).to_vec();
+        }
+
+        // normal search flow
+        let mode = if q.contains(' ') {
+            TokenMode::All
+        } else {
+            TokenMode::Any
+        };
+        let hits = search_in_origin(self.selected_origin, q, mode);
+
+        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name).collect();
+        let rank = origin_rank(self.selected_origin);
+        names.sort_unstable_by_key(|n| rank.get(n).copied().unwrap_or(usize::MAX));
+
+        if names.len() > MAX_RESULTS {
+            names.truncate(MAX_RESULTS);
+        }
+        names
+    }
+
+    pub(crate) fn filtered_names_old(&self) -> Vec<&'static str> {
         use crate::colors_helper::{
             HEAVY_MIN_QUERY, MAX_RESULTS, is_heavy_origin, origin_names, origin_rank,
         };
@@ -134,10 +172,9 @@ impl App {
     /// Filter names by origin *and* search, then sort alphabetically
 
     /// Get HEX for a name, *restricted to the active origin*.
-    fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
+    pub(crate) fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
         let set = colors_helper::colors_for(self.selected_origin);
-        set.as_slice()
-            .iter()
+        set.iter()
             .find(|&&(_hex, nm)| nm.eq_ignore_ascii_case(name))
             .map(|&(hex, _)| hex)
     }
@@ -366,6 +403,13 @@ use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
 
 impl App {
+    /// Fill `results_idx` with all rows from current `base` and select the first row.
+    pub fn repopulate_full_results(&mut self) {
+        self.results_idx.clear();
+        self.results_idx.extend(0..self.base.len());
+        self.sel_pos = if self.base.is_empty() { None } else { Some(0) };
+        self.dropdown_open = true;
+    }
     pub fn scroll_to_selected(&self) -> Task<Msg> {
         // Must match your dropdown widget:
         const VIEWPORT_H: f32 = 220.0; // .height(Length::Fixed(220.0))
@@ -473,5 +517,39 @@ impl App {
             self.bb = format!("{:02X}", rgb.b);
         }
         self.selected_name = Some(name.to_string());
+    }
+
+    /// Set rr/gg/bb from a hex string like "#61B3E4" or "61B3E4".
+    pub(crate) fn set_from_hex(&mut self, hex: &str) {
+        let clean = hex.trim().trim_start_matches('#');
+        if clean.len() == 6 {
+            if let Ok(r) = u8::from_str_radix(&clean[0..2], 16) {
+                if let Ok(g) = u8::from_str_radix(&clean[2..4], 16) {
+                    if let Ok(b) = u8::from_str_radix(&clean[4..6], 16) {
+                        self.rr = format!("{r:02X}");
+                        self.gg = format!("{g:02X}");
+                        self.bb = format!("{b:02X}");
+                    }
+                }
+            }
+        }
+    }
+
+    /// Apply the color at `results_idx[row]` to the wheel + selection.
+    pub(crate) fn select_row(&mut self, row: usize) {
+        if row < self.results_idx.len() {
+            self.sel_pos = Some(row);
+            let idx = self.results_idx[row];
+            let (hex, name) = self.base[idx];
+            self.selected_name = Some(name.to_string());
+            self.set_from_hex(hex);
+        }
+    }
+    pub(crate) fn repopulate_full_results_capped(&mut self) {
+        let n = self.base.len().min(MAX_RESULTS);
+        self.results_idx.clear();
+        self.results_idx.reserve(n);
+        self.results_idx.extend(0..n);
+        self.sel_pos = if n > 0 { Some(0) } else { None };
     }
 }

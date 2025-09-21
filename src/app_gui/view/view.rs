@@ -1,9 +1,9 @@
 use crate::app_gui::App;
-use crate::colors_helper::Origin;
+use crate::colors_helper::{Origin, REGISTRY};
 use crate::messages::Msg;
 use crate::widgets::color_wheel::WheelSearchProps;
-use iced::Element;
-use iced::widget::pick_list;
+use iced::widget::{container, pick_list, scrollable, text_input};
+use iced::{Alignment, Element, Length};
 
 impl App {
     pub fn view(&self) -> Element<Msg> {
@@ -39,6 +39,7 @@ impl App {
                 on_click_row: Msg::DropdownClicked,
             },
         );
+
         // --- filtered names (FAST; uses your cached/indexed search) ---
         let filtered_names: Vec<&'static str> = self.filtered_names();
 
@@ -50,7 +51,10 @@ impl App {
                 .find(|s| s.eq_ignore_ascii_case(cur))
         });
 
-        // Origins dropdown
+        // Old:
+        // let origins_list = vec![Origin::All, Origin::XKCD, ...];
+
+        // New: derive from REGISTRY so it auto-includes new palettes
         let origins_list = {
             let mut v = vec![
                 Origin::All,
@@ -69,33 +73,43 @@ impl App {
             }
             v
         };
-        let origin_dd = pick_list(origins_list, Some(self.selected_origin), Msg::OriginPicked)
-            .placeholder("Origin")
-            .width(Length::Shrink);
-        use iced::border;
-        use iced::widget::{
-            Space, column, container, mouse_area, row, scrollable, text, text_input,
-        };
-        use iced::{Alignment, Background, Color, Length};
+
+        let origin_dd = iced::widget::pick_list(
+            origins_list,
+            Some(self.selected_origin), // <- must be Some(current)
+            Msg::OriginPicked,          // <- on_select
+        )
+        .placeholder("Origin")
+        .width(iced::Length::Shrink);
+
+        // Search box (uses your existing query + messages)
 
         // Keep the rest of your layout as you like:
         let clear_btn = iced::widget::button("Clear")
             .on_press(Msg::Clear)
             .padding([6, 10]);
 
-        let content = column![
-            container(wheel_view)
-                .width(Length::Fill)
-                .align_x(Alignment::Center)
-                .padding([4, 0]),
-            row![origin_dd, clear_btn]
-                .spacing(10)
-                .align_y(Alignment::Center)
-                .width(Length::Shrink),
-        ]
-        .align_x(Alignment::Center)
-        .spacing(8)
-        .padding([6, 6]);
+        let content = iced::widget::Column::new()
+            // Center the wheel without forcing width; it will scale to the window.
+            .push(
+                container(wheel_view)
+                    .width(Length::Fill)
+                    .align_x(Alignment::Center)
+                    .padding([4, 0]),
+            )
+            // Input above dropdown, centered, shrink-friendly (inline instead of `stacked_controls`)
+            // Bottom row with origin selector + clear button
+            .push(
+                iced::widget::Row::new()
+                    .push(origin_dd)
+                    .push(clear_btn)
+                    .spacing(10)
+                    .align_y(iced::Alignment::Center)
+                    .width(Length::Shrink),
+            )
+            .align_x(Alignment::Center)
+            .spacing(12)
+            .padding([8, 8]);
 
         scrollable(
             container(content)

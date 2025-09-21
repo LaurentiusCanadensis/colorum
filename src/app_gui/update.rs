@@ -1,5 +1,8 @@
 use crate::app_gui::App;
-use crate::colors_helper::{Origin, sanitize_hex2};
+use crate::colors_helper::{
+    HEAVY_MIN_QUERY, MAX_RESULTS, Origin, TokenMode, is_heavy_origin, origin_rank, sanitize_hex2,
+    search_in_origin,
+};
 use crate::hex::combine_hex;
 use crate::messages::Msg;
 use iced::keyboard::Key;
@@ -82,6 +85,9 @@ impl App {
 
             Msg::PickedName(name) => {
                 self.apply_selected_name(name);
+                if let Some(hex) = self.hex_for_name_in_origin(&name) {
+                    self.set_from_hex(hex);
+                }
                 Task::none()
             }
 
@@ -101,25 +107,177 @@ impl App {
                 self.rr.clear();
                 self.gg.clear();
                 self.bb.clear();
-                self.search.clear();
+
+                self.query.clear();
+                self.results_idx.clear();
+                self.last_query.clear();
+                self.last_results_idx.clear();
+
+                self.sel_pos = None;
+                self.dropdown_open = false;
+
                 self.selected_name = None;
                 self.status.clear();
-                self.selected_origin = Origin::All;
+
+                // Keep the current origin, or reset if you prefer:
+                // self.selected_origin = Origin::All;
+
                 Task::none()
             }
 
-            Msg::QueryChanged(q) => {
-                self.query = q;
-                self.rebuild_results(); // sets sel_pos = Some(0) when non-empty
-                return self.scroll_to_selected();
+            Msg::QueryChanged(s) => {
+                self.query = s;
+                let q = self.query.trim();
+
+                // Gate heavy origins: do nothing until 2+ chars
+                const HEAVY_MIN: usize = 2;
+
+                let is_heavy = matches!(self.selected_origin, Origin::All);
+
+                if q.is_empty() || (is_heavy && q.len() < HEAVY_MIN) {
+                    // For GitHub/All, showing *everything* is costly; keep dropdown closed.
+                    self.results_idx.clear();
+                    self.sel_pos = None;
+                    self.dropdown_open = false;
+
+                    // If you prefer to show top-N instead, call a small precompute here.
+                    return Task::none();
+                }
+
+                let qlc = q.to_ascii_lowercase();
+                let prev = self.last_query.clone();
+                let mut seed: Option<&[usize]> = None;
+
+                if !prev.is_empty() && qlc.starts_with(&prev) {
+                    // The new query is stricter → filter the old results only
+                    seed = Some(&self.last_results_idx);
+                }
+
+                self.results_idx.clear();
+                const MAX_RESULTS: usize = 200;
+
+                if let Some(seed_ids) = seed {
+                    for &i in seed_ids {
+                        if self.base_names_lc[i].contains(&qlc) {
+                            self.results_idx.push(i);
+                            if self.results_idx.len() >= MAX_RESULTS {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // full scan fallback
+                    for (i, name_lc) in self.base_names_lc.iter().enumerate() {
+                        if name_lc.contains(&qlc) {
+                            self.results_idx.push(i);
+                            if self.results_idx.len() >= MAX_RESULTS {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                self.last_query = qlc.clone();
+                self.last_results_idx = self.results_idx.clone();
+                // Fast scan over cached lowercase (no allocation per item)
+                self.results_idx.clear();
+                // Optional: stop once we have enough rows to keep UI snappy
+
+                for (i, name_lc) in self.base_names_lc.iter().enumerate() {
+                    if name_lc.contains(&qlc) {
+                        self.results_idx.push(i);
+                        if self.results_idx.len() >= MAX_RESULTS {
+                            break;
+                        }
+                    }
+                }
+
+                self.sel_pos = if self.results_idx.is_empty() {
+                    None
+                } else {
+                    Some(0)
+                };
+                self.dropdown_open = !self.results_idx.is_empty();
+
+                // Auto-select first hit to update center color immediately
+                if let Some(&i0) = self.results_idx.first() {
+                    let (hex, name) = self.base[i0];
+                    self.selected_name = Some(name.to_string());
+                    self.set_from_hex(hex);
+                }
+
+                Task::none()
             }
 
             Msg::OriginPicked(o) => {
+                #[cfg(feature = "profile")]
+                let __t0 = std::time::Instant::now();
+
                 self.selected_origin = o;
-                self.reindex_origin();
-                self.rebuild_results();
-                return self.scroll_to_selected();
+
+                let slice = crate::colors_helper::colors_for(o);
+                self.base = slice.to_vec();
+
+                // rebuild lowercase cache for the new base
+                self.base_names_lc.clear();
+                self.base_names_lc.reserve(self.base.len());
+                for &(_h, n) in &self.base {
+                    self.base_names_lc.push(n.to_ascii_lowercase());
+                }
+
+                // reset incremental caches
+                self.last_query.clear();
+                self.last_results_idx.clear();
+
+                self.base_index_by_name.clear();
+                for (i, &(_h, n)) in self.base.iter().enumerate() {
+                    self.base_index_by_name.insert(n, i);
+                }
+
+                // OWN the trimmed query (avoid borrowing self)
+                let q: String = self.query.trim().to_owned();
+
+                if q.is_empty() {
+                    self.repopulate_full_results_capped();
+                } else {
+                    let qlc = q.to_ascii_lowercase();
+                    self.results_idx.clear();
+                    for (i, name_lc) in self.base_names_lc.iter().enumerate() {
+                        if name_lc.contains(&qlc) {
+                            self.results_idx.push(i);
+                            // keep it snappy
+                            if self.results_idx.len() >= MAX_RESULTS {
+                                break;
+                            }
+                        }
+                    }
+                    self.sel_pos = if self.results_idx.is_empty() {
+                        None
+                    } else {
+                        Some(0)
+                    };
+                }
+
+                if let Some(&i0) = self.results_idx.first() {
+                    let (hex, name) = self.base[i0];
+                    self.selected_name = Some(name.to_string());
+                    self.set_from_hex(hex);
+                } else {
+                    self.selected_name = None;
+                }
+
+                #[cfg(feature = "profile")]
+                eprintln!(
+                    "[profile] OriginPicked({:?}): base_len={} hits={} took={:?}",
+                    self.selected_origin,
+                    self.base.len(),
+                    self.results_idx.len(),
+                    __t0.elapsed()
+                );
+
+                Task::none()
             }
+
             Msg::KeyPressed(key) => {
                 use iced::keyboard::{Key, key::Named};
                 let mut moved = false;
@@ -157,11 +315,7 @@ impl App {
                 iced::Task::none()
             }
             Msg::DropdownClicked(row) => {
-                if row < self.results_idx.len() {
-                    self.sel_pos = Some(row);
-                    self.activate_selected();
-                    return self.scroll_to_selected(); // keep clicked item at top
-                }
+                self.select_row(row);
                 Task::none()
             }
 

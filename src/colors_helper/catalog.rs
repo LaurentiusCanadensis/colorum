@@ -49,63 +49,54 @@ pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
         Origin::GitHub => COLORS_GITHUB,
     }
 }
-
+fn data_xkcd() -> &'static [(&'static str, &'static str)] {
+    COLORS_XKCD
+}
+fn data_pantone() -> &'static [(&'static str, &'static str)] {
+    COLORS_PANTONE
+}
+fn data_hindi() -> &'static [(&'static str, &'static str)] {
+    COLORS_HINDI
+}
+fn data_persian() -> &'static [(&'static str, &'static str)] {
+    COLORS_PERSIAN
+}
+fn data_brands() -> &'static [(&'static str, &'static str)] {
+    COLORS_BRANDS
+}
+fn data_italian_brands() -> &'static [(&'static str, &'static str)] {
+    COLORS_ITALIANBRANDS
+}
+#[cfg(feature = "github-colors")]
+fn data_github() -> &'static [(&'static str, &'static str)] {
+    COLORS_GITHUB
+}
 pub const COLORS_ALL_FALLBACK: &[(&str, &str)] = &[];
 
-pub fn colors_for(origin: Origin) -> ColorsFor {
-    match origin {
-        Origin::Css => ColorsFor::Slice(COLORS_CSS),
-        Origin::XKCD => ColorsFor::Slice(COLORS_XKCD),
-        Origin::Pantone => ColorsFor::Slice(COLORS_PANTONE),
-        Origin::Hindi => ColorsFor::Slice(COLORS_HINDI),
-        Origin::Persian => ColorsFor::Slice(COLORS_PERSIAN),
-        Origin::Brands => ColorsFor::Slice(COLORS_BRANDS),
-        Origin::ItalianBrands => ColorsFor::Slice(COLORS_ITALIANBRANDS),
-
-        Origin::National => ColorsFor::Slice(COLORS_NATIONAL.as_slice()),
-        #[cfg(feature = "github-colors")]
-        Origin::GitHub => ColorsFor::Slice(COLORS_GITHUB),
-        Origin::All => {
-            if !COLORS_ALL_FALLBACK.is_empty() {
-                ColorsFor::Slice(COLORS_ALL_FALLBACK)
-            } else {
-                let mut v = Vec::new();
-                v.extend_from_slice(COLORS_CSS);
-                v.extend_from_slice(COLORS_XKCD);
-                v.extend_from_slice(COLORS_PERSIAN);
-                v.extend_from_slice(COLORS_PANTONE);
-                v.extend_from_slice(COLORS_HINDI);
-                v.extend_from_slice(COLORS_BRANDS);
-                v.extend_from_slice(COLORS_ITALIANBRANDS);
-
-                v.extend_from_slice(COLORS_NATIONAL.as_slice());
-                #[cfg(feature = "github-colors")]
-                v.extend_from_slice(COLORS_GITHUB);
-                ColorsFor::Owned(v)
-            }
-        }
+pub static REGISTRY_MAP: LazyLock<
+    HashMap<Origin, fn() -> &'static [(&'static str, &'static str)]>,
+> = LazyLock::new(|| {
+    let mut m = HashMap::with_capacity(REGISTRY.len());
+    for c in REGISTRY {
+        m.insert(c.origin, c.data); // store the function pointer
     }
-}
-
-pub static COMBINED_COLORS: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
-    let base = COLORS_CSS
-        .iter()
-        .copied()
-        .chain(COLORS_XKCD.iter().copied())
-        .chain(COLORS_ITALIANBRANDS.iter().copied())
-        .chain(COLORS_BRANDS.iter().copied())
-        .chain(COLORS_PANTONE.iter().copied())
-        .chain(COLORS_PERSIAN.iter().copied())
-        .chain(COLORS_NATIONAL.iter().copied())
-        .chain(COLORS_HINDI.iter().copied());
-
-    #[cfg(feature = "github-colors")]
-    let it = base.chain(COLORS_GITHUB.iter().copied());
-    #[cfg(not(feature = "github-colors"))]
-    let it = base;
-    it.collect()
+    m
 });
 
+pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
+    if let Origin::All = origin {
+        return COMBINED_COLORS.as_slice();
+    }
+    REGISTRY_MAP.get(&origin).map(|f| f()).unwrap_or(&[])
+}
+
+pub static COMBINED_COLORS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLock::new(|| {
+    let mut v = Vec::new();
+    for c in REGISTRY {
+        v.extend_from_slice((c.data)());
+    }
+    v
+});
 // Name lookups
 pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
     COMBINED_COLORS
@@ -173,24 +164,29 @@ pub static ORIGIN_NAMES_BRANDS: LazyLock<Box<[&'static str]>> =
 
 pub static ORIGIN_NAMES_ITALIANBRANDS: LazyLock<Box<[&'static str]>> =
     LazyLock::new(|| build_sorted_names(Origin::ItalianBrands));
+// Origin -> &'static [&'static str]
+static NAMES_CACHE: LazyLock<std::sync::Mutex<HashMap<Origin, &'static [&'static str]>>> =
+    LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
 
 pub fn origin_names(origin: Origin) -> &'static [&'static str] {
-    match origin {
-        Origin::All => &ORIGIN_NAMES_ALL,
-        Origin::Css => &ORIGIN_NAMES_CSS,
-        Origin::XKCD => &ORIGIN_NAMES_XKCD,
-        Origin::Pantone => &ORIGIN_NAMES_PANTONE,
-        Origin::ItalianBrands => &ORIGIN_NAMES_ITALIANBRANDS,
-        Origin::National => &ORIGIN_NAMES_NATIONAL,
-        #[cfg(feature = "github-colors")]
-        Origin::GitHub => &ORIGIN_NAMES_GITHUB,
-
-        Origin::Brands => &ORIGIN_NAMES_BRANDS,
-        Origin::Persian => &ORIGIN_NAMES_PERSIAN,
-        Origin::Hindi => &ORIGIN_NAMES_HINDI,
+    if let Origin::All = origin {
+        // One combined cache for All
+        static ALL_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
+            let names: Vec<&'static str> = COMBINED_COLORS.iter().map(|&(_, n)| n).collect();
+            Box::leak(names.into_boxed_slice())
+        });
+        return *ALL_NAMES;
     }
-}
 
+    let mut guard = NAMES_CACHE.lock().expect("poisoned NAMES_CACHE");
+    if let Some(&cached) = guard.get(&origin) {
+        return cached;
+    }
+    let names_vec: Vec<&'static str> = colors_for(origin).iter().map(|&(_, n)| n).collect();
+    let leaked: &'static [&'static str] = Box::leak(names_vec.into_boxed_slice());
+    guard.insert(origin, leaked);
+    leaked
+}
 pub static ORIGIN_RANK_ALL: LazyLock<HashMap<&'static str, usize>> =
     LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_ALL));
 pub static ORIGIN_RANK_CSS: LazyLock<HashMap<&'static str, usize>> =
@@ -214,20 +210,22 @@ pub static ORIGIN_RANK_BRANDS: LazyLock<HashMap<&'static str, usize>> =
 pub static ORIGIN_RANK_ITALIANBRANDS: LazyLock<HashMap<&'static str, usize>> =
     LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_ITALIANBRANDS));
 
+// Origin -> &'static HashMap<&'static str, usize>
+static RANK_CACHE: LazyLock<
+    std::sync::Mutex<HashMap<Origin, &'static HashMap<&'static str, usize>>>,
+> = LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+
 pub fn origin_rank(origin: Origin) -> &'static HashMap<&'static str, usize> {
-    match origin {
-        Origin::All => &ORIGIN_RANK_ALL,
-        Origin::Css => &ORIGIN_RANK_CSS,
-        Origin::XKCD => &ORIGIN_RANK_XKCD,
-        Origin::Pantone => &ORIGIN_RANK_PANTONE,
-        Origin::Brands => &ORIGIN_RANK_BRANDS,
-        Origin::ItalianBrands => &ORIGIN_RANK_ITALIANBRANDS,
-
-        Origin::Hindi => &ORIGIN_RANK_HINDI,
-        Origin::Persian => &ORIGIN_RANK_PERSIAN,
-        Origin::National => &ORIGIN_RANK_NATIONAL,
-
-        #[cfg(feature = "github-colors")]
-        Origin::GitHub => &ORIGIN_RANK_GITHUB,
+    let mut guard = RANK_CACHE.lock().expect("poisoned RANK_CACHE");
+    if let Some(&cached) = guard.get(&origin) {
+        return cached;
     }
+
+    let mut map: HashMap<&'static str, usize> = HashMap::new();
+    for (i, &(_, name)) in colors_for(origin).iter().enumerate() {
+        map.insert(name, i);
+    }
+    let leaked: &'static HashMap<&'static str, usize> = Box::leak(Box::new(map));
+    guard.insert(origin, leaked);
+    leaked
 }

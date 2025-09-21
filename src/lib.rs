@@ -3,6 +3,7 @@
 //! - Provides `run_app()` that `main.rs` can call to start the Iced app_gui.
 
 #![forbid(unsafe_code)]
+extern crate core;
 
 pub mod colors; // src/colors/
 pub mod colors_helper; // src/colors_helper/
@@ -98,3 +99,16 @@ mod tests {
         assert_eq!(name, "springgreen");
     }
 }
+#[cfg(feature = "profile")]
+pub fn init_profiling() {
+    use tracing_subscriber::{EnvFilter, fmt};
+    // RUST_LOG controls verbosity at runtime; defaults below if not set:
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,rust_colors=trace".into());
+
+    // Ignore double-init errors if multiple crates call it:
+    let _ = fmt().with_env_filter(filter).compact().try_init();
+}
+
+#[cfg(not(feature = "profile"))]
+pub fn init_profiling() {}
