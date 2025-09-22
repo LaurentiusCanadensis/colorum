@@ -121,90 +121,45 @@ fn build_rank_map(names: &[&'static str]) -> HashMap<&'static str, usize> {
     }
     m
 }
-pub static ORIGIN_NAMES_ALL: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::All));
-pub static ORIGIN_NAMES_CSS: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::Css));
-pub static ORIGIN_NAMES_XKCD: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::XKCD));
-pub static ORIGIN_NAMES_PANTONE: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::Pantone));
-pub static ORIGIN_NAMES_HINDI: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::Hindi));
-pub static ORIGIN_NAMES_PERSIAN: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::Persian));
-pub static ORIGIN_NAMES_NATIONAL: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::National));
-#[cfg(feature = "github-colors")]
-pub static ORIGIN_NAMES_GITHUB: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::GitHub));
-pub static ORIGIN_NAMES_BRANDS: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::Brands));
+// Consolidated origin name caching
+pub static ORIGIN_NAMES_CACHE: LazyLock<HashMap<Origin, Box<[&'static str]>>> = LazyLock::new(|| {
+    let mut cache = HashMap::new();
 
-pub static ORIGIN_NAMES_ITALIANBRANDS: LazyLock<Box<[&'static str]>> =
-    LazyLock::new(|| build_sorted_names(Origin::ItalianBrands));
-// Origin -> &'static [&'static str]
-static NAMES_CACHE: LazyLock<std::sync::Mutex<HashMap<Origin, &'static [&'static str]>>> =
-    LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+    // Build for all origins
+    for &origin in &[
+        Origin::All, Origin::Css, Origin::XKCD, Origin::Pantone,
+        Origin::Hindi, Origin::Persian, Origin::National, Origin::Brands,
+        Origin::ItalianBrands, Origin::MetalFlames, Origin::KelvinColors,
+        #[cfg(feature = "github-colors")]
+        Origin::GitHub,
+    ] {
+        cache.insert(origin, build_sorted_names(origin));
+    }
+
+    cache
+});
+// Consolidated origin rank caching
+pub static ORIGIN_RANK_CACHE: LazyLock<HashMap<Origin, HashMap<&'static str, usize>>> = LazyLock::new(|| {
+    let mut cache = HashMap::new();
+
+    // Build ranks for all origins using the name cache
+    for (&origin, names) in ORIGIN_NAMES_CACHE.iter() {
+        cache.insert(origin, build_rank_map(names));
+    }
+
+    cache
+});
 
 pub fn origin_names(origin: Origin) -> &'static [&'static str] {
-    if let Origin::All = origin {
-        // One combined cache for All
-        static ALL_NAMES: LazyLock<&'static [&'static str]> = LazyLock::new(|| {
-            let names: Vec<&'static str> = COMBINED_COLORS.iter().map(|&(_, n)| n).collect();
-            Box::leak(names.into_boxed_slice())
-        });
-        return *ALL_NAMES;
-    }
-
-    let mut guard = NAMES_CACHE.lock().expect("poisoned NAMES_CACHE");
-    if let Some(&cached) = guard.get(&origin) {
-        return cached;
-    }
-    let names_vec: Vec<&'static str> = colors_for(origin).iter().map(|&(_, n)| n).collect();
-    let leaked: &'static [&'static str] = Box::leak(names_vec.into_boxed_slice());
-    guard.insert(origin, leaked);
-    leaked
+    ORIGIN_NAMES_CACHE.get(&origin)
+        .map(|names| names.as_ref())
+        .unwrap_or(&[])
 }
-pub static ORIGIN_RANK_ALL: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_ALL));
-pub static ORIGIN_RANK_CSS: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_CSS));
-pub static ORIGIN_RANK_XKCD: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_XKCD));
-pub static ORIGIN_RANK_PANTONE: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_PANTONE));
-pub static ORIGIN_RANK_HINDI: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_HINDI));
-pub static ORIGIN_RANK_PERSIAN: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_PERSIAN));
-pub static ORIGIN_RANK_NATIONAL: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_NATIONAL));
-#[cfg(feature = "github-colors")]
-pub static ORIGIN_RANK_GITHUB: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_GITHUB));
-pub static ORIGIN_RANK_BRANDS: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_BRANDS));
-
-pub static ORIGIN_RANK_ITALIANBRANDS: LazyLock<HashMap<&'static str, usize>> =
-    LazyLock::new(|| build_rank_map(&ORIGIN_NAMES_ITALIANBRANDS));
-
-// Origin -> &'static HashMap<&'static str, usize>
-static RANK_CACHE: LazyLock<
-    std::sync::Mutex<HashMap<Origin, &'static HashMap<&'static str, usize>>>,
-> = LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
 
 pub fn origin_rank(origin: Origin) -> &'static HashMap<&'static str, usize> {
-    let mut guard = RANK_CACHE.lock().expect("poisoned RANK_CACHE");
-    if let Some(&cached) = guard.get(&origin) {
-        return cached;
-    }
-
-    let mut map: HashMap<&'static str, usize> = HashMap::new();
-    for (i, &(_, name)) in colors_for(origin).iter().enumerate() {
-        map.insert(name, i);
-    }
-    let leaked: &'static HashMap<&'static str, usize> = Box::leak(Box::new(map));
-    guard.insert(origin, leaked);
-    leaked
+    ORIGIN_RANK_CACHE.get(&origin)
+        .unwrap_or(&EMPTY_RANK_MAP)
 }
+
+// Empty fallback to avoid Option handling
+static EMPTY_RANK_MAP: LazyLock<HashMap<&'static str, usize>> = LazyLock::new(|| HashMap::new());

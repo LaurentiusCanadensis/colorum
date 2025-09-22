@@ -73,6 +73,7 @@ impl Default for App {
             // ...include any other fields you have here unchanged...
             base_hex_nopound: vec![],
         };
+        // populate lowercase cache and hex without pound once at startup
         s.base_names_lc = s
             .base
             .iter()
@@ -88,12 +89,6 @@ impl Default for App {
                     h
                 }
             })
-            .collect();
-        // populate lowercase cache once at startup
-        s.base_names_lc = s
-            .base
-            .iter()
-            .map(|&(_h, n)| n.to_ascii_lowercase())
             .collect();
         s.repopulate_full_results();
         s

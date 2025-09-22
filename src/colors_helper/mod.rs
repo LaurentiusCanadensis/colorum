@@ -136,7 +136,7 @@ pub static REGISTRY: &[ColorCatalog] = &[
     ColorCatalog {
         name: "CSS",
         origin: Origin::Css,
-        data: data_xkcd,
+        data: data_css,
     },
     ColorCatalog {
         name: "XKCD",
@@ -192,6 +192,9 @@ pub static REGISTRY: &[ColorCatalog] = &[
 ];
 fn data_national() -> &'static [(&'static str, &'static str)] {
     COLORS_NATIONAL.as_slice() // this runs at runtime, not in a const context
+}
+fn data_css() -> &'static [(&'static str, &'static str)] {
+    COLORS_CSS
 }
 fn data_xkcd() -> &'static [(&'static str, &'static str)] {
     COLORS_XKCD

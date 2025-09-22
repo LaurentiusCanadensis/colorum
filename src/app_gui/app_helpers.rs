@@ -1,21 +1,9 @@
-use std::collections::HashMap;
-use std::sync::LazyLock;
-// src/app_gui.rs
-#[cfg(feature = "github-colors")]
-use crate::colors_helper::COLORS_GITHUB;
 use crate::colors_helper::{
-    self, COLORS_BRANDS, COLORS_CSS, COLORS_HINDI, COLORS_ITALIANBRANDS, COLORS_METALS_FLAME,
-    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, MAX_RESULTS, KELVIN_COLORS,
-    Origin,
+    self, MAX_RESULTS, Origin,
 };
 use crate::app_gui::App;
-use iced::advanced::subscription;
 use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
-use iced::futures::future::Lazy;
-
-
-use once_cell::sync::Lazy as OnceLazy; // <-- alias to avoid name collision
 
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
@@ -197,215 +185,14 @@ fn u8_from_hex2(s: &str) -> u8 {
 }
 
 pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static str)] {
-    match origin {
-        Origin::All => COMBINED_COLORS.as_slice(),
-        Origin::XKCD => COLORS_XKCD,
-        Origin::Pantone => COLORS_PANTONE,
-        Origin::Hindi => COLORS_HINDI,
-        Origin::Persian => COLORS_PERSIAN,
-        #[cfg(feature = "github-colors")]
-        Origin::GitHub => COLORS_GITHUB,
-        Origin::Css => COLORS_CSS,
-        Origin::Brands => COLORS_BRANDS,
-        Origin::ItalianBrands => COLORS_ITALIANBRANDS,
-        Origin::MetalFlames => COLORS_METALS_FLAME,
-        Origin::KelvinColors => KELVIN_COLORS,
-
-        Origin::National => COLORS_NATIONAL.as_slice(),
-    }
+    crate::colors_helper::colors_for(origin)
 }
 
-// ---------- A) Exact name maps & pre-lowercased cache ----------
-pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
-    COMBINED_COLORS
-        .iter()
-        .map(|(hex, name)| (*name, *hex))
-        .collect()
-});
+// Use centralized lookup functions from colors_helper
 
-pub static COLORS_BY_NAME_LC: LazyLock<HashMap<String, &'static str>> = LazyLock::new(|| {
-    let mut m = HashMap::new();
-    for (hex, name) in COMBINED_COLORS.as_slice() {
-        m.insert(name.to_lowercase(), *hex);
-    }
-    m
-});
+// Use centralized search functions from colors_helper
 
-pub struct ColorEntry {
-    pub hex: &'static str,
-    pub name: &'static str,
-    pub name_lc: String, // built once
-}
-
-pub static COLORS_LC: LazyLock<Vec<ColorEntry>> = LazyLock::new(|| {
-    COMBINED_COLORS
-        .iter()
-        .map(|(hex, name)| ColorEntry {
-            hex: *hex,
-            name: *name,
-            name_lc: name.to_lowercase(),
-        })
-        .collect()
-});
-
-// ---------- Tokenization ----------
-fn tokenize_lc(s: &str) -> impl Iterator<Item = String> + '_ {
-    s.split(|c: char| !c.is_alphanumeric())
-        .filter(|t| !t.is_empty())
-        .map(|t| t.to_lowercase())
-}
-
-// ---------- B) Token index (token -> sorted, deduped posting list) ----------
-// NOTE: store compact Box<[usize]> and pre-sort/dedup once.
-pub static NAME_TOKEN_INDEX: LazyLock<HashMap<String, Box<[usize]>>> = LazyLock::new(|| {
-    let mut idx: HashMap<String, Vec<usize>> = HashMap::new();
-
-    for (i, (_, name)) in COMBINED_COLORS.iter().enumerate() {
-        for tok in tokenize_lc(name) {
-            idx.entry(tok).or_default().push(i);
-        }
-    }
-
-    // Sort, dedup, shrink, then convert to Box<[usize]>
-    idx.into_iter()
-        .map(|(tok, mut v)| {
-            v.sort_unstable();
-            v.dedup();
-            v.shrink_to_fit();
-            (tok, v.into_boxed_slice())
-        })
-        .collect()
-});
-
-// ---------- Lookups ----------
-pub fn lookup_by_name(name: &str) -> Option<&'static str> {
-    COLORS_BY_NAME.get(name).copied()
-}
-
-pub fn lookup_by_name_ci(name: &str) -> Option<&'static str> {
-    COLORS_BY_NAME_LC.get(&name.to_lowercase()).copied()
-}
-
-// Fast substring search (case-insensitive, O(n) but no per-item lowercase)
-pub fn search_substring(query: &str) -> Vec<(&'static str, &'static str)> {
-    let q = query.to_lowercase();
-    COLORS_LC
-        .iter()
-        .filter(|e| e.name_lc.contains(&q))
-        .map(|e| (e.hex, e.name))
-        .collect()
-}
-
-// ---------- Helpers for sorted postings ----------
-#[inline]
-fn intersect_sorted_slices(a: &[usize], b: &[usize]) -> Vec<usize> {
-    let mut i = 0;
-    let mut j = 0;
-    let mut out = Vec::with_capacity(a.len().min(b.len()));
-
-    while i < a.len() && j < b.len() {
-        match a[i].cmp(&b[j]) {
-            std::cmp::Ordering::Less => i += 1,
-            std::cmp::Ordering::Greater => j += 1,
-            std::cmp::Ordering::Equal => {
-                out.push(a[i]);
-                i += 1;
-                j += 1;
-            }
-        }
-    }
-    out
-}
-
-#[inline]
-fn union_sorted_slices(a: &[usize], b: &[usize]) -> Vec<usize> {
-    let mut i = 0;
-    let mut j = 0;
-    // Upper bound is a.len() + b.len()
-    let mut out = Vec::with_capacity(a.len() + b.len());
-
-    while i < a.len() && j < b.len() {
-        match a[i].cmp(&b[j]) {
-            std::cmp::Ordering::Less => {
-                out.push(a[i]);
-                i += 1;
-            }
-            std::cmp::Ordering::Greater => {
-                out.push(b[j]);
-                j += 1;
-            }
-            std::cmp::Ordering::Equal => {
-                out.push(a[i]); // same value once
-                i += 1;
-                j += 1;
-            }
-        }
-    }
-    if i < a.len() {
-        out.extend_from_slice(&a[i..]);
-    }
-    if j < b.len() {
-        out.extend_from_slice(&b[j..]);
-    }
-    out
-}
-
-// ---------- Token search: ANY (OR) semantics, k-way union over sorted postings ----------
-pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
-    let mut postings: Vec<&[usize]> = Vec::new();
-
-    for tok in tokenize_lc(query) {
-        if let Some(list) = NAME_TOKEN_INDEX.get(&tok) {
-            postings.push(list);
-        }
-    }
-
-    if postings.is_empty() {
-        return Vec::new();
-    }
-
-    // Sort by length to improve merge locality
-    postings.sort_by_key(|p| p.len());
-
-    // Iteratively union the sorted lists
-    let mut result: Vec<usize> = postings[0].to_vec();
-    for p in postings.iter().skip(1) {
-        result = union_sorted_slices(&result, p);
-    }
-
-    result.into_iter().map(|i| COMBINED_COLORS[i]).collect()
-}
-
-// ---------- Token search: ALL (AND) semantics, intersect smallest lists first ----------
-pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
-    // Collect tokens and fetch postings
-    let mut lists: Vec<&[usize]> = {
-        let mut tmp = Vec::new();
-        for tok in tokenize_lc(query) {
-            match NAME_TOKEN_INDEX.get(&tok) {
-                Some(list) => tmp.push(list.as_ref()),
-                None => return Vec::new(), // missing token => no matches
-            }
-        }
-        if tmp.is_empty() {
-            return Vec::new();
-        }
-        tmp
-    };
-
-    // Intersect smallest first to keep intermediate sets tiny
-    lists.sort_by_key(|p| p.len());
-
-    let mut current: Vec<usize> = lists[0].to_vec();
-    for p in lists.iter().skip(1) {
-        if current.is_empty() {
-            break;
-        }
-        current = intersect_sorted_slices(&current, p);
-    }
-
-    current.into_iter().map(|i| COMBINED_COLORS[i]).collect()
-}
+// Duplicate search functions removed - use colors_helper module instead
 
 
 impl App {
@@ -563,60 +350,13 @@ impl App {
 
 }
 
-pub struct ColorCatalog {
-    pub name:  &'static str,
-    pub origin: Origin,
-    pub data:  &'static [(&'static str, &'static str)],
-}
+// Removed duplicate ColorCatalog - use the one from colors_helper
 
 
-pub static REGISTRY: OnceLazy<Vec<ColorCatalog>> = OnceLazy::new(|| {
-    let mut v = vec![
-        ColorCatalog { name: "All",            origin: Origin::All,            data: &[] },
-        ColorCatalog { name: "CSS",            origin: Origin::Css,            data: COLORS_CSS },
-        ColorCatalog { name: "XKCD",           origin: Origin::XKCD,           data: COLORS_XKCD },
-        ColorCatalog { name: "Pantone",        origin: Origin::Pantone,        data: COLORS_PANTONE },
-        ColorCatalog { name: "Hindi",          origin: Origin::Hindi,          data: COLORS_HINDI },
-        ColorCatalog { name: "Persian",        origin: Origin::Persian,        data: COLORS_PERSIAN },
-        ColorCatalog { name: "National",       origin: Origin::National,       data: &**COLORS_NATIONAL },
-        ColorCatalog { name: "Brands",         origin: Origin::Brands,         data: COLORS_BRANDS },
-        ColorCatalog { name: "Italian Brands", origin: Origin::ItalianBrands,  data: COLORS_ITALIANBRANDS },
-        ColorCatalog { name: "Metal Flames", origin: Origin::MetalFlames,  data: COLORS_METALS_FLAME },
-        ColorCatalog { name: "Kelvin Colors", origin: Origin::KelvinColors,  data: KELVIN_COLORS },
-
-    ];
-
-    #[cfg(feature = "github-colors")]
-    v.push(ColorCatalog { name: "GitHub", origin: Origin::GitHub, data: COLORS_GITHUB });
-
-    v
-});
-
-// Combined “All” (computed once at runtime)
-pub static COMBINED_COLORS: OnceLazy<Vec<(&'static str, &'static str)>> = OnceLazy::new(|| {
-    let mut v: Vec<(&'static str, &'static str)> = Vec::new();
-    for c in REGISTRY.iter() {
-        if c.origin != Origin::All {
-            v.extend_from_slice(c.data);
-        }
-    }
-    v.shrink_to_fit();
-    v
-});
-
-pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
-    match origin {
-        Origin::All => COMBINED_COLORS.as_slice(),
-        other => REGISTRY
-            .iter()
-            .find(|c| c.origin == other)
-            .map(|c| c.data)
-            .unwrap_or(&[]),
-    }
-}
+// Use centralized registry from colors_helper module
 
 pub fn origins_vec() -> Vec<Origin> {
-    REGISTRY.iter().map(|c| c.origin).collect()
+    crate::colors_helper::REGISTRY.iter().map(|c| c.origin).collect()
 }
 
 pub const HEAVY_MIN_QUERY: usize = 2;
