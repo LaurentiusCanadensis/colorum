@@ -1,6 +1,7 @@
 // src/colors_helper/catalog.rs
 use super::*;
 use std::collections::HashMap;
+use crate::colors::kelvin_colors::KELVIN_COLORS;
 
 pub enum ColorsFor {
     Slice(&'static [(&'static str, &'static str)]),
@@ -44,34 +45,12 @@ pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
         Origin::National => COLORS_NATIONAL.as_slice(),
         Origin::Brands => COLORS_BRANDS,
         Origin::ItalianBrands => COLORS_ITALIANBRANDS,
-
+        Origin::MetalFlames => COLORS_METALS_FLAME,
+        Origin::KelvinColors => KELVIN_COLORS,
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
     }
 }
-fn data_xkcd() -> &'static [(&'static str, &'static str)] {
-    COLORS_XKCD
-}
-fn data_pantone() -> &'static [(&'static str, &'static str)] {
-    COLORS_PANTONE
-}
-fn data_hindi() -> &'static [(&'static str, &'static str)] {
-    COLORS_HINDI
-}
-fn data_persian() -> &'static [(&'static str, &'static str)] {
-    COLORS_PERSIAN
-}
-fn data_brands() -> &'static [(&'static str, &'static str)] {
-    COLORS_BRANDS
-}
-fn data_italian_brands() -> &'static [(&'static str, &'static str)] {
-    COLORS_ITALIANBRANDS
-}
-#[cfg(feature = "github-colors")]
-fn data_github() -> &'static [(&'static str, &'static str)] {
-    COLORS_GITHUB
-}
-pub const COLORS_ALL_FALLBACK: &[(&str, &str)] = &[];
 
 pub static REGISTRY_MAP: LazyLock<
     HashMap<Origin, fn() -> &'static [(&'static str, &'static str)]>,

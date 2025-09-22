@@ -33,6 +33,7 @@ pub struct App {
     pub dropdown_open: bool,
     last_query: String,
     last_results_idx: Vec<usize>,
+    pub base_hex_nopound: Vec<&'static str>, // NEW: "E53B3B" for "#E53B3B"
 }
 
 impl Default for App {
@@ -47,6 +48,7 @@ impl Default for App {
         for (i, &(_h, n)) in base.iter().enumerate() {
             base_index_by_name.insert(n, i);
         }
+
         let mut s = Self {
             rr: String::new(),
             gg: String::new(),
@@ -69,7 +71,24 @@ impl Default for App {
             dropdown_open: false,
             base_names_lc: Vec::new(),
             // ...include any other fields you have here unchanged...
+            base_hex_nopound: vec![],
         };
+        s.base_names_lc = s
+            .base
+            .iter()
+            .map(|&(_h, n)| n.to_ascii_lowercase())
+            .collect();
+        s.base_hex_nopound = s
+            .base
+            .iter()
+            .map(|&(h, _)| {
+                if let Some(stripped) = h.strip_prefix('#') {
+                    stripped
+                } else {
+                    h
+                }
+            })
+            .collect();
         // populate lowercase cache once at startup
         s.base_names_lc = s
             .base

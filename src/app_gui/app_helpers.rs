@@ -5,9 +5,17 @@ use std::sync::LazyLock;
 use crate::colors_helper::COLORS_GITHUB;
 use crate::colors_helper::{
     self, COLORS_BRANDS, COLORS_CSS, COLORS_HINDI, COLORS_ITALIANBRANDS, COLORS_METALS_FLAME,
-    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, COMBINED_COLORS, MAX_RESULTS,
+    COLORS_NATIONAL, COLORS_PANTONE, COLORS_PERSIAN, COLORS_XKCD, MAX_RESULTS, KELVIN_COLORS,
     Origin,
 };
+use crate::app_gui::App;
+use iced::advanced::subscription;
+use iced::keyboard::{self, Event as KEvent, Key, key::Named};
+use iced::{Event, Subscription};
+use iced::futures::future::Lazy;
+
+
+use once_cell::sync::Lazy as OnceLazy; // <-- alias to avoid name collision
 
 use crate::hex::{combine_hex, sanitize_hex2};
 use crate::messages::Msg;
@@ -200,6 +208,8 @@ pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static st
         Origin::Css => COLORS_CSS,
         Origin::Brands => COLORS_BRANDS,
         Origin::ItalianBrands => COLORS_ITALIANBRANDS,
+        Origin::MetalFlames => COLORS_METALS_FLAME,
+        Origin::KelvinColors => KELVIN_COLORS,
 
         Origin::National => COLORS_NATIONAL.as_slice(),
     }
@@ -397,10 +407,6 @@ pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
     current.into_iter().map(|i| COMBINED_COLORS[i]).collect()
 }
 
-use crate::app_gui::App;
-use iced::advanced::subscription;
-use iced::keyboard::{self, Event as KEvent, Key, key::Named};
-use iced::{Event, Subscription};
 
 impl App {
     /// Fill `results_idx` with all rows from current `base` and select the first row.
@@ -551,5 +557,75 @@ impl App {
         self.results_idx.reserve(n);
         self.results_idx.extend(0..n);
         self.sel_pos = if n > 0 { Some(0) } else { None };
+    }
+
+
+
+}
+
+pub struct ColorCatalog {
+    pub name:  &'static str,
+    pub origin: Origin,
+    pub data:  &'static [(&'static str, &'static str)],
+}
+
+
+pub static REGISTRY: OnceLazy<Vec<ColorCatalog>> = OnceLazy::new(|| {
+    let mut v = vec![
+        ColorCatalog { name: "All",            origin: Origin::All,            data: &[] },
+        ColorCatalog { name: "CSS",            origin: Origin::Css,            data: COLORS_CSS },
+        ColorCatalog { name: "XKCD",           origin: Origin::XKCD,           data: COLORS_XKCD },
+        ColorCatalog { name: "Pantone",        origin: Origin::Pantone,        data: COLORS_PANTONE },
+        ColorCatalog { name: "Hindi",          origin: Origin::Hindi,          data: COLORS_HINDI },
+        ColorCatalog { name: "Persian",        origin: Origin::Persian,        data: COLORS_PERSIAN },
+        ColorCatalog { name: "National",       origin: Origin::National,       data: &**COLORS_NATIONAL },
+        ColorCatalog { name: "Brands",         origin: Origin::Brands,         data: COLORS_BRANDS },
+        ColorCatalog { name: "Italian Brands", origin: Origin::ItalianBrands,  data: COLORS_ITALIANBRANDS },
+        ColorCatalog { name: "Metal Flames", origin: Origin::MetalFlames,  data: COLORS_METALS_FLAME },
+        ColorCatalog { name: "Kelvin Colors", origin: Origin::KelvinColors,  data: KELVIN_COLORS },
+
+    ];
+
+    #[cfg(feature = "github-colors")]
+    v.push(ColorCatalog { name: "GitHub", origin: Origin::GitHub, data: COLORS_GITHUB });
+
+    v
+});
+
+// Combined “All” (computed once at runtime)
+pub static COMBINED_COLORS: OnceLazy<Vec<(&'static str, &'static str)>> = OnceLazy::new(|| {
+    let mut v: Vec<(&'static str, &'static str)> = Vec::new();
+    for c in REGISTRY.iter() {
+        if c.origin != Origin::All {
+            v.extend_from_slice(c.data);
+        }
+    }
+    v.shrink_to_fit();
+    v
+});
+
+pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
+    match origin {
+        Origin::All => COMBINED_COLORS.as_slice(),
+        other => REGISTRY
+            .iter()
+            .find(|c| c.origin == other)
+            .map(|c| c.data)
+            .unwrap_or(&[]),
+    }
+}
+
+pub fn origins_vec() -> Vec<Origin> {
+    REGISTRY.iter().map(|c| c.origin).collect()
+}
+
+pub const HEAVY_MIN_QUERY: usize = 2;
+
+pub fn is_heavy_origin(o: Origin) -> bool {
+    match o {
+        Origin::All => true,
+        #[cfg(feature = "github-colors")]
+        Origin::GitHub => true,
+        _ => false,
     }
 }

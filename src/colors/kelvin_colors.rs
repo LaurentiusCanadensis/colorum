@@ -1,4 +1,5 @@
-const KELVIN_PALETTE: &[(&str, &str)] = &[
+pub const KELVIN_COLORS: &[(&str, &str)] = &[
+    //const KELVIN_PALETTE: &[(&str, &str)] = &[
     ("#FFFFFF", "Skylight 20000K Very Pale Blue-White"),
     ("#050573", "Skylight 19500K Deep Navy Blue"),
     ("#0D0DD2", "Skylight 18500K Royal Blue"),

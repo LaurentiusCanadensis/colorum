@@ -60,6 +60,11 @@ static IDX_BRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
 static IDX_ITALIANBRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
     LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::ItalianBrands)));
 
+static IDX_METALFLAMES: LazyLock<HashMap<String, Box<[usize]>>> =
+    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::MetalFlames)));
+static IDX_KELVINCOLORS: LazyLock<HashMap<String, Box<[usize]>>> =
+    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::KelvinColors)));
+
 #[cfg(feature = "github-colors")]
 static IDX_GITHUB: LazyLock<HashMap<String, Box<[usize]>>> =
     LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::GitHub)));
@@ -75,6 +80,8 @@ fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
         Origin::National => &IDX_NATIONAL,
         Origin::Brands => &IDX_BRANDS,
         Origin::ItalianBrands => &IDX_ITALIANBRANDS,
+        Origin::MetalFlames => &IDX_METALFLAMES,
+        Origin::KelvinColors => &IDX_KELVINCOLORS,
 
         #[cfg(feature = "github-colors")]
         Origin::GitHub => &IDX_GITHUB,

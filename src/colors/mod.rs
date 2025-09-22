@@ -11,6 +11,6 @@ pub mod persian_colors;
 pub mod hindi_colors;
 
 pub mod brand_colors;
-mod italianbrand_colors;
-mod kelvin_colors;
-mod metals_flame_colors;
+pub mod italianbrand_colors;
+pub mod kelvin_colors;
+pub mod metals_flame_colors;

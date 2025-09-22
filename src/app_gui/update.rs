@@ -128,36 +128,82 @@ impl App {
             Msg::QueryChanged(s) => {
                 self.query = s;
                 let q = self.query.trim();
-
-                // Gate heavy origins: do nothing until 2+ chars
-                const HEAVY_MIN: usize = 2;
+                #[cfg(feature = "github-colors")]
+                // Treat these origins as "heavy"
+                let is_heavy = matches!(self.selected_origin, Origin::All | Origin::GitHub);
 
                 let is_heavy = matches!(self.selected_origin, Origin::All);
 
-                if q.is_empty() || (is_heavy && q.len() < HEAVY_MIN) {
-                    // For GitHub/All, showing *everything* is costly; keep dropdown closed.
-                    self.results_idx.clear();
-                    self.sel_pos = None;
-                    self.dropdown_open = false;
+                const HEAVY_MIN: usize = 2;
+                const MAX_RESULTS: usize = 200;
 
-                    // If you prefer to show top-N instead, call a small precompute here.
+                // If it *looks* like a hex query, run HEX reverse search and bypass gating
+                if let Some(hexq) = normalize_hex_query(q) {
+                    self.results_idx.clear();
+
+                    // prefix match (fast) over cached hex without '#'
+                    for (i, &hex_no_pound) in self.base_hex_nopound.iter().enumerate() {
+                        if hex_no_pound.starts_with(&hexq) {
+                            self.results_idx.push(i);
+                            if self.results_idx.len() >= MAX_RESULTS {
+                                break;
+                            }
+                        }
+                    }
+
+                    self.sel_pos = if self.results_idx.is_empty() {
+                        None
+                    } else {
+                        Some(0)
+                    };
+                    self.dropdown_open = !self.results_idx.is_empty();
+
+                    // Auto-select first hit to update center color immediately
+                    if let Some(&i0) = self.results_idx.first() {
+                        let (hex, name) = self.base[i0];
+                        self.selected_name = Some(name.to_string());
+                        self.set_from_hex(hex);
+                    }
+
+                    // record cache keys for your “seed” optimization path
+                    self.last_query = hexq;
+                    self.last_results_idx = self.results_idx.clone();
+
                     return Task::none();
                 }
 
-                let qlc = q.to_ascii_lowercase();
-                let prev = self.last_query.clone();
-                let mut seed: Option<&[usize]> = None;
+                // Non-hex query path (name search)
+                if q.is_empty() || (is_heavy && q.len() < HEAVY_MIN) {
+                    // Heavy origin + too-short query → keep list closed (or show top-N if you prefer)
+                    self.results_idx.clear();
+                    self.sel_pos = None;
+                    self.dropdown_open = false;
+                    self.last_query.clear();
+                    self.last_results_idx.clear();
 
-                if !prev.is_empty() && qlc.starts_with(&prev) {
-                    // The new query is stricter → filter the old results only
-                    seed = Some(&self.last_results_idx);
+                    // Optional: when blank, pick the first color in the current origin
+                    if q.is_empty() && !self.base.is_empty() {
+                        self.results_idx.push(0);
+                        self.sel_pos = Some(0);
+                        let (hex, name) = self.base[0];
+                        self.selected_name = Some(name.to_string());
+                        self.set_from_hex(hex);
+                        self.dropdown_open = true; // or false if you don't want the list open on blank
+                        self.last_results_idx = self.results_idx.clone();
+                    }
+
+                    return Task::none();
                 }
 
-                self.results_idx.clear();
-                const MAX_RESULTS: usize = 200;
+                // Fast name search (with seed-thinning)
+                let qlc = q.to_ascii_lowercase();
+                let prev = self.last_query.clone();
 
-                if let Some(seed_ids) = seed {
-                    for &i in seed_ids {
+                self.results_idx.clear();
+
+                if !prev.is_empty() && qlc.starts_with(&prev) && !self.last_results_idx.is_empty() {
+                    // Narrow down from previous results only
+                    for &i in &self.last_results_idx {
                         if self.base_names_lc[i].contains(&qlc) {
                             self.results_idx.push(i);
                             if self.results_idx.len() >= MAX_RESULTS {
@@ -166,7 +212,7 @@ impl App {
                         }
                     }
                 } else {
-                    // full scan fallback
+                    // Full scan over cached lowercase names
                     for (i, name_lc) in self.base_names_lc.iter().enumerate() {
                         if name_lc.contains(&qlc) {
                             self.results_idx.push(i);
@@ -179,18 +225,6 @@ impl App {
 
                 self.last_query = qlc.clone();
                 self.last_results_idx = self.results_idx.clone();
-                // Fast scan over cached lowercase (no allocation per item)
-                self.results_idx.clear();
-                // Optional: stop once we have enough rows to keep UI snappy
-
-                for (i, name_lc) in self.base_names_lc.iter().enumerate() {
-                    if name_lc.contains(&qlc) {
-                        self.results_idx.push(i);
-                        if self.results_idx.len() >= MAX_RESULTS {
-                            break;
-                        }
-                    }
-                }
 
                 self.sel_pos = if self.results_idx.is_empty() {
                     None
@@ -199,7 +233,7 @@ impl App {
                 };
                 self.dropdown_open = !self.results_idx.is_empty();
 
-                // Auto-select first hit to update center color immediately
+                // Auto-select first hit to update wheel
                 if let Some(&i0) = self.results_idx.first() {
                     let (hex, name) = self.base[i0];
                     self.selected_name = Some(name.to_string());
@@ -217,6 +251,17 @@ impl App {
 
                 let slice = crate::colors_helper::colors_for(o);
                 self.base = slice.to_vec();
+                // (re)build caches
+                self.base_index_by_name.clear();
+                for (i, &(_h, n)) in self.base.iter().enumerate() {
+                    self.base_index_by_name.insert(n, i);
+                }
+                self.base_names_lc = self
+                    .base
+                    .iter()
+                    .map(|&(_, n)| n.to_ascii_lowercase())
+                    .collect();
+
 
                 // rebuild lowercase cache for the new base
                 self.base_names_lc.clear();
@@ -233,6 +278,23 @@ impl App {
                 for (i, &(_h, n)) in self.base.iter().enumerate() {
                     self.base_index_by_name.insert(n, i);
                 }
+
+                self.base_names_lc = self
+                    .base
+                    .iter()
+                    .map(|&(_h, n)| n.to_ascii_lowercase())
+                    .collect();
+                self.base_hex_nopound = self
+                    .base
+                    .iter()
+                    .map(|&(h, _)| {
+                        if let Some(stripped) = h.strip_prefix('#') {
+                            stripped
+                        } else {
+                            h
+                        }
+                    })
+                    .collect();
 
                 // OWN the trimmed query (avoid borrowing self)
                 let q: String = self.query.trim().to_owned();
@@ -265,6 +327,22 @@ impl App {
                 } else {
                     self.selected_name = None;
                 }
+                self.base_names_lc = self
+                    .base
+                    .iter()
+                    .map(|&(_h, n)| n.to_ascii_lowercase())
+                    .collect();
+                self.base_hex_nopound = self
+                    .base
+                    .iter()
+                    .map(|&(h, _)| {
+                        if let Some(stripped) = h.strip_prefix('#') {
+                            stripped
+                        } else {
+                            h
+                        }
+                    })
+                    .collect();
 
                 #[cfg(feature = "profile")]
                 eprintln!(
@@ -322,4 +400,22 @@ impl App {
             _ => Task::none(),
         }
     }
+}
+
+#[inline]
+fn normalize_hex_query(q: &str) -> Option<String> {
+    // Trim, strip leading '#', remove spaces, upper-case
+    let mut s = q
+        .trim()
+        .trim_start_matches('#')
+        .replace(char::is_whitespace, "");
+    if s.is_empty() {
+        return None;
+    }
+    // HEX only, max 6 chars (allow 1..6 to support prefix)
+    if s.len() > 6 || !s.chars().all(|c| c.is_ascii_hexdigit()) {
+        return None;
+    }
+    s.make_ascii_uppercase();
+    Some(s)
 }

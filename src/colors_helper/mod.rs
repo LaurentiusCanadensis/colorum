@@ -20,6 +20,10 @@ pub use css_colors::COLORS_CSS;
 mod metals_flame_colors;
 pub use metals_flame_colors::COLORS_METALS_FLAME;
 
+
+#[path = "../colors/kelvin_colors.rs"]
+mod kelvin_colors;
+pub use kelvin_colors::KELVIN_COLORS;
 #[path = "../colors/xkcd_colors.rs"]
 mod xkcd_colors;
 pub use xkcd_colors::COLORS_XKCD;
@@ -80,6 +84,8 @@ pub enum Origin {
     ItalianBrands,
     National,
     Brands,
+    MetalFlames,
+    KelvinColors,
     #[cfg(feature = "github-colors")]
     GitHub,
 }
@@ -100,6 +106,8 @@ impl Display for Origin {
             Origin::National => "National",
             Origin::Brands => "Brands",
             Origin::ItalianBrands => "Italian Brands",
+            Origin::MetalFlames => "Metal Flames",
+            Origin::KelvinColors => "Kelvin Colors",
 
             #[cfg(feature = "github-colors")]
             Origin::GitHub => "github",
@@ -165,6 +173,16 @@ pub static REGISTRY: &[ColorCatalog] = &[
         origin: Origin::ItalianBrands,
         data: data_italian_brands,
     },
+    ColorCatalog {
+        name: "Metal Flames",
+        origin: Origin::MetalFlames,
+        data: data_metal_flames,
+    },
+    ColorCatalog {
+        name: "Kelvin Colors",
+        origin: Origin::KelvinColors,
+        data: data_kelvin_colors,
+    },
     #[cfg(feature = "github-colors")]
     ColorCatalog {
         name: "GitHub",
@@ -192,6 +210,11 @@ fn data_brands() -> &'static [(&'static str, &'static str)] {
 }
 fn data_italian_brands() -> &'static [(&'static str, &'static str)] {
     COLORS_ITALIANBRANDS
+}
+fn data_kelvin_colors() -> &'static [(&'static str, &'static str)] {
+    KELVIN_COLORS
+}fn data_metal_flames() -> &'static [(&'static str, &'static str)] {
+    COLORS_METALS_FLAME
 }
 #[cfg(feature = "github-colors")]
 fn data_github() -> &'static [(&'static str, &'static str)] {

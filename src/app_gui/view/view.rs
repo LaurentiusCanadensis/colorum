@@ -4,6 +4,7 @@ use crate::messages::Msg;
 use crate::widgets::color_wheel::WheelSearchProps;
 use iced::widget::{container, pick_list, scrollable, text_input};
 use iced::{Alignment, Element, Length};
+use crate::app_gui::app_helpers::origins_vec;
 
 impl App {
     pub fn view(&self) -> Element<Msg> {
@@ -55,24 +56,7 @@ impl App {
         // let origins_list = vec![Origin::All, Origin::XKCD, ...];
 
         // New: derive from REGISTRY so it auto-includes new palettes
-        let origins_list = {
-            let mut v = vec![
-                Origin::All,
-                Origin::Css,
-                Origin::XKCD,
-                Origin::Pantone,
-                Origin::Hindi,
-                Origin::Persian,
-                Origin::National,
-                Origin::Brands,
-                Origin::ItalianBrands,
-            ];
-            #[cfg(feature = "github-colors")]
-            {
-                v.push(Origin::GitHub);
-            }
-            v
-        };
+        let origins_list = origins_vec();
 
         let origin_dd = iced::widget::pick_list(
             origins_list,
