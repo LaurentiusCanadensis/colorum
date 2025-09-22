@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Colorum mark">
+    <defs>
+        <linearGradient id="spectral3" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FF5F6D"/><stop offset="14%" stop-color="#F89B29"/>
+            <stop offset="28%" stop-color="#F8FF00"/><stop offset="42%" stop-color="#38EF7D"/>
+            <stop offset="57%" stop-color="#00C6FF"/><stop offset="71%" stop-color="#6A00FF"/>
+            <stop offset="85%" stop-color="#FF00CC"/><stop offset="100%" stop-color="#FF5F6D"/>
+        </linearGradient>
+    </defs>
+    <g transform="translate(32,32)">
+        <path d="M132 33.65 A72 72 0 1 1 60 158.35 A72 72 0 1 1 60 33.65"
+              fill="none" stroke="url(#spectral3)" stroke-width="20" stroke-linecap="round"/>
+    </g>
+</svg>
