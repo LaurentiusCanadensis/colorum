@@ -13,6 +13,9 @@ use app_gui::App;
 use app_gui::view::view;
 use iced::{Theme, application};
 
+pub mod brand;
+
+
 
 
 use colors::*;

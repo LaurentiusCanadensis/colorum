@@ -11,7 +11,7 @@ use iced::{Event, Task, clipboard};
 
 impl App {
     pub fn title(&self) -> String {
-        "rondel".into()
+        "Colorum".to_string()
     }
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {

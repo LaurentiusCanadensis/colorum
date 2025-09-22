@@ -16,6 +16,8 @@ pub mod rgb;
 // Prefer folding them into `ui::widgets` long-term.
 pub mod widgets;
 
+pub mod brand;
+
 // ---- Re-exports for ergonomics ---------------------------------------------
 
 // Common search/selection surface the UI uses

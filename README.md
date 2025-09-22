@@ -1,5 +1,5 @@
 
-# rust_colors
+# Colorum — Thesaurus Colorum
 
 A comprehensive Rust color management application with an interactive GUI built on the Iced framework. Features multiple color palette sources, real-time search, and an intuitive color wheel interface for exploring and working with colors.
 

@@ -8,6 +8,8 @@ pub mod subscription;
 pub mod update;
 pub mod view;
 
+
+
 pub struct App {
     // lowercase cache for fast substring search (parallel to `base`)
     base_names_lc: Vec<String>,
