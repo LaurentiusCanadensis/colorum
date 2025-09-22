@@ -45,9 +45,9 @@ pub fn origin_slice(origin: Origin) -> &'static [(HexCode, ColorName)] {
         Origin::Persian => COLORS_PERSIAN,
         Origin::National => COLORS_NATIONAL.as_slice(),
         Origin::Brands => COLORS_BRANDS,
-        Origin::ItalianBrands => COLORS_ITALIANBRANDS,
+        Origin::ItalianBrands => COLORS_ITALIANBRANDS.as_slice(),
         Origin::MetalFlames => COLORS_METALS_FLAME,
-        Origin::KelvinColors => KELVIN_COLORS,
+        Origin::KelvinColors => KELVIN_COLORS.as_slice(),
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
         // New palette system - direct access to ensure data is available

@@ -3,6 +3,7 @@ use crate::color_types::{HexCode, ColorName};
 #[cfg(feature = "github-colors")]
 pub const COLORS_GITHUB: &[(HexCode, ColorName)] = &[
     (HexCode::new("#C93F38"), ColorName::new("100 Mph")),
+    /*
     (HexCode::new("#C93F38"), ColorName::new("100 Mph")),
     (HexCode::new("#A59344"), ColorName::new("18th Century Green")),
     (HexCode::new("#7B463B"), ColorName::new("1975 Earth Red")),
@@ -30218,5 +30219,5 @@ pub const COLORS_GITHUB: &[(HexCode, ColorName)] = &[
     (HexCode::new("#6BC026"), ColorName::new("Zunda Green")),
     (HexCode::new("#008996"), ColorName::new("Zuni")),
     (HexCode::new("#248BCC"), ColorName::new("Zürich Blue")),
-    (HexCode::new("#E6E1D9"), ColorName::new("Zürich White"))
+    (HexCode::new("#E6E1D9"), ColorName::new("Zürich White"))*/
 ];

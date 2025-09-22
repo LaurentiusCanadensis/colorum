@@ -225,10 +225,10 @@ fn data_brands() -> &'static [(HexCode, ColorName)] {
     COLORS_BRANDS
 }
 fn data_italian_brands() -> &'static [(HexCode, ColorName)] {
-    COLORS_ITALIANBRANDS
+    COLORS_ITALIANBRANDS.as_slice()
 }
 fn data_kelvin_colors() -> &'static [(HexCode, ColorName)] {
-    KELVIN_COLORS
+    KELVIN_COLORS.as_slice()
 }
 fn data_metal_flames() -> &'static [(HexCode, ColorName)] {
     COLORS_METALS_FLAME

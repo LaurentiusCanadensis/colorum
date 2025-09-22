@@ -65,6 +65,7 @@ pub use messages::{Channel, Msg};
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::colors::kelvin_colors::KELVIN_COLORS;
 
     #[test]
     fn normalize_variants() {
@@ -103,6 +104,19 @@ mod tests {
         let (name, hex, _d2) = nearest_name_r_eq_00("#00FE7F");
         assert_eq!(hex, "#00FF7F");
         assert_eq!(name, "springgreen");
+    }
+
+    #[test]
+    fn kelvin_colors_sorted() {
+        println!("First 10 Kelvin colors:");
+        for (i, (hex, name)) in KELVIN_COLORS.iter().take(10).enumerate() {
+            println!("{}: {} - {}", i + 1, name.as_str(), hex.as_str());
+        }
+
+        // Check that first color has highest temperature
+        let first_name = KELVIN_COLORS[0].1.as_str();
+        println!("First color: {}", first_name);
+        assert!(first_name.contains("20000K"));
     }
 }
 #[cfg(feature = "profile")]

@@ -1,7 +1,7 @@
 // src/colors_helper/search.rs
 use super::*;
 use std::collections::HashMap;
-use crate::color_types::{HexCode, ColorName};
+use crate::color_types::{HexCode, ColorName, Entity};
 use super::sort;
 
 pub struct ColorEntry {
@@ -14,6 +14,85 @@ fn tokenize_lc(s: &str) -> impl Iterator<Item = String> + '_ {
     s.split(|c: char| !c.is_alphanumeric())
         .filter(|t| !t.is_empty())
         .map(|t| t.to_lowercase())
+}
+
+/// Parse entity filter from query like "Entity:Temperature|Brand some query"
+/// Returns (filtered_entities, cleaned_query)
+fn parse_entity_filter(query: &str) -> (Option<Vec<Entity>>, String) {
+    // Make parsing case-insensitive by checking both "Entity:" and "entity:"
+    let entity_prefix = if query.starts_with("Entity:") {
+        Some("Entity:")
+    } else if query.starts_with("entity:") {
+        Some("entity:")
+    } else {
+        None
+    };
+
+    if let Some(prefix) = entity_prefix {
+        let entity_part = &query[prefix.len()..];
+
+        if let Some(space_pos) = entity_part.find(' ') {
+            let entities_str = &entity_part[..space_pos];
+            let remaining_query = &entity_part[space_pos + 1..];
+
+            let entities = parse_entities(entities_str);
+            println!("DEBUG: Parsed entities from '{}': {:?}", entities_str, entities);
+            if !entities.is_empty() {
+                return (Some(entities), remaining_query.to_string());
+            }
+        } else {
+            // Just "Entity:Temperature" with no additional query
+            let entities = parse_entities(entity_part);
+            println!("DEBUG: Parsed entities from '{}': {:?}", entity_part, entities);
+            if !entities.is_empty() {
+                return (Some(entities), String::new());
+            }
+        }
+    }
+    (None, query.to_string())
+}
+
+/// Parse entity names separated by | into Entity enum values
+fn parse_entities(entities_str: &str) -> Vec<Entity> {
+    entities_str.split('|')
+        .filter_map(|s| {
+            let s = s.trim().to_lowercase();
+            match s.as_str() {
+                "color" => Some(Entity::Color),
+                "object" => Some(Entity::Object),
+                "material" => Some(Entity::Material),
+                "place" => Some(Entity::Place),
+                "brand" => Some(Entity::Brand),
+                "person" => Some(Entity::Person),
+                "abstract" => Some(Entity::Abstract),
+                "chemical" => Some(Entity::Chemical),
+                "temperature" => Some(Entity::Temperature),
+                "other" => Some(Entity::Other),
+                _ => None,
+            }
+        })
+        .collect()
+}
+
+/// Apply entity filter to search results
+fn apply_entity_filter(results: Vec<(HexCode, ColorName)>, entity_filter: &Option<Vec<Entity>>) -> Vec<(HexCode, ColorName)> {
+    if let Some(entities) = entity_filter {
+        println!("DEBUG: Filtering {} results for entities: {:?}", results.len(), entities);
+        let filtered: Vec<_> = results
+            .into_iter()
+            .filter(|(_, name)| {
+                let matches = entities.contains(&name.entity());
+                if matches {
+                    println!("DEBUG: Matched '{}' with entity {:?}", name.as_str(), name.entity());
+                }
+                matches
+            })
+            .collect();
+        println!("DEBUG: Filtered down to {} results", filtered.len());
+        filtered
+    } else {
+        results
+    }
 }
 
 fn build_token_index_for(slice: &[(HexCode, ColorName)]) -> HashMap<String, Box<[usize]>> {
@@ -94,12 +173,24 @@ fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
 }
 
 pub fn search_substring(query: &str) -> Vec<(HexCode, ColorName)> {
-    let qlc = query.to_lowercase();
-    let mut out: Vec<(HexCode, ColorName)> = COLORS_LC
+    let (entity_filter, cleaned_query) = parse_entity_filter(query);
+    let qlc = cleaned_query.to_lowercase();
+
+    let mut out: Vec<(HexCode, ColorName)> = catalog::COMBINED_COLORS
         .iter()
-        .filter(|e| e.name_lc.contains(&qlc))
-        .map(|e| (HexCode::new(e.hex), ColorName::new(e.name)))
+        .filter(|(_, name)| {
+            // First check entity filter if specified
+            if let Some(ref entities) = entity_filter {
+                if !entities.contains(&name.entity()) {
+                    return false;
+                }
+            }
+            // Then check name contains query (if query is not empty)
+            qlc.is_empty() || name.as_str().to_lowercase().contains(&qlc)
+        })
+        .map(|(hex, name)| (*hex, *name))
         .collect();
+
     sort::sort_dropdown_by_origin(&qlc, &mut out);
     if out.len() > super::MAX_RESULTS {
         out.truncate(super::MAX_RESULTS);
@@ -125,19 +216,30 @@ pub fn search_in_origin(
     mode: TokenMode,
 ) -> Vec<(HexCode, ColorName)> {
     let q = query.trim();
+    let (entity_filter, cleaned_query) = parse_entity_filter(q);
     let slice = origin_slice(origin);
 
+    // Handle entity-only filtering (no text query)
+    if cleaned_query.is_empty() && entity_filter.is_some() {
+        let entities = entity_filter.unwrap();
+        return slice
+            .iter()
+            .filter(|(_, name)| entities.contains(&name.entity()))
+            .map(|(hex, name)| (*hex, *name))
+            .collect();
+    }
+
     // AFTER
-    if q.is_empty() {
+    if cleaned_query.is_empty() {
         // For All, don't return the entire universe — let the UI show nothing or a small default.
         if matches!(origin, Origin::All) {
             return Vec::new();
         }
-        return slice.to_vec();
+        return apply_entity_filter(slice.to_vec(), &entity_filter);
     }
 
     // Tokenize once
-    let tokens: Vec<String> = tokenize_lc(q).collect();
+    let tokens: Vec<String> = tokenize_lc(&cleaned_query).collect();
 
     // Partition tokens by length: short tokens use substring, full tokens use index
     let mut full_toks: Vec<&str> = Vec::new();
@@ -194,8 +296,12 @@ pub fn search_in_origin(
         };
 
         if matches!(origin, Origin::All) {
-            sort_dropdown_by_origin(&q.to_lowercase(), &mut out);
+            sort_dropdown_by_origin(&cleaned_query.to_lowercase(), &mut out);
         }
+
+        // Apply entity filtering to final results
+        out = apply_entity_filter(out, &entity_filter);
+
         if out.len() > MAX_RESULTS {
             out.truncate(MAX_RESULTS);
         }
@@ -254,8 +360,12 @@ pub fn search_in_origin(
         };
 
         if matches!(origin, Origin::All) {
-            sort_dropdown_by_origin(&q.to_lowercase(), &mut out);
+            sort_dropdown_by_origin(&cleaned_query.to_lowercase(), &mut out);
         }
+
+        // Apply entity filtering to final results
+        out = apply_entity_filter(out, &entity_filter);
+
         if out.len() > MAX_RESULTS {
             out.truncate(MAX_RESULTS);
         }
@@ -278,12 +388,15 @@ pub fn search_in_origin(
 
     // If index produced nothing in ANY mode, try a substring fallback on q
     if current.is_empty() {
-        let qlc = q.to_lowercase();
-        return slice
-            .iter()
-            .copied()
-            .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
-            .collect();
+        let qlc = cleaned_query.to_lowercase();
+        return apply_entity_filter(
+            slice
+                .iter()
+                .copied()
+                .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
+                .collect(),
+            &entity_filter,
+        );
     }
 
     // Apply short-token substring filter to the candidate set (AND semantics for ALL/Substring; OR for ANY)
@@ -317,8 +430,12 @@ pub fn search_in_origin(
     }
 
     if matches!(origin, Origin::All) {
-        sort_dropdown_by_origin(&q.to_lowercase(), &mut out);
+        sort_dropdown_by_origin(&cleaned_query.to_lowercase(), &mut out);
     }
+
+    // Apply entity filtering to final results
+    out = apply_entity_filter(out, &entity_filter);
+
     if out.len() > MAX_RESULTS {
         out.truncate(MAX_RESULTS);
     }
