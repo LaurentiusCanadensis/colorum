@@ -30,6 +30,9 @@ pub use colors::brand_colors::COLORS_BRANDS;
 #[cfg(feature = "github-colors")]
 pub use colors::github_colors::COLORS_GITHUB;
 
+// Import new palette modules to ensure inventory registration
+use colors::{seasons, canadian_provinces};
+
 // ---- App runner glue for main.rs -------------------------------------------
 
 use iced::Result as IcedResult;

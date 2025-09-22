@@ -356,7 +356,24 @@ impl App {
 // Use centralized registry from colors_helper module
 
 pub fn origins_vec() -> Vec<Origin> {
-    crate::colors_helper::REGISTRY.iter().map(|c| c.origin).collect()
+    vec![
+        Origin::All,
+        Origin::Css,
+        Origin::XKCD,
+        Origin::Pantone,
+        Origin::Hindi,
+        Origin::Persian,
+        Origin::National,
+        Origin::Brands,
+        Origin::ItalianBrands,
+        Origin::MetalFlames,
+        Origin::KelvinColors,
+        #[cfg(feature = "github-colors")]
+        Origin::GitHub,
+        // New simplified palette system
+        Origin::Seasons,
+        Origin::CanadianProvinces,
+    ]
 }
 
 pub const HEAVY_MIN_QUERY: usize = 2;

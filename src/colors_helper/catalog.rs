@@ -49,6 +49,9 @@ pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
         Origin::KelvinColors => KELVIN_COLORS,
         #[cfg(feature = "github-colors")]
         Origin::GitHub => COLORS_GITHUB,
+        // New palette system - direct access to ensure data is available
+        Origin::Seasons => crate::colors::seasons::DATA,
+        Origin::CanadianProvinces => crate::colors::canadian_provinces::DATA,
     }
 }
 

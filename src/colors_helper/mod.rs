@@ -70,6 +70,8 @@ mod search;
 pub use search::*;
 mod ui;
 pub use ui::*;
+pub mod palette_registry;
+pub use palette_registry::*;
 
 // ===== origin facade (kept public) =====
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -88,6 +90,8 @@ pub enum Origin {
     KelvinColors,
     #[cfg(feature = "github-colors")]
     GitHub,
+    Seasons,
+    CanadianProvinces,
 }
 impl Hash for Origin {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -111,6 +115,8 @@ impl Display for Origin {
 
             #[cfg(feature = "github-colors")]
             Origin::GitHub => "github",
+            Origin::Seasons => "Seasons",
+            Origin::CanadianProvinces => "Canadian Provinces",
         };
         f.write_str(s)
     }
@@ -120,6 +126,13 @@ pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
     if let Origin::All = origin {
         return COMBINED_COLORS.as_slice();
     }
+
+    // First try the automatic registry from inventory
+    if let Some(data) = palette_registry::REGISTRY_MAP_AUTO.get(&origin) {
+        return data();
+    }
+
+    // Fallback to manual registry for legacy palettes
     REGISTRY_MAP
         .get(&origin)
         .map(|f| f()) // call the fn pointer
@@ -189,6 +202,12 @@ pub static REGISTRY: &[ColorCatalog] = &[
         origin: Origin::GitHub,
         data: data_github,
     },
+    // New simplified palette system
+    ColorCatalog {
+        name: "Seasons",
+        origin: Origin::Seasons,
+        data: data_seasons,
+    },
 ];
 fn data_national() -> &'static [(&'static str, &'static str)] {
     COLORS_NATIONAL.as_slice() // this runs at runtime, not in a const context
@@ -224,11 +243,24 @@ fn data_github() -> &'static [(&'static str, &'static str)] {
     COLORS_GITHUB
 }
 
+// New palette data functions
+fn data_seasons() -> &'static [(&'static str, &'static str)] {
+    crate::colors::seasons::DATA
+}
+
 pub static COMBINED_COLORS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLock::new(|| {
     let mut v = Vec::new();
+
+    // Add all manual registry palettes
     for c in REGISTRY {
         v.extend_from_slice((c.data)()); // <- call the function
     }
+
+    // Add all automatically registered palettes
+    for palette in inventory::iter::<palette_registry::PaletteRegistration>() {
+        v.extend_from_slice((palette.data)());
+    }
+
     v
 });
 

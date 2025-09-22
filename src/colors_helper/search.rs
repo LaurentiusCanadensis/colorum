@@ -85,6 +85,9 @@ fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
 
         #[cfg(feature = "github-colors")]
         Origin::GitHub => &IDX_GITHUB,
+
+        // New palette system - these use the auto-generated indices
+        Origin::Seasons | Origin::CanadianProvinces => &IDX_ALL, // fallback for now
     }
 }
 
