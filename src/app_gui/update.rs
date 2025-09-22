@@ -161,8 +161,8 @@ impl App {
                     // Auto-select first hit to update center color immediately
                     if let Some(&i0) = self.results_idx.first() {
                         let (hex, name) = self.base[i0];
-                        self.selected_name = Some(name.to_string());
-                        self.set_from_hex(hex);
+                        self.selected_name = Some(name.as_str().to_string());
+                        self.set_from_hex(hex.as_str());
                     }
 
                     // record cache keys for your “seed” optimization path
@@ -186,8 +186,8 @@ impl App {
                         self.results_idx.push(0);
                         self.sel_pos = Some(0);
                         let (hex, name) = self.base[0];
-                        self.selected_name = Some(name.to_string());
-                        self.set_from_hex(hex);
+                        self.selected_name = Some(name.as_str().to_string());
+                        self.set_from_hex(hex.as_str());
                         self.dropdown_open = true; // or false if you don't want the list open on blank
                         self.last_results_idx = self.results_idx.clone();
                     }
@@ -236,8 +236,8 @@ impl App {
                 // Auto-select first hit to update wheel
                 if let Some(&i0) = self.results_idx.first() {
                     let (hex, name) = self.base[i0];
-                    self.selected_name = Some(name.to_string());
-                    self.set_from_hex(hex);
+                    self.selected_name = Some(name.as_str().to_string());
+                    self.set_from_hex(hex.as_str());
                 }
 
                 Task::none()
@@ -253,21 +253,21 @@ impl App {
                 self.base = slice.to_vec();
                 // (re)build caches
                 self.base_index_by_name.clear();
-                for (i, &(_h, n)) in self.base.iter().enumerate() {
-                    self.base_index_by_name.insert(n, i);
+                for (i, (_h, n)) in self.base.iter().enumerate() {
+                    self.base_index_by_name.insert(*n, i);
                 }
                 self.base_names_lc = self
                     .base
                     .iter()
-                    .map(|&(_, n)| n.to_ascii_lowercase())
+                    .map(|(_, n)| n.as_str().to_ascii_lowercase())
                     .collect();
 
 
                 // rebuild lowercase cache for the new base
                 self.base_names_lc.clear();
                 self.base_names_lc.reserve(self.base.len());
-                for &(_h, n) in &self.base {
-                    self.base_names_lc.push(n.to_ascii_lowercase());
+                for (_h, n) in &self.base {
+                    self.base_names_lc.push(n.as_str().to_ascii_lowercase());
                 }
 
                 // reset incremental caches
@@ -275,23 +275,23 @@ impl App {
                 self.last_results_idx.clear();
 
                 self.base_index_by_name.clear();
-                for (i, &(_h, n)) in self.base.iter().enumerate() {
-                    self.base_index_by_name.insert(n, i);
+                for (i, (_h, n)) in self.base.iter().enumerate() {
+                    self.base_index_by_name.insert(*n, i);
                 }
 
                 self.base_names_lc = self
                     .base
                     .iter()
-                    .map(|&(_h, n)| n.to_ascii_lowercase())
+                    .map(|(_h, n)| n.as_str().to_ascii_lowercase())
                     .collect();
                 self.base_hex_nopound = self
                     .base
                     .iter()
-                    .map(|&(h, _)| {
-                        if let Some(stripped) = h.strip_prefix('#') {
+                    .map(|(h, _)| {
+                        if let Some(stripped) = h.as_str().strip_prefix('#') {
                             stripped
                         } else {
-                            h
+                            h.as_str()
                         }
                     })
                     .collect();
@@ -322,24 +322,24 @@ impl App {
 
                 if let Some(&i0) = self.results_idx.first() {
                     let (hex, name) = self.base[i0];
-                    self.selected_name = Some(name.to_string());
-                    self.set_from_hex(hex);
+                    self.selected_name = Some(name.as_str().to_string());
+                    self.set_from_hex(hex.as_str());
                 } else {
                     self.selected_name = None;
                 }
                 self.base_names_lc = self
                     .base
                     .iter()
-                    .map(|&(_h, n)| n.to_ascii_lowercase())
+                    .map(|(_h, n)| n.as_str().to_ascii_lowercase())
                     .collect();
                 self.base_hex_nopound = self
                     .base
                     .iter()
-                    .map(|&(h, _)| {
-                        if let Some(stripped) = h.strip_prefix('#') {
+                    .map(|(h, _)| {
+                        if let Some(stripped) = h.as_str().strip_prefix('#') {
                             stripped
                         } else {
-                            h
+                            h.as_str()
                         }
                     })
                     .collect();

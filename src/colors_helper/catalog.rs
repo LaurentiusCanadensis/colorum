@@ -2,21 +2,22 @@
 use super::*;
 use std::collections::HashMap;
 use crate::colors::kelvin_colors::KELVIN_COLORS;
+use crate::color_types::{HexCode, ColorName};
 
 pub enum ColorsFor {
-    Slice(&'static [(&'static str, &'static str)]),
-    Owned(Vec<(&'static str, &'static str)>),
+    Slice(&'static [(HexCode, ColorName)]),
+    Owned(Vec<(HexCode, ColorName)>),
 }
 impl ColorsFor {
     #[inline]
-    pub fn as_slice(&self) -> &[(&'static str, &'static str)] {
+    pub fn as_slice(&self) -> &[(HexCode, ColorName)] {
         match self {
             ColorsFor::Slice(s) => s,
             ColorsFor::Owned(v) => v.as_slice(),
         }
     }
     #[inline]
-    pub fn to_vec(&self) -> Vec<(&'static str, &'static str)> {
+    pub fn to_vec(&self) -> Vec<(HexCode, ColorName)> {
         self.as_slice().to_vec()
     }
     #[inline]
@@ -28,13 +29,13 @@ impl ColorsFor {
         self.len() == 0
     }
     #[inline]
-    pub fn iter(&self) -> std::slice::Iter<'_, (&'static str, &'static str)> {
+    pub fn iter(&self) -> std::slice::Iter<'_, (HexCode, ColorName)> {
         self.as_slice().iter()
     }
 }
 
 // Per-origin slice
-pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
+pub fn origin_slice(origin: Origin) -> &'static [(HexCode, ColorName)] {
     match origin {
         Origin::All => COMBINED_COLORS.as_slice(),
         Origin::Css => COLORS_CSS,
@@ -56,7 +57,7 @@ pub fn origin_slice(origin: Origin) -> &'static [(&'static str, &'static str)] {
 }
 
 pub static REGISTRY_MAP: LazyLock<
-    HashMap<Origin, fn() -> &'static [(&'static str, &'static str)]>,
+    HashMap<Origin, fn() -> &'static [(HexCode, ColorName)]>,
 > = LazyLock::new(|| {
     let mut m = HashMap::with_capacity(REGISTRY.len());
     for c in REGISTRY {
@@ -65,14 +66,14 @@ pub static REGISTRY_MAP: LazyLock<
     m
 });
 
-pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
+pub fn colors_for(origin: Origin) -> &'static [(HexCode, ColorName)] {
     if let Origin::All = origin {
         return COMBINED_COLORS.as_slice();
     }
     REGISTRY_MAP.get(&origin).map(|f| f()).unwrap_or(&[])
 }
 
-pub static COMBINED_COLORS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLock::new(|| {
+pub static COMBINED_COLORS: LazyLock<Vec<(HexCode, ColorName)>> = LazyLock::new(|| {
     let mut v = Vec::new();
     for c in REGISTRY {
         v.extend_from_slice((c.data)());
@@ -83,13 +84,13 @@ pub static COMBINED_COLORS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLo
 pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
     COMBINED_COLORS
         .iter()
-        .map(|(hex, name)| (*name, *hex))
+        .map(|(hex, name)| (name.as_str(), hex.as_str()))
         .collect()
 });
 pub static COLORS_BY_NAME_LC: LazyLock<HashMap<String, &'static str>> = LazyLock::new(|| {
     let mut m = HashMap::new();
     for (hex, name) in COMBINED_COLORS.as_slice() {
-        m.insert(name.to_lowercase(), *hex);
+        m.insert(name.as_str().to_lowercase(), hex.as_str());
     }
     m
 });
@@ -103,7 +104,7 @@ pub fn lookup_by_name_ci(name: &str) -> Option<&'static str> {
 // Sorted names & ranks
 fn build_sorted_names(origin: Origin) -> Box<[&'static str]> {
     let slice = colors_for(origin);
-    let mut names: Vec<&'static str> = slice.iter().map(|&(_h, n)| n).collect();
+    let mut names: Vec<&'static str> = slice.iter().map(|(_h, n)| n.as_str()).collect();
     if matches!(origin, Origin::All) {
         names.sort_unstable_by(|a, b| {
             let ha = lookup_by_name(a).unwrap_or("#000000");

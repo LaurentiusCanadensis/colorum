@@ -1,13 +1,15 @@
-/// Full CSS Level 4/X11 named color list (140 entries).
-/// Each entry is (`#RRGGBB`, "name").
-pub const COLORS_PERSIAN: &[(&str, &str)] = &[
-    ("#C81D11", "Persian red"),
-    ("#701C1C", "Persian plum"),
-    ("#F77FBE", "Persian pink"),
-    ("#FE28A2", "Persian rose"),
-    ("#00A693", "Persian green"),
-    ("#D99058", "Persian orange"),
-    ("#32127A", "Persian indigo"),
-    ("#1C39BB", "Persian blue"),
-    ("#0067A5", "Persian medium blue"),
+use crate::color_types::{HexCode, ColorName};
+
+/// Persian color names with structured types.
+/// Each entry is a tuple of (HexCode, ColorName) with sortable components.
+pub const COLORS_PERSIAN: &[(HexCode, ColorName)] = &[
+    (HexCode::new("#C81D11"), ColorName::new("Persian red")),
+    (HexCode::new("#701C1C"), ColorName::new("Persian plum")),
+    (HexCode::new("#F77FBE"), ColorName::new("Persian pink")),
+    (HexCode::new("#FE28A2"), ColorName::new("Persian rose")),
+    (HexCode::new("#00A693"), ColorName::new("Persian green")),
+    (HexCode::new("#D99058"), ColorName::new("Persian orange")),
+    (HexCode::new("#32127A"), ColorName::new("Persian indigo")),
+    (HexCode::new("#1C39BB"), ColorName::new("Persian blue")),
+    (HexCode::new("#0067A5"), ColorName::new("Persian medium blue")),
 ];

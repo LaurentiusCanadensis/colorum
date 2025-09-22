@@ -2,6 +2,7 @@
 use core::fmt::{self, Display};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use crate::color_types::{HexCode, ColorName, convert_to_legacy_format};
 
 pub use once_cell::sync::Lazy;
 pub use std::sync::LazyLock;
@@ -122,27 +123,15 @@ impl Display for Origin {
     }
 }
 
-pub fn colors_for(origin: Origin) -> &'static [(&'static str, &'static str)] {
-    if let Origin::All = origin {
-        return COMBINED_COLORS.as_slice();
-    }
-
-    // First try the automatic registry from inventory
-    if let Some(data) = palette_registry::REGISTRY_MAP_AUTO.get(&origin) {
-        return data();
-    }
-
-    // Fallback to manual registry for legacy palettes
-    REGISTRY_MAP
-        .get(&origin)
-        .map(|f| f()) // call the fn pointer
-        .unwrap_or(&[])
+pub fn colors_for(origin: Origin) -> &'static [(HexCode, ColorName)] {
+    // Use the implementation from catalog.rs
+    catalog::colors_for(origin)
 }
 
 pub struct ColorCatalog {
     pub name: &'static str,
     pub origin: Origin,
-    pub data: fn() -> &'static [(&'static str, &'static str)],
+    pub data: fn() -> &'static [(HexCode, ColorName)],
 }
 
 pub static REGISTRY: &[ColorCatalog] = &[
@@ -208,68 +197,64 @@ pub static REGISTRY: &[ColorCatalog] = &[
         origin: Origin::Seasons,
         data: data_seasons,
     },
+    ColorCatalog {
+        name: "Canadian Provinces",
+        origin: Origin::CanadianProvinces,
+        data: data_canadian_provinces,
+    },
 ];
-fn data_national() -> &'static [(&'static str, &'static str)] {
+fn data_national() -> &'static [(HexCode, ColorName)] {
     COLORS_NATIONAL.as_slice() // this runs at runtime, not in a const context
 }
-fn data_css() -> &'static [(&'static str, &'static str)] {
+fn data_css() -> &'static [(HexCode, ColorName)] {
     COLORS_CSS
 }
-fn data_xkcd() -> &'static [(&'static str, &'static str)] {
+fn data_xkcd() -> &'static [(HexCode, ColorName)] {
     COLORS_XKCD
 }
-fn data_pantone() -> &'static [(&'static str, &'static str)] {
+fn data_pantone() -> &'static [(HexCode, ColorName)] {
     COLORS_PANTONE
 }
-fn data_hindi() -> &'static [(&'static str, &'static str)] {
+fn data_hindi() -> &'static [(HexCode, ColorName)] {
     COLORS_HINDI
 }
-fn data_persian() -> &'static [(&'static str, &'static str)] {
+fn data_persian() -> &'static [(HexCode, ColorName)] {
     COLORS_PERSIAN
 }
-fn data_brands() -> &'static [(&'static str, &'static str)] {
+fn data_brands() -> &'static [(HexCode, ColorName)] {
     COLORS_BRANDS
 }
-fn data_italian_brands() -> &'static [(&'static str, &'static str)] {
+fn data_italian_brands() -> &'static [(HexCode, ColorName)] {
     COLORS_ITALIANBRANDS
 }
-fn data_kelvin_colors() -> &'static [(&'static str, &'static str)] {
+fn data_kelvin_colors() -> &'static [(HexCode, ColorName)] {
     KELVIN_COLORS
-}fn data_metal_flames() -> &'static [(&'static str, &'static str)] {
+}
+fn data_metal_flames() -> &'static [(HexCode, ColorName)] {
     COLORS_METALS_FLAME
 }
 #[cfg(feature = "github-colors")]
-fn data_github() -> &'static [(&'static str, &'static str)] {
+fn data_github() -> &'static [(HexCode, ColorName)] {
     COLORS_GITHUB
 }
 
 // New palette data functions
-fn data_seasons() -> &'static [(&'static str, &'static str)] {
+fn data_seasons() -> &'static [(HexCode, ColorName)] {
     crate::colors::seasons::DATA
 }
 
-pub static COMBINED_COLORS: LazyLock<Vec<(&'static str, &'static str)>> = LazyLock::new(|| {
-    let mut v = Vec::new();
+fn data_canadian_provinces() -> &'static [(HexCode, ColorName)] {
+    crate::colors::canadian_provinces::DATA
+}
 
-    // Add all manual registry palettes
-    for c in REGISTRY {
-        v.extend_from_slice((c.data)()); // <- call the function
-    }
-
-    // Add all automatically registered palettes
-    for palette in inventory::iter::<palette_registry::PaletteRegistration>() {
-        v.extend_from_slice((palette.data)());
-    }
-
-    v
-});
+// COMBINED_COLORS moved to catalog.rs with new types
 
 // BEFORE (wrong value type)
 // pub static REGISTRY_MAP: LazyLock<HashMap<Origin, &'static [(&'static str, &'static str)]>> = ...
 
 // AFTER (store fn pointers)
 pub static REGISTRY_MAP: LazyLock<
-    HashMap<Origin, fn() -> &'static [(&'static str, &'static str)]>,
+    HashMap<Origin, fn() -> &'static [(HexCode, ColorName)]>,
 > = LazyLock::new(|| {
     let mut m = HashMap::with_capacity(REGISTRY.len());
     for c in REGISTRY {

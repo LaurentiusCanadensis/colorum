@@ -1,6 +1,8 @@
 // src/colors_helper/search.rs
 use super::*;
 use std::collections::HashMap;
+use crate::color_types::{HexCode, ColorName};
+use super::sort;
 
 pub struct ColorEntry {
     pub hex: &'static str,
@@ -14,10 +16,10 @@ fn tokenize_lc(s: &str) -> impl Iterator<Item = String> + '_ {
         .map(|t| t.to_lowercase())
 }
 
-fn build_token_index_for(slice: &[(&'static str, &'static str)]) -> HashMap<String, Box<[usize]>> {
+fn build_token_index_for(slice: &[(HexCode, ColorName)]) -> HashMap<String, Box<[usize]>> {
     let mut idx: HashMap<String, Vec<usize>> = HashMap::new();
-    for (i, &(_, name)) in slice.iter().enumerate() {
-        for tok in tokenize_lc(name) {
+    for (i, (_, name)) in slice.iter().enumerate() {
+        for tok in tokenize_lc(name.as_str()) {
             idx.entry(tok).or_default().push(i);
         }
     }
@@ -31,43 +33,43 @@ fn build_token_index_for(slice: &[(&'static str, &'static str)]) -> HashMap<Stri
 }
 
 pub static COLORS_LC: LazyLock<Vec<ColorEntry>> = LazyLock::new(|| {
-    super::catalog::COMBINED_COLORS
+    catalog::COMBINED_COLORS
         .iter()
         .map(|(hex, name)| ColorEntry {
-            hex: *hex,
-            name: *name,
-            name_lc: name.to_lowercase(),
+            hex: hex.as_str(),
+            name: name.as_str(),
+            name_lc: name.as_str().to_lowercase(),
         })
         .collect()
 });
 
 static IDX_ALL: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::All)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::All)));
 static IDX_CSS: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Css)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::Css)));
 static IDX_XKCD: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::XKCD)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::XKCD)));
 static IDX_PANTONE: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Pantone)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::Pantone)));
 static IDX_HINDI: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Hindi)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::Hindi)));
 static IDX_PERSIAN: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Persian)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::Persian)));
 static IDX_NATIONAL: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::National)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::National)));
 static IDX_BRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::Brands)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::Brands)));
 static IDX_ITALIANBRANDS: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::ItalianBrands)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::ItalianBrands)));
 
 static IDX_METALFLAMES: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::MetalFlames)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::MetalFlames)));
 static IDX_KELVINCOLORS: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::KelvinColors)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::KelvinColors)));
 
 #[cfg(feature = "github-colors")]
 static IDX_GITHUB: LazyLock<HashMap<String, Box<[usize]>>> =
-    LazyLock::new(|| build_token_index_for(super::catalog::origin_slice(Origin::GitHub)));
+    LazyLock::new(|| build_token_index_for(catalog::origin_slice(Origin::GitHub)));
 
 fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
     match origin {
@@ -91,14 +93,14 @@ fn origin_index(origin: Origin) -> &'static HashMap<String, Box<[usize]>> {
     }
 }
 
-pub fn search_substring(query: &str) -> Vec<(&'static str, &'static str)> {
+pub fn search_substring(query: &str) -> Vec<(HexCode, ColorName)> {
     let qlc = query.to_lowercase();
-    let mut out: Vec<(&'static str, &'static str)> = COLORS_LC
+    let mut out: Vec<(HexCode, ColorName)> = COLORS_LC
         .iter()
         .filter(|e| e.name_lc.contains(&qlc))
-        .map(|e| (e.hex, e.name))
+        .map(|e| (HexCode::new(e.hex), ColorName::new(e.name)))
         .collect();
-    super::sort::sort_dropdown_by_origin(&qlc, &mut out);
+    sort::sort_dropdown_by_origin(&qlc, &mut out);
     if out.len() > super::MAX_RESULTS {
         out.truncate(super::MAX_RESULTS);
     }
@@ -121,7 +123,7 @@ pub fn search_in_origin(
     origin: Origin,
     query: &str,
     mode: TokenMode,
-) -> Vec<(&'static str, &'static str)> {
+) -> Vec<(HexCode, ColorName)> {
     let q = query.trim();
     let slice = origin_slice(origin);
 
@@ -164,7 +166,7 @@ pub fn search_in_origin(
         if matches!(origin, Origin::All) {
             return search_substring(q);
         }
-        let mut out: Vec<(&'static str, &'static str)> = match mode {
+        let mut out: Vec<(HexCode, ColorName)> = match mode {
             TokenMode::Any => {
                 // ANY of the short tokens
                 if short_toks.is_empty() {
@@ -175,7 +177,7 @@ pub fn search_in_origin(
                         .iter()
                         .copied()
                         .filter(|&(_h, n)| {
-                            let nlc = n.to_lowercase();
+                            let nlc = n.as_str().to_lowercase();
                             short_toks.iter().any(|s| nlc.contains(s))
                         })
                         .collect()
@@ -186,7 +188,7 @@ pub fn search_in_origin(
                 slice
                     .iter()
                     .copied()
-                    .filter(|&(_h, n)| name_matches_all_short(n, &short_toks))
+                    .filter(|&(_h, n)| name_matches_all_short(n.as_str(), &short_toks))
                     .collect()
             }
         };
@@ -224,21 +226,21 @@ pub fn search_in_origin(
             return search_substring(q);
         }
         // Fallback: substring using all tokens (behaves like "Any" if requested)
-        let mut out: Vec<(&'static str, &'static str)> = if !short_toks.is_empty() {
+        let mut out: Vec<(HexCode, ColorName)> = if !short_toks.is_empty() {
             // use short tokens OR semantics for ANY, AND for ALL/Substring
             match mode {
                 TokenMode::Any => slice
                     .iter()
                     .copied()
                     .filter(|&(_h, n)| {
-                        let nlc = n.to_lowercase();
+                        let nlc = n.as_str().to_lowercase();
                         short_toks.iter().any(|s| nlc.contains(s))
                     })
                     .collect(),
                 _ => slice
                     .iter()
                     .copied()
-                    .filter(|&(_h, n)| name_matches_all_short(n, &short_toks))
+                    .filter(|&(_h, n)| name_matches_all_short(n.as_str(), &short_toks))
                     .collect(),
             }
         } else {
@@ -247,7 +249,7 @@ pub fn search_in_origin(
             slice
                 .iter()
                 .copied()
-                .filter(|&(_h, n)| n.to_lowercase().contains(&qlc))
+                .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
                 .collect()
         };
 
@@ -280,12 +282,12 @@ pub fn search_in_origin(
         return slice
             .iter()
             .copied()
-            .filter(|&(_h, n)| n.to_lowercase().contains(&qlc))
+            .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
             .collect();
     }
 
     // Apply short-token substring filter to the candidate set (AND semantics for ALL/Substring; OR for ANY)
-    let mut out: Vec<(&'static str, &'static str)> = Vec::with_capacity(current.len());
+    let mut out: Vec<(HexCode, ColorName)> = Vec::with_capacity(current.len());
     match mode {
         TokenMode::Any => {
             if short_toks.is_empty() {
@@ -296,7 +298,7 @@ pub fn search_in_origin(
             } else {
                 for i in current {
                     let name = slice[i].1;
-                    let nlc = name.to_lowercase();
+                    let nlc = name.as_str().to_lowercase();
                     if short_toks.iter().any(|s| nlc.contains(s)) {
                         out.push(slice[i]);
                     }
@@ -307,7 +309,7 @@ pub fn search_in_origin(
             // ALL or Substring → require ALL short tokens to appear
             for i in current {
                 let name = slice[i].1;
-                if name_matches_all_short(name, &short_toks) {
+                if name_matches_all_short(name.as_str(), &short_toks) {
                     out.push(slice[i]);
                 }
             }
@@ -327,16 +329,16 @@ use std::sync::LazyLock;
 
 // Build once over the full combined list.
 pub static COLORS_BY_NAME: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
-    COMBINED_COLORS
+    catalog::COMBINED_COLORS
         .iter()
-        .map(|(hex, name)| (*name, *hex))
+        .map(|(hex, name)| (name.as_str(), hex.as_str()))
         .collect()
 });
 
 pub static COLORS_BY_NAME_LC: LazyLock<HashMap<String, &'static str>> = LazyLock::new(|| {
     let mut m = HashMap::new();
-    for (hex, name) in COMBINED_COLORS.as_slice() {
-        m.insert(name.to_lowercase(), *hex);
+    for (hex, name) in catalog::COMBINED_COLORS.as_slice() {
+        m.insert(name.as_str().to_lowercase(), hex.as_str());
     }
     m
 });
@@ -404,8 +406,8 @@ pub fn is_heavy_origin(origin: Origin) -> bool {
 pub static NAME_TOKEN_INDEX: LazyLock<HashMap<String, Box<[usize]>>> = LazyLock::new(|| {
     let mut idx: HashMap<String, Vec<usize>> = HashMap::new();
 
-    for (i, (_, name)) in COMBINED_COLORS.iter().enumerate() {
-        for tok in tokenize_lc(name) {
+    for (i, (_, name)) in catalog::COMBINED_COLORS.iter().enumerate() {
+        for tok in tokenize_lc(name.as_str()) {
             idx.entry(tok).or_default().push(i);
         }
     }
@@ -421,7 +423,7 @@ pub static NAME_TOKEN_INDEX: LazyLock<HashMap<String, Box<[usize]>>> = LazyLock:
 });
 
 // Global token searches over COMBINED_COLORS
-pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
+pub fn search_tokens_any(query: &str) -> Vec<(HexCode, ColorName)> {
     let mut postings: Vec<&[usize]> = Vec::new();
     for tok in tokenize_lc(query) {
         if let Some(list) = NAME_TOKEN_INDEX.get(&tok) {
@@ -436,8 +438,8 @@ pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
     for p in postings.iter().skip(1) {
         result = union_sorted_slices(&result, p);
     }
-    let mut out: Vec<(&'static str, &'static str)> =
-        result.into_iter().map(|i| COMBINED_COLORS[i]).collect();
+    let mut out: Vec<(HexCode, ColorName)> =
+        result.into_iter().map(|i| catalog::COMBINED_COLORS[i]).collect();
 
     // Prefer exact name matches and CSS first for global (All) searches
     let qlc = query.to_lowercase();
@@ -447,7 +449,7 @@ pub fn search_tokens_any(query: &str) -> Vec<(&'static str, &'static str)> {
     }
     out
 }
-pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
+pub fn search_tokens_all(query: &str) -> Vec<(HexCode, ColorName)> {
     let mut lists: Vec<&[usize]> = {
         let mut tmp = Vec::new();
         for tok in tokenize_lc(query) {
@@ -469,8 +471,8 @@ pub fn search_tokens_all(query: &str) -> Vec<(&'static str, &'static str)> {
         }
         current = intersect_sorted_slices(&current, p);
     }
-    let mut out: Vec<(&'static str, &'static str)> =
-        current.into_iter().map(|i| COMBINED_COLORS[i]).collect();
+    let mut out: Vec<(HexCode, ColorName)> =
+        current.into_iter().map(|i| catalog::COMBINED_COLORS[i]).collect();
 
     let qlc = query.to_lowercase();
     sort_dropdown_by_origin(&qlc, &mut out);

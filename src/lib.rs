@@ -7,6 +7,7 @@ extern crate core;
 
 pub mod colors; // src/colors/
 pub mod colors_helper; // src/colors_helper/
+pub mod color_types; // src/color_types.rs
 pub mod hex;
 pub mod messages;
 pub mod rgb;

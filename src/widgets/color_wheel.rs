@@ -1,6 +1,7 @@
 use crate::app_gui::App;
 use crate::colors_helper::COMBINED_COLORS;
 use crate::messages::{Channel, Msg};
+use crate::color_types::{HexCode, ColorName};
 use iced::border::Radius;
 use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
@@ -162,9 +163,9 @@ where
                 let (hex, name) = app.base[idx];
                 let is_sel = app.sel_pos == Some(row);
                 let label = if is_sel {
-                    format!("▶ {}  {}", name, hex)
+                    format!("▶ {}  {}", name.as_str(), hex.as_str())
                 } else {
-                    format!("{}  {}", name, hex)
+                    format!("{}  {}", name.as_str(), hex.as_str())
                 };
 
                 let row_body = container(text(label))
@@ -233,7 +234,7 @@ pub struct WheelSearchProps<'a> {
     pub query: &'a str,
     pub results_idx: &'a [usize],
     pub sel_pos: Option<usize>,
-    pub base: &'a [(&'static str, &'static str)],
+    pub base: &'a [(HexCode, ColorName)],
     pub scroll_id: iced::widget::scrollable::Id,
     pub on_query: fn(String) -> crate::messages::Msg,
     pub on_enter: fn() -> crate::messages::Msg,
@@ -355,9 +356,9 @@ where
                 let (hex, name) = props.base[idx];
                 let is_sel = props.sel_pos == Some(row);
                 let label = if is_sel {
-                    format!("▶ {}  {}", name, hex)
+                    format!("▶ {}  {}", name.as_str(), hex.as_str())
                 } else {
-                    format!("{}  {}", name, hex)
+                    format!("{}  {}", name.as_str(), hex.as_str())
                 };
 
                 let row_body = container(text(label))
@@ -532,12 +533,12 @@ where
         let mut best_d: Option<u32> = None;
 
         for (h, name) in COMBINED_COLORS.iter() {
-            if let Some(rgb) = hex_to_rgb(h) {
+            if let Some(rgb) = hex_to_rgb(h.as_str()) {
                 let d = dist2((self.r, self.g, self.b), (rgb.r, rgb.g, rgb.b));
                 if best_d.map_or(true, |bd| d < bd) {
                     best_d = Some(d);
-                    best_hex = Some(h);
-                    best_name = Some(name);
+                    best_hex = Some(h.as_str());
+                    best_name = Some(name.as_str());
                 }
             }
         }

@@ -7,11 +7,13 @@ mod rgb;
 mod widgets;
 
 pub mod colors;
-
+pub mod color_types;
 use crate::rgb::hex_to_rgb;
 use app_gui::App;
 use app_gui::view::view;
 use iced::{Theme, application};
+
+
 
 use colors::*;
 

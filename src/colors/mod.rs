@@ -22,3 +22,4 @@ pub mod seasons;
 
 // Canadian provinces and territories palette
 pub mod canadian_provinces;
+

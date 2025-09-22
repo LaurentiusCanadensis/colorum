@@ -1,6 +1,7 @@
 use crate::colors_helper::{
     self, MAX_RESULTS, Origin,
 };
+use crate::color_types::{HexCode, ColorName};
 use crate::app_gui::App;
 use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
@@ -47,9 +48,9 @@ impl App {
             let (hex, name) = self.base[idx];
             let is_sel = self.sel_pos == Some(row);
             let label = if is_sel {
-                format!("▶ {}  {}", name, hex)
+                format!("▶ {}  {}", name.as_str(), hex.as_str())
             } else {
-                format!("{}  {}", name, hex)
+                format!("{}  {}", name.as_str(), hex.as_str())
             };
 
             let row_body = container(text(label))
@@ -112,7 +113,7 @@ impl App {
         };
         let hits = search_in_origin(self.selected_origin, q, mode);
 
-        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name).collect();
+        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name.as_str()).collect();
         let rank = origin_rank(self.selected_origin);
         names.sort_unstable_by_key(|n| rank.get(n).copied().unwrap_or(usize::MAX));
 
@@ -151,7 +152,7 @@ impl App {
         let hits = search_in_origin(self.selected_origin, q, mode);
 
         // Keep names only
-        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name).collect();
+        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name.as_str()).collect();
 
         // Order by precomputed rank (no per-keystroke lowercase cost)
         let rank = origin_rank(self.selected_origin);
@@ -171,8 +172,8 @@ impl App {
     pub(crate) fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
         let set = colors_helper::colors_for(self.selected_origin);
         set.iter()
-            .find(|&&(_hex, nm)| nm.eq_ignore_ascii_case(name))
-            .map(|&(hex, _)| hex)
+            .find(|(_hex, nm)| nm.as_str().eq_ignore_ascii_case(name))
+            .map(|(hex, _)| hex.as_str())
     }
 }
 #[allow(dead_code)]
@@ -184,7 +185,7 @@ fn u8_from_hex2(s: &str) -> u8 {
     }
 }
 
-pub fn colors_for_origin(origin: Origin) -> &'static [(&'static str, &'static str)] {
+pub fn colors_for_origin(origin: Origin) -> &'static [(HexCode, ColorName)] {
     crate::colors_helper::colors_for(origin)
 }
 
@@ -239,8 +240,8 @@ impl App {
 
         self.base_index_by_name.clear();
         self.base_index_by_name.reserve(self.base.len());
-        for (i, &(_h, n)) in self.base.iter().enumerate() {
-            self.base_index_by_name.insert(n, i);
+        for (i, (_h, n)) in self.base.iter().enumerate() {
+            self.base_index_by_name.insert(*n, i);
         }
 
         // Reset results & cursor (query will repopulate)
@@ -267,7 +268,7 @@ impl App {
         self.results_idx.clear();
         self.results_idx.reserve(hits.len());
 
-        for &(_hex, name) in hits.iter() {
+        for (_hex, name) in hits.iter() {
             if let Some(&i) = self.base_index_by_name.get(name) {
                 self.results_idx.push(i);
             }
@@ -304,7 +305,7 @@ impl App {
         let idx = self.results_idx[row];
         let (hex, name) = self.base[idx];
 
-        if let Some(rgb) = crate::rgb::hex_to_rgb(hex) {
+        if let Some(rgb) = crate::rgb::hex_to_rgb(hex.as_str()) {
             self.rr = format!("{:02X}", rgb.r);
             self.gg = format!("{:02X}", rgb.g);
             self.bb = format!("{:02X}", rgb.b);
@@ -335,7 +336,7 @@ impl App {
             let idx = self.results_idx[row];
             let (hex, name) = self.base[idx];
             self.selected_name = Some(name.to_string());
-            self.set_from_hex(hex);
+            self.set_from_hex(hex.as_str());
         }
     }
     pub(crate) fn repopulate_full_results_capped(&mut self) {

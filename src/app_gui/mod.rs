@@ -1,6 +1,7 @@
 use iced::widget::{Space, column, container, mouse_area, scrollable, text};
 use iced::{Alignment, Background, Color, Element, Length, Renderer, Theme, border};
 use std::collections::HashMap;
+use crate::color_types::{HexCode, ColorName};
 
 pub mod app_helpers;
 pub mod subscription;
@@ -26,8 +27,8 @@ pub struct App {
     pub dropdown_scroll_id: scrollable::Id,
 
     // Index-driven dropdown state
-    pub base: Vec<(&'static str, &'static str)>,
-    pub base_index_by_name: HashMap<&'static str, usize>,
+    pub base: Vec<(HexCode, ColorName)>,
+    pub base_index_by_name: HashMap<ColorName, usize>,
     pub results_idx: Vec<usize>,
     pub sel_pos: Option<usize>,
     pub dropdown_open: bool,
@@ -45,8 +46,8 @@ impl Default for App {
 
         // build name -> index map
         let mut base_index_by_name = HashMap::with_capacity(base.len());
-        for (i, &(_h, n)) in base.iter().enumerate() {
-            base_index_by_name.insert(n, i);
+        for (i, (_h, n)) in base.iter().enumerate() {
+            base_index_by_name.insert(*n, i);
         }
 
         let mut s = Self {
@@ -77,16 +78,16 @@ impl Default for App {
         s.base_names_lc = s
             .base
             .iter()
-            .map(|&(_h, n)| n.to_ascii_lowercase())
+            .map(|(_h, n)| n.as_str().to_ascii_lowercase())
             .collect();
         s.base_hex_nopound = s
             .base
             .iter()
-            .map(|&(h, _)| {
-                if let Some(stripped) = h.strip_prefix('#') {
+            .map(|(h, _)| {
+                if let Some(stripped) = h.as_str().strip_prefix('#') {
                     stripped
                 } else {
-                    h
+                    h.as_str()
                 }
             })
             .collect();

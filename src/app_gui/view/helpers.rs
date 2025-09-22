@@ -22,7 +22,7 @@ pub fn filtered_names_for_origin(origin: Origin, search: &str) -> Vec<&'static s
     };
     let mut v: Vec<&'static str> = search_in_origin(origin, q, mode)
         .into_iter()
-        .map(|(_h, n)| n)
+        .map(|(_h, n)| n.as_str())
         .collect();
 
     let rank = origin_rank(origin);
