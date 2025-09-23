@@ -355,6 +355,19 @@ pub fn search_in_origin(
         if matches!(origin, Origin::All) {
             return search_substring(q);
         }
+        // For non-All origins, fall back to substring search on the specific origin slice
+        let qlc = q.to_lowercase();
+        let mut out: Vec<(HexCode, ColorName)> = slice
+            .iter()
+            .copied()
+            .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
+            .collect();
+
+        out = apply_entity_filter(out, &entity_filter);
+        if out.len() > MAX_RESULTS {
+            out.truncate(MAX_RESULTS);
+        }
+        return out;
         // Fallback: substring using all tokens (behaves like "Any" if requested)
         let mut out: Vec<(HexCode, ColorName)> = if !short_toks.is_empty() {
             // use short tokens OR semantics for ANY, AND for ALL/Substring
