@@ -1,5 +1,5 @@
-//! Library entry for `rust_colors`
-//! - Re-exports core modules so call sites can `use rust_colors::*`.
+//! Library entry for `colorum`
+//! - Re-exports core modules so call sites can `use colorum::*`.
 //! - Provides `run_app()` that `main.rs` can call to start the Iced app_gui.
 
 #![forbid(unsafe_code)]
@@ -45,7 +45,7 @@ use iced::Result as IcedResult;
 /// Typical `main.rs`:
 /// ```
 /// fn main() -> iced::Result {
-///     rust_colors::run_app()
+///     colorum::run_app()
 /// }
 /// ```
 // ---- App module -------------------------------------------------------------
@@ -207,7 +207,7 @@ pub fn init_profiling() {
     use tracing_subscriber::{EnvFilter, fmt};
     // RUST_LOG controls verbosity at runtime; defaults below if not set:
     let filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,rust_colors=trace".into());
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,colorum=trace".into());
 
     // Ignore double-init errors if multiple crates call it:
     let _ = fmt().with_env_filter(filter).compact().try_init();

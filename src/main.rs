@@ -21,7 +21,7 @@ pub mod brand;
 use colors::*;
 
 fn main() -> iced::Result {
-    rust_colors::init_profiling();
+    colorum::init_profiling();
 
     application(App::title, App::update, App::view)
         .theme(|_| Theme::Light)

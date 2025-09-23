@@ -35,10 +35,10 @@ macro_rules! define_palette {
         pub struct $struct_name;
 
         impl $crate::colors_helper::palette_registry::ColorPalette for $struct_name {
-            const DATA: &'static [(rust_colors::color_types::HexCode, rust_colors::color_types::ColorName)] = &[
+            const DATA: &'static [(colorum::color_types::HexCode, colorum::color_types::ColorName)] = &[
                 $((
-                    rust_colors::color_types::HexCode::new($hex),
-                    rust_colors::color_types::ColorName::new($name)
+                    colorum::color_types::HexCode::new($hex),
+                    colorum::color_types::ColorName::new($name)
                 )),*
             ];
             const NAME: &'static str = $display_name;
@@ -46,10 +46,10 @@ macro_rules! define_palette {
         }
 
         // Export the data directly for easy access
-        pub const DATA: &'static [(rust_colors::color_types::HexCode, rust_colors::color_types::ColorName)] = &[
+        pub const DATA: &'static [(colorum::color_types::HexCode, colorum::color_types::ColorName)] = &[
             $((
-                rust_colors::color_types::HexCode::new($hex),
-                rust_colors::color_types::ColorName::new($name)
+                colorum::color_types::HexCode::new($hex),
+                colorum::color_types::ColorName::new($name)
             )),*
         ];
 
