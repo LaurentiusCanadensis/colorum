@@ -333,6 +333,23 @@ pub fn search_in_origin(
     }
 
     // Case B: we have at least one full token → use per-origin index
+    // But skip token index for origins that don't have proper indices
+    if matches!(origin, Origin::Seasons | Origin::CanadianProvinces) {
+        // Fall back to substring search for these origins
+        let qlc = q.to_lowercase();
+        let mut out: Vec<(HexCode, ColorName)> = slice
+            .iter()
+            .copied()
+            .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
+            .collect();
+
+        out = apply_entity_filter(out, &entity_filter);
+        if out.len() > MAX_RESULTS {
+            out.truncate(MAX_RESULTS);
+        }
+        return out;
+    }
+
     let idx = origin_index(origin);
 
     // Build postings for the "full" tokens
@@ -364,45 +381,6 @@ pub fn search_in_origin(
             .collect();
 
         out = apply_entity_filter(out, &entity_filter);
-        if out.len() > MAX_RESULTS {
-            out.truncate(MAX_RESULTS);
-        }
-        return out;
-        // Fallback: substring using all tokens (behaves like "Any" if requested)
-        let mut out: Vec<(HexCode, ColorName)> = if !short_toks.is_empty() {
-            // use short tokens OR semantics for ANY, AND for ALL/Substring
-            match mode {
-                TokenMode::Any => slice
-                    .iter()
-                    .copied()
-                    .filter(|&(_h, n)| {
-                        let nlc = n.as_str().to_lowercase();
-                        short_toks.iter().any(|s| nlc.contains(s))
-                    })
-                    .collect(),
-                _ => slice
-                    .iter()
-                    .copied()
-                    .filter(|&(_h, n)| name_matches_all_short(n.as_str(), &short_toks))
-                    .collect(),
-            }
-        } else {
-            // No short tokens either: substring on the whole query (rare)
-            let qlc = q.to_lowercase();
-            slice
-                .iter()
-                .copied()
-                .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
-                .collect()
-        };
-
-        if matches!(origin, Origin::All) {
-            sort_dropdown_by_origin(&cleaned_query.to_lowercase(), &mut out);
-        }
-
-        // Apply entity filtering to final results
-        out = apply_entity_filter(out, &entity_filter);
-
         if out.len() > MAX_RESULTS {
             out.truncate(MAX_RESULTS);
         }
