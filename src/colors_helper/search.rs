@@ -1,7 +1,7 @@
 // src/colors_helper/search.rs
 use super::*;
 use std::collections::HashMap;
-use crate::color_types::{HexCode, ColorName, Entity};
+use crate::core::color_types::{HexCode, ColorName, Entity};
 use super::sort;
 
 pub struct ColorEntry {

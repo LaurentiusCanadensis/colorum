@@ -3,7 +3,7 @@
 // National colors (approximated from official flag specs / Pantone → sRGB).
 // Each entry is (HexCode, ColorName) with structured types.
 use once_cell::sync::Lazy;
-use crate::color_types::{HexCode, ColorName, Entity, Ordering};
+use crate::core::color_types::{HexCode, ColorName, Entity, Ordering};
 use crate::colors_helper::Origin;
 use std::collections::BTreeSet;
 

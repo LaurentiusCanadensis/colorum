@@ -1,6 +1,6 @@
 // src/colors_helper/sort.rs
 use super::*;
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub fn origin_priority_of(hex: &str, name: &str) -> u8 {
     if COLORS_CSS.iter().any(|(h, n)| h.as_str() == hex && n.as_str() == name) {

@@ -1,10 +1,10 @@
-use crate::app_gui::App;
+use crate::ui::app_gui::App;
 use crate::colors_helper::{
     HEAVY_MIN_QUERY, MAX_RESULTS, Origin, TokenMode, is_heavy_origin, origin_rank, sanitize_hex2,
     search_in_origin,
 };
-use crate::hex::combine_hex;
-use crate::messages::Msg;
+use crate::core::hex::combine_hex;
+use crate::ui::messages::Msg;
 use iced::keyboard::Key;
 use iced::keyboard::key::Named;
 use iced::{Event, Task, clipboard};
@@ -74,9 +74,9 @@ impl App {
             Msg::WheelChanged(ch, v) => {
                 let hh = format!("{v:02X}");
                 match ch {
-                    crate::messages::Channel::R => self.rr = hh,
-                    crate::messages::Channel::G => self.gg = hh,
-                    crate::messages::Channel::B => self.bb = hh,
+                    crate::ui::messages::Channel::R => self.rr = hh,
+                    crate::ui::messages::Channel::G => self.gg = hh,
+                    crate::ui::messages::Channel::B => self.bb = hh,
                 }
                 Task::none()
             }

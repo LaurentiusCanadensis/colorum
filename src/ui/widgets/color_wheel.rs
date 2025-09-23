@@ -1,7 +1,7 @@
-use crate::app_gui::App;
+use crate::ui::app_gui::App;
 use crate::colors_helper::COMBINED_COLORS;
-use crate::messages::{Channel, Msg};
-use crate::color_types::{HexCode, ColorName};
+use crate::ui::messages::{Channel, Msg};
+use crate::core::color_types::{HexCode, ColorName};
 use iced::border::Radius;
 use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
@@ -12,7 +12,7 @@ use iced::{
     widget::{column, container, text, text_input},
 };
 
-use crate::hex_to_rgb;
+use crate::core::hex_to_rgb;
 
 #[derive(Default)]
 pub struct WheelState {
@@ -236,9 +236,9 @@ pub struct WheelSearchProps<'a> {
     pub sel_pos: Option<usize>,
     pub base: &'a [(HexCode, ColorName)],
     pub scroll_id: iced::widget::scrollable::Id,
-    pub on_query: fn(String) -> crate::messages::Msg,
-    pub on_enter: fn() -> crate::messages::Msg,
-    pub on_click_row: fn(usize) -> crate::messages::Msg,
+    pub on_query: fn(String) -> crate::ui::messages::Msg,
+    pub on_enter: fn() -> crate::ui::messages::Msg,
+    pub on_click_row: fn(usize) -> crate::ui::messages::Msg,
 }
 
 fn greedy_wrap<'a>(text: &'a str, max_chars: usize, max_lines: usize) -> String {
@@ -313,7 +313,7 @@ fn compute_typography(inner_radius: f32) -> (f32, f32, usize, usize) {
 }
 impl<F> ColorWheel<F>
 where
-    F: Fn(crate::messages::Channel, u8) -> crate::messages::Msg + Clone + 'static,
+    F: Fn(crate::ui::messages::Channel, u8) -> crate::ui::messages::Msg + Clone + 'static,
 {
     /// Render wheel **plus** search + dropdown, using the host app's state/callbacks.
     pub fn view_with_search_props<'a>(
@@ -323,8 +323,8 @@ where
         gg: &'a str,
         bb: &'a str,
         props: WheelSearchProps<'a>,
-    ) -> iced::Element<'a, crate::messages::Msg> {
-        use crate::messages::Msg;
+    ) -> iced::Element<'a, crate::ui::messages::Msg> {
+        use crate::ui::messages::Msg;
         use iced::widget::container as container_widget;
         use iced::widget::{Space, column, container, mouse_area, scrollable, text, text_input};
         use iced::{Alignment, Background, Color, Length, Renderer, Theme};

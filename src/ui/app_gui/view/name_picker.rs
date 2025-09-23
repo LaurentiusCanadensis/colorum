@@ -1,12 +1,12 @@
-use crate::app_gui::App;
+use crate::ui::app_gui::App;
 use crate::colors_helper::Origin;
-use crate::messages::Msg;
+use crate::ui::messages::Msg;
 use iced::Element;
 use iced::widget::pick_list;
 
 mod name_picker_widget {
     use super::*;
-    use crate::app_gui::view::helpers::{filtered_names_for_origin, retain_selection};
+    use crate::ui::app_gui::view::helpers::{filtered_names_for_origin, retain_selection};
     use crate::colors_helper::{
         HEAVY_MIN_QUERY, MAX_RESULTS, TokenMode, is_heavy_origin, origin_names, origin_rank,
         search_in_origin,

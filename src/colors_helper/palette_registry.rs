@@ -1,6 +1,6 @@
 // Simplified palette registration system
 use super::Origin;
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 use std::collections::HashMap;
 use std::sync::LazyLock;
 

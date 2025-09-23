@@ -2,7 +2,7 @@
 use super::*;
 use std::collections::HashMap;
 use crate::colors::kelvin_colors::KELVIN_COLORS;
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub enum ColorsFor {
     Slice(&'static [(HexCode, ColorName)]),

@@ -2,7 +2,7 @@
 use core::fmt::{self, Display};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub use std::sync::LazyLock;
 
@@ -55,7 +55,7 @@ mod github_colors;
 pub use github_colors::COLORS_GITHUB;
 
 // share hex/rgb utils
-pub use crate::hex::*;
+pub use crate::core::hex::*;
 
 // ==== submodules ====
 pub(crate) mod catalog;

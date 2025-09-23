@@ -1,4 +1,4 @@
-use crate::messages::{Channel, Msg};
+use crate::ui::messages::{Channel, Msg};
 use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::{column, container, row, text};

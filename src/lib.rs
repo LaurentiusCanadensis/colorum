@@ -3,18 +3,16 @@
 //! - Provides `run_app()` that `main.rs` can call to start the Iced app_gui.
 
 #![forbid(unsafe_code)]
-extern crate core;
+extern crate core as std_core;
 
 pub mod colors; // src/colors/
 pub mod colors_helper; // src/colors_helper/
-pub mod color_types; // src/color_types.rs
-pub mod hex;
-pub mod messages;
-pub mod rgb;
+pub mod core; // src/core/ - Core types and utilities
+pub mod ui; // src/ui/ - User interface components
 
-// If you keep top-level widgets separate from ui/widgets, expose them here.
-// Prefer folding them into `ui::widgets` long-term.
-pub mod widgets;
+// Re-export core types for convenience
+pub use core::{color_types, hex, rgb};
+pub use ui::{messages, widgets};
 
 pub mod brand;
 
@@ -50,18 +48,16 @@ pub use colors::github_colors::COLORS_GITHUB;
 /// }
 /// ```
 // ---- App module -------------------------------------------------------------
-// Expecting `src/app_gui.rs` to define `pub struct App;` that implements
-// `iced::Application`. If your app_gui lives under `src/app_gui/mod.rs`, keep `mod app_gui;`.
-pub mod app_gui;
+// UI module already declared above
 // Re-exports (updated)
-pub use hex::{
+pub use core::hex::{
     HexError, combine_hex, hex_for_name, name_for_hex, normalize_hex, sanitize_hex2, split_hex,
 };
-pub use rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
+pub use core::rgb::{Rgb, dist2, hex_to_rgb, rgb_to_hex};
 
 // If you want these at the root:
 pub use colors_helper::COMBINED_COLORS;
-pub use messages::{Channel, Msg};
+pub use ui::messages::{Channel, Msg};
 
 #[cfg(test)]
 mod tests {
@@ -168,7 +164,7 @@ mod tests {
     #[test]
     fn test_entity_filtering() {
         use crate::colors_helper::{search_in_origin, Origin, TokenMode};
-        use crate::color_types::Entity;
+        use crate::core::color_types::Entity;
 
         // Test Entity:Temperature
         let temp_results = search_in_origin(Origin::All, "Entity:Temperature", TokenMode::Any);

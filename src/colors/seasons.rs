@@ -1,6 +1,6 @@
 // Seasons palette: 60 colors representing the year divided into ~6-day periods
 // Each color captures the essence of that time of year
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub const DATA: &[(HexCode, ColorName)] = &[
     // January (Winter depths) - Deep blues and cold whites

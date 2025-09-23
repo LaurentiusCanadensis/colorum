@@ -1,6 +1,6 @@
 // Canadian Provinces palette: Colors representing each province and territory
 // Color palettes inspired by provincial flags, nature, and cultural symbols
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub const DATA: &[(HexCode, ColorName)] = &[
     // British Columbia - Pacific coastal blues, forest greens, mountain whites

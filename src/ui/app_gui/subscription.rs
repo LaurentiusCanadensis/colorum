@@ -1,5 +1,5 @@
-use crate::app_gui::App;
-use crate::messages::Msg;
+use crate::ui::app_gui::App;
+use crate::ui::messages::Msg;
 
 impl App {
     // add near your other imports in app_gui.rs

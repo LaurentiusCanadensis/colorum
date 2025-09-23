@@ -1,10 +1,10 @@
-use crate::app_gui::App;
+use crate::ui::app_gui::App;
 use crate::colors_helper::{Origin, REGISTRY};
-use crate::messages::Msg;
-use crate::widgets::color_wheel::WheelSearchProps;
+use crate::ui::messages::Msg;
+use crate::ui::widgets::color_wheel::WheelSearchProps;
 use iced::widget::{container, image, pick_list, scrollable, svg, text_input};
 use iced::{Alignment, border, Element, Length};
-use crate::app_gui::app_helpers::origins_vec;
+use crate::ui::app_gui::app_helpers::origins_vec;
 use crate::brand;
 
 impl App {
@@ -30,7 +30,7 @@ impl App {
         let g = u8_from_hex2(&self.gg);
         let b = u8_from_hex2(&self.bb);
 
-        let wheel = crate::widgets::color_wheel::ColorWheel::new(r, g, b, Msg::WheelChanged);
+        let wheel = crate::ui::widgets::color_wheel::ColorWheel::new(r, g, b, Msg::WheelChanged);
 
         let wheel_view = wheel.view_with_search_props(
             "Colorum Wheel",

@@ -1,4 +1,4 @@
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 /// Metal flame test colors with structured types.
 /// Each entry is a tuple of (HexCode, ColorName) with sortable components.

@@ -1,4 +1,4 @@
-use crate::color_types::{HexCode, ColorName, Entity, Ordering};
+use crate::core::color_types::{HexCode, ColorName, Entity, Ordering};
 use crate::colors_helper::Origin;
 
 /// Full CSS Level 4/X11 named color list (140 entries).

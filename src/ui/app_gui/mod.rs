@@ -1,6 +1,6 @@
 use iced::widget::scrollable;
 use std::collections::HashMap;
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 pub mod app_helpers;
 pub mod subscription;

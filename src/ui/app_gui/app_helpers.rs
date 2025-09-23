@@ -1,14 +1,14 @@
 use crate::colors_helper::{
     self, MAX_RESULTS, Origin,
 };
-use crate::color_types::{HexCode, ColorName};
-use crate::app_gui::App;
+use crate::core::color_types::{HexCode, ColorName};
+use crate::ui::app_gui::App;
 use iced::keyboard::{self, Event as KEvent, Key, key::Named};
 use iced::{Event, Subscription};
 
-use crate::hex::{combine_hex, sanitize_hex2};
-use crate::messages::Msg;
-use crate::rgb::hex_to_rgb;
+use crate::core::hex::{combine_hex, sanitize_hex2};
+use crate::ui::messages::Msg;
+use crate::core::rgb::hex_to_rgb;
 use iced::widget::{
     PickList, Space, button, column, container, mouse_area, pick_list, row, scrollable, text,
     text_input,
@@ -305,7 +305,7 @@ impl App {
         let idx = self.results_idx[row];
         let (hex, name) = self.base[idx];
 
-        if let Some(rgb) = crate::rgb::hex_to_rgb(hex.as_str()) {
+        if let Some(rgb) = crate::core::rgb::hex_to_rgb(hex.as_str()) {
             self.rr = format!("{:02X}", rgb.r);
             self.gg = format!("{:02X}", rgb.g);
             self.bb = format!("{:02X}", rgb.b);

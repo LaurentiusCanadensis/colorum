@@ -1,19 +1,15 @@
 #![warn(dead_code, unused_imports, unused_mut, unused_variables)]
-mod app_gui;
 mod colors_helper;
-mod hex;
-pub mod messages;
-mod rgb;
-mod widgets;
+mod core;
+mod ui;
 
 pub mod colors;
-pub mod color_types;
-use crate::rgb::hex_to_rgb;
-use app_gui::App;
+pub mod brand;
+
+use crate::core::rgb::hex_to_rgb;
+use ui::app_gui::App;
 // Unused: use app_gui::view::view;
 use iced::{Theme, application};
-
-pub mod brand;
 
 
 
