@@ -40,6 +40,10 @@ pub struct App {
     // Splash screen state
     pub show_splash: bool,
     pub splash_start_time: Option<std::time::Instant>,
+
+    // Window size for responsive behavior
+    pub window_width: f32,
+    pub window_height: f32,
 }
 
 impl Default for App {
@@ -82,6 +86,10 @@ impl Default for App {
             // Initialize splash screen
             show_splash: true,
             splash_start_time: Some(std::time::Instant::now()),
+
+            // Initialize window size (will be updated by window events)
+            window_width: 800.0,
+            window_height: 600.0,
         };
         // populate lowercase cache and hex without pound once at startup
         s.base_names_lc = s

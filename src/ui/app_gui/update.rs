@@ -418,6 +418,12 @@ impl App {
                 Task::none()
             }
 
+            Msg::WindowResized(width, height) => {
+                self.window_width = width;
+                self.window_height = height;
+                Task::none()
+            }
+
             _ => Task::none(),
         }
     }

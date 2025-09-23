@@ -44,7 +44,7 @@ where
         }
     }
 
-    /// Renders the canvas and overlays the 3 hex inputs **inside** the wheel.
+    /// Renders the canvas and overlays the 3 hex inputs **inside** the wheel (for large sizes only).
     pub fn view(
         self,
         label: &'static str,
@@ -52,15 +52,27 @@ where
         g_hex: &str,
         b_hex: &str,
     ) -> Element<'static, Msg> {
+        self.view_with_size(label, r_hex, g_hex, b_hex, 300.0, false)
+    }
+
+    /// Renders the wheel with customizable size and option to hide input overlays.
+    pub fn view_with_size(
+        self,
+        label: &'static str,
+        r_hex: &str,
+        g_hex: &str,
+        b_hex: &str,
+        size: f32,
+        hide_inputs: bool,
+    ) -> Element<'static, Msg> {
         use iced::widget::stack;
 
         // Base wheel canvas
         let canvas = Canvas::new(self)
-            .width(Length::Fixed(300.0))
-            .height(Length::Fixed(300.0));
+            .width(Length::Fixed(size))
+            .height(Length::Fixed(size));
 
         // Geometry parameters
-        let size = 300.0_f32;
         let center = size / 2.0;
         let outer_radius = size.min(size) * 0.45;
         let ring_thickness = outer_radius * 0.18;
@@ -72,60 +84,94 @@ where
 
         let half_field_h = 18.0_f32;
 
-        // Helper to place an input at the north of a ring
-        let place_input =
-            |value: &str, placeholder: &'static str, on_input: fn(String) -> Msg, radius: f32| {
-                let v_adjust = ring_thickness * 0.12;
-                let input_w = 33.0_f32;
-                let top_px = (center - radius - half_field_h + v_adjust).max(0.0);
-                let left_px = (center - (input_w / 2.0)).clamp(0.0, size - input_w);
+        if hide_inputs {
+            // Scale title and spacing for smaller wheels
+            let title_size = if size < 200.0 { 16 } else { 18 };
+            let spacing = if size < 200.0 { 6 } else { 8 };
+            let padding = if size < 200.0 { 4 } else { 6 };
 
-                let field = text_input(placeholder, value)
-                    .on_input(on_input)
-                    .padding(6)
-                    .size(14)
-                    .width(Length::Fixed(input_w))
-                    .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
-                        background: Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.1)),
-                        border: Border {
-                            width: 0.5,
-                            color: Color::from_rgba(0.0, 0.0, 0.0, 0.15),
-                            radius: Radius::from(6.0),
-                        },
+            // Just the canvas without input overlays for small sizes
+            container(
+                column![
+                    text(label).size(title_size),
+                    canvas,
+                ]
+                .spacing(spacing)
+                .width(Length::Fixed(size))
+                .align_x(Alignment::Center),
+            )
+            .padding(padding)
+            .into()
+        } else {
+            // Helper to place an input at the north of a ring
+            let place_input =
+                |value: &str, placeholder: &'static str, on_input: fn(String) -> Msg, radius: f32| {
+                    let v_adjust = ring_thickness * 0.12;
 
-                        icon: Color::from_rgb(0.35, 0.35, 0.35),
-                        placeholder: Color::from_rgba(1.0, 1.0, 1.0, 0.6),
-                        value: Color::WHITE,
-                        selection: Color::from_rgba(0.20, 0.55, 1.0, 0.35),
-                    });
+                    // Scale input size based on wheel size - more reasonable scaling
+                    let (input_padding, input_font_size, input_w) = if size < 200.0 {
+                        (4, 12, 28.0)  // Smaller inputs for small wheels
+                    } else if size < 270.0 {
+                        (5, 13, 30.0)  // Medium inputs for medium wheels
+                    } else {
+                        (6, 14, 33.0)  // Standard inputs for large wheels
+                    };
 
-                container(field)
-                    .width(Length::Fixed(size))
-                    .height(Length::Fixed(size))
-                    .padding(Padding {
-                        top: top_px,
-                        right: 0.0,
-                        bottom: 0.0,
-                        left: left_px,
-                    })
-                    .into()
-            };
+                    let top_px = (center - radius - half_field_h + v_adjust).max(0.0);
+                    let left_px = (center - (input_w / 2.0)).clamp(0.0, size - input_w);
 
-        let r_input_layer: Element<Msg> = place_input(r_hex, "RR", Msg::RChanged, r_outer);
-        let g_input_layer: Element<Msg> = place_input(g_hex, "GG", Msg::GChanged, r_mid);
-        let b_input_layer: Element<Msg> = place_input(b_hex, "BB", Msg::BChanged, r_inner);
+                    let field = text_input(placeholder, value)
+                        .on_input(on_input)
+                        .padding(input_padding)
+                        .size(input_font_size)
+                        .width(Length::Fixed(input_w))
+                        .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
+                            background: Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.1)),
+                            border: Border {
+                                width: 0.5,
+                                color: Color::from_rgba(0.0, 0.0, 0.0, 0.15),
+                                radius: Radius::from(6.0),
+                            },
 
-        container(
-            column![
-                text(label).size(18),
-                stack![canvas, r_input_layer, g_input_layer, b_input_layer,],
-            ]
-            .spacing(8)
-            .width(Length::Fixed(300.0))
-            .align_x(Alignment::Center),
-        )
-        .padding(6)
-        .into()
+                            icon: Color::from_rgb(0.35, 0.35, 0.35),
+                            placeholder: Color::from_rgba(1.0, 1.0, 1.0, 0.6),
+                            value: Color::WHITE,
+                            selection: Color::from_rgba(0.20, 0.55, 1.0, 0.35),
+                        });
+
+                    container(field)
+                        .width(Length::Fixed(size))
+                        .height(Length::Fixed(size))
+                        .padding(Padding {
+                            top: top_px,
+                            right: 0.0,
+                            bottom: 0.0,
+                            left: left_px,
+                        })
+                        .into()
+                };
+
+            let r_input_layer: Element<Msg> = place_input(r_hex, "RR", Msg::RChanged, r_outer);
+            let g_input_layer: Element<Msg> = place_input(g_hex, "GG", Msg::GChanged, r_mid);
+            let b_input_layer: Element<Msg> = place_input(b_hex, "BB", Msg::BChanged, r_inner);
+
+            // Scale title and spacing for smaller wheels too
+            let title_size = if size < 200.0 { 16 } else if size < 270.0 { 17 } else { 18 };
+            let spacing = if size < 200.0 { 6 } else if size < 270.0 { 7 } else { 8 };
+            let padding = if size < 200.0 { 4 } else if size < 270.0 { 5 } else { 6 };
+
+            container(
+                column![
+                    text(label).size(title_size),
+                    stack![canvas, r_input_layer, g_input_layer, b_input_layer,],
+                ]
+                .spacing(spacing)
+                .width(Length::Fixed(size))
+                .align_x(Alignment::Center),
+            )
+            .padding(padding)
+            .into()
+        }
     }
 
     /// Renders the wheel AND the old fast search + index-driven dropdown
@@ -329,8 +375,16 @@ where
         use iced::widget::{Space, column, container, mouse_area, scrollable, text, text_input};
         use iced::{Alignment, Background, Color, Length, Renderer, Theme};
 
+        // Determine if we should use small widget mode based on window/container size
+        // For now, we'll use a simple heuristic - in a real app you'd pass size info
+        let is_small = false; // This could be determined by container bounds
+
         // Core wheel (this consumes `self`, same as `view`)
-        let wheel_core: iced::Element<'a, Msg> = self.view(title, rr, gg, bb);
+        let wheel_core: iced::Element<'a, Msg> = if is_small {
+            self.view_with_size(title, rr, gg, bb, 250.0, true)
+        } else {
+            self.view(title, rr, gg, bb)
+        };
 
         // Search box wired to your app callbacks
         let search_box: iced::widget::TextInput<'a, Msg, Theme, Renderer> =
@@ -353,7 +407,10 @@ where
                 .align_x(Alignment::Start)
                 .width(Length::Fill);
 
-            for (row, &idx) in props.results_idx.iter().enumerate() {
+            // Limit to 3 items for small widget mode
+            let max_items = if props.results_idx.len() > 10 { 3 } else { props.results_idx.len() };
+
+            for (row, &idx) in props.results_idx.iter().take(max_items).enumerate() {
                 let (hex, name) = props.base[idx];
                 let is_sel = props.sel_pos == Some(row);
                 let label = if is_sel {
@@ -389,9 +446,11 @@ where
                 col = col.push(click);
             }
 
+            let dropdown_height = if max_items <= 3 { 80.0 } else { 180.0 };
+
             scrollable(col)
                 .id(props.scroll_id.clone())
-                .height(Length::Fixed(180.0))
+                .height(Length::Fixed(dropdown_height))
                 .width(Length::Fill)
                 .into()
         }
@@ -406,12 +465,15 @@ where
             stack = stack.push(dropdown(&props));
         }
 
+        // Reduce spacing for compact layout - use a default since max_items isn't always available
+        let spacing = 4;
+
         container(
             column![wheel_core, stack]
-                .spacing(8)
+                .spacing(spacing)
                 .align_x(Alignment::Center),
         )
-        .padding([6, 6])
+        .padding([4, 4])
         .width(Length::Fill)
         .align_x(Alignment::Center)
         .into()

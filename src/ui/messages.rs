@@ -37,4 +37,5 @@ pub enum Msg {
     CloseDropdown,
     RawEvent(Event),
     Tick,
+    WindowResized(f32, f32), // width, height
 }

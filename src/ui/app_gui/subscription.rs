@@ -17,12 +17,17 @@ impl App {
             _ => None,
         });
 
+        // Window resize events
+        let window_events = iced::window::resize_events().map(|(_, size)| {
+            Msg::WindowResized(size.width, size.height)
+        });
+
         if self.show_splash {
             let timer = iced::time::every(std::time::Duration::from_millis(100))
                 .map(|_| Msg::Tick);
-            iced::Subscription::batch([keyboard, timer])
+            iced::Subscription::batch([keyboard, timer, window_events])
         } else {
-            keyboard
+            iced::Subscription::batch([keyboard, window_events])
         }
     }
 }
