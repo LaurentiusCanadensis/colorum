@@ -53,7 +53,7 @@ impl App {
         let filtered_names: Vec<&'static str> = self.filtered_names();
 
         // Keep selected if still present
-        let selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
+        let _selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
             filtered_names
                 .iter()
                 .copied()

@@ -262,8 +262,9 @@ fn greedy_wrap<'a>(text: &'a str, max_chars: usize, max_lines: usize) -> String 
                 }
             }
             // If single word longer than max, hard-truncate it
-            if word.len() > max_chars {
-                out.push(format!("{}…", &word[..max_chars.saturating_sub(1)]));
+            if word.chars().count() > max_chars {
+                let truncated: String = word.chars().take(max_chars.saturating_sub(1)).collect();
+                out.push(format!("{}…", truncated));
             } else {
                 line.push_str(word);
             }
@@ -307,7 +308,7 @@ fn compute_typography(inner_radius: f32) -> (f32, f32, usize, usize) {
     let max_chars_name = (usable_w / avg_w_name).floor().max(8.0) as usize;
 
     // Allow up to 2 lines for the name
-    let max_lines_name = 2usize;
+    let _max_lines_name = 2usize;
     (hex_size, name_size, max_chars_hex, max_chars_name.min(40))
 }
 impl<F> ColorWheel<F>

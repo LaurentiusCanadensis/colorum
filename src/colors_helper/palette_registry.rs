@@ -79,7 +79,7 @@ pub fn registered_palettes() -> &'static [&'static PaletteRegistration] {
 }
 
 /// Get palette data by origin (legacy function - returns empty for compatibility)
-pub fn palette_data(origin: Origin) -> &'static [(&'static str, &'static str)] {
+pub fn palette_data(_origin: Origin) -> &'static [(&'static str, &'static str)] {
     // This function is deprecated - use the new type system instead
     &[]
 }

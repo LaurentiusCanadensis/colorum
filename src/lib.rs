@@ -21,7 +21,8 @@ pub mod brand;
 // ---- Re-exports for ergonomics ---------------------------------------------
 
 // Common search/selection surface the UI uses
-pub use colors_helper::{Origin, best_first_for_ui, dropdown_results_for_ui};
+pub use colors_helper::Origin;
+// Temporarily disabled: pub use colors_helper::{best_first_for_ui, dropdown_results_for_ui};
 
 // Frequently used color tables (optional, but convenient)
 pub use colors::{
@@ -34,11 +35,11 @@ pub use colors::brand_colors::COLORS_BRANDS;
 pub use colors::github_colors::COLORS_GITHUB;
 
 // Import new palette modules to ensure inventory registration
-use colors::{seasons, canadian_provinces};
+// Disabled for now: use colors::{seasons, canadian_provinces};
 
 // ---- App runner glue for main.rs -------------------------------------------
 
-use iced::Result as IcedResult;
+// Unused: use iced::Result as IcedResult;
 
 /// Run the Iced application with default settings.
 ///

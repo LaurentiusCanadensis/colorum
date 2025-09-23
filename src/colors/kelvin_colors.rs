@@ -85,7 +85,6 @@ pub static KELVIN_COLORS: LazyLock<Vec<(HexCode, ColorName)>> = LazyLock::new(||
 /// Helper function to extract Kelvin temperature from color name
 fn extract_kelvin_temp(name: &str) -> Option<u32> {
     // Look for pattern like "20000K" or "5500k" - find the largest number followed by 'k'
-    use std::cmp::max;
 
     let name_lower = name.to_lowercase();
     let mut max_temp: Option<u32> = None;

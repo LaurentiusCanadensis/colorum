@@ -10,7 +10,7 @@ pub mod colors;
 pub mod color_types;
 use crate::rgb::hex_to_rgb;
 use app_gui::App;
-use app_gui::view::view;
+// Unused: use app_gui::view::view;
 use iced::{Theme, application};
 
 pub mod brand;
@@ -18,7 +18,7 @@ pub mod brand;
 
 
 
-use colors::*;
+// Unused: use colors::*;
 
 fn main() -> iced::Result {
     colorum::init_profiling();

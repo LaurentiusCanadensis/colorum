@@ -8,6 +8,7 @@ edition = "2024"
 profile = []
 default = []
 github-colors = []
+outlined-logos = []
 
 [dependencies]
 tracing = "0.1"

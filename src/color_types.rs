@@ -125,7 +125,7 @@ fn extract_kelvin_temp(name: &str) -> Option<u32> {
     if let Some(k_pos) = name_lower.find('k') {
         // Look backwards from 'k' to find the number
         let before_k = &name_lower[..k_pos];
-        let mut num_end = k_pos;
+        let num_end = k_pos;
         let mut num_start = k_pos;
 
         // Find start of number (work backwards from k)

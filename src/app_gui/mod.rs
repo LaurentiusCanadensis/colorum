@@ -1,5 +1,4 @@
-use iced::widget::{Space, column, container, mouse_area, scrollable, text};
-use iced::{Alignment, Background, Color, Element, Length, Renderer, Theme, border};
+use iced::widget::scrollable;
 use std::collections::HashMap;
 use crate::color_types::{HexCode, ColorName};
 

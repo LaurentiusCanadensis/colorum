@@ -2,14 +2,10 @@
 use core::fmt::{self, Display};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use crate::color_types::{HexCode, ColorName, convert_to_legacy_format};
+use crate::color_types::{HexCode, ColorName};
 
-pub use once_cell::sync::Lazy;
 pub use std::sync::LazyLock;
 
-pub use dropdown_results_for_ui;
-
-pub use best_first_for_ui;
 
 // external color tables
 
@@ -60,7 +56,6 @@ pub use github_colors::COLORS_GITHUB;
 
 // share hex/rgb utils
 pub use crate::hex::*;
-pub use crate::rgb::*;
 
 // ==== submodules ====
 pub(crate) mod catalog;
@@ -70,9 +65,8 @@ pub use sort::*;
 mod search;
 pub use search::*;
 mod ui;
-pub use ui::*;
+// Unused for now: pub use ui::*;
 pub mod palette_registry;
-pub use palette_registry::*;
 
 // ===== origin facade (kept public) =====
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

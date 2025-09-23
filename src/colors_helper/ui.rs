@@ -21,11 +21,11 @@ pub fn best_first_for_ui(origin: Origin, query: &str) -> Option<(&'static str, &
             if let Some(pair) = css_exact_match(&q.to_lowercase()) {
                 return Some(pair);
             }
-            let mut v = search_substring(q);
+            let v = search_substring(q);
             if let Some(first) = v.first() {
                 return Some((first.0.as_str(), first.1.as_str()));
             }
-            let mut v2 = search_tokens_any(q);
+            let v2 = search_tokens_any(q);
             v2.first().map(|(h, n)| (h.as_str(), n.as_str()))
         }
         _ => {
