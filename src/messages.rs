@@ -36,4 +36,5 @@ pub enum Msg {
     OpenDropdown,
     CloseDropdown,
     RawEvent(Event),
+    Tick,
 }

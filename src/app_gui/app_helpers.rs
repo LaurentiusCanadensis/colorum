@@ -93,7 +93,7 @@ impl App {
             search_in_origin,
         };
 
-        let q = self.search.trim();
+        let q = self.query.trim();
 
         if q.is_empty() {
             // show full list when no query
@@ -101,7 +101,7 @@ impl App {
         }
 
         if is_heavy_origin(self.selected_origin) && q.len() < HEAVY_MIN_QUERY {
-            // fallback: still show everything if user hasn’t typed enough
+            // fallback: still show everything if user hasn't typed enough
             return origin_names(self.selected_origin).to_vec();
         }
 
@@ -170,7 +170,7 @@ impl App {
 
     /// Get HEX for a name, *restricted to the active origin*.
     pub(crate) fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
-        let set = colors_helper::colors_for(self.selected_origin);
+        let set = colors_helper::origin_slice(self.selected_origin);
         set.iter()
             .find(|(_hex, nm)| nm.as_str().eq_ignore_ascii_case(name))
             .map(|(hex, _)| hex.as_str())
@@ -186,7 +186,7 @@ fn u8_from_hex2(s: &str) -> u8 {
 }
 
 pub fn colors_for_origin(origin: Origin) -> &'static [(HexCode, ColorName)] {
-    crate::colors_helper::colors_for(origin)
+    crate::colors_helper::origin_slice(origin)
 }
 
 // Use centralized lookup functions from colors_helper
@@ -236,7 +236,7 @@ impl App {
 
     /// Rebuild the `base` list & index for the current origin.
     pub fn reindex_origin(&mut self) {
-        self.base = crate::colors_helper::colors_for(self.selected_origin).to_vec();
+        self.base = crate::colors_helper::origin_slice(self.selected_origin).to_vec();
 
         self.base_index_by_name.clear();
         self.base_index_by_name.reserve(self.base.len());

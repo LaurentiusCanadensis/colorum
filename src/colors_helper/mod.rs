@@ -63,7 +63,7 @@ pub use crate::hex::*;
 pub use crate::rgb::*;
 
 // ==== submodules ====
-mod catalog;
+pub(crate) mod catalog;
 pub use catalog::*;
 mod sort;
 pub use sort::*;

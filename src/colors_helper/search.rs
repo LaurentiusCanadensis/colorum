@@ -58,15 +58,15 @@ fn parse_entities(entities_str: &str) -> Vec<Entity> {
         .filter_map(|s| {
             let s = s.trim().to_lowercase();
             match s.as_str() {
-                "color" => Some(Entity::Color),
-                "object" => Some(Entity::Object),
-                "material" => Some(Entity::Material),
-                "place" => Some(Entity::Place),
-                "brand" => Some(Entity::Brand),
-                "person" => Some(Entity::Person),
+                "color" | "colors" => Some(Entity::Color),
+                "object" | "objects" => Some(Entity::Object),
+                "material" | "materials" => Some(Entity::Material),
+                "place" | "places" => Some(Entity::Place),
+                "brand" | "brands" => Some(Entity::Brand),
+                "person" | "persons" | "people" => Some(Entity::Person),
                 "abstract" => Some(Entity::Abstract),
-                "chemical" => Some(Entity::Chemical),
-                "temperature" => Some(Entity::Temperature),
+                "chemical" | "chemicals" => Some(Entity::Chemical),
+                "temperature" | "temperatures" => Some(Entity::Temperature),
                 "other" => Some(Entity::Other),
                 _ => None,
             }
@@ -202,6 +202,7 @@ pub fn search_substring(query: &str) -> Vec<(HexCode, ColorName)> {
 //    intersect_sorted_slices, union_sorted_slices – unchanged except they call
 //    `origin_slice`, `origin_index`, and `sort::sort_dropdown_by_origin` from here.
 
+#[derive(Debug, Clone)]
 pub enum TokenMode {
     Any,
     All,
@@ -268,6 +269,29 @@ pub fn search_in_origin(
         if matches!(origin, Origin::All) {
             return search_substring(q);
         }
+
+        // Special case: single character queries should do simple substring matching, not token matching
+        if cleaned_query.len() == 1 {
+            let qlc = cleaned_query.to_lowercase();
+            let mut out: Vec<(HexCode, ColorName)> = slice
+                .iter()
+                .copied()
+                .filter(|&(_h, n)| n.as_str().to_lowercase().contains(&qlc))
+                .collect();
+
+            if matches!(origin, Origin::All) {
+                sort_dropdown_by_origin(&qlc, &mut out);
+            }
+
+            // Apply entity filtering to final results
+            out = apply_entity_filter(out, &entity_filter);
+
+            if out.len() > MAX_RESULTS {
+                out.truncate(MAX_RESULTS);
+            }
+            return out;
+        }
+
         let mut out: Vec<(HexCode, ColorName)> = match mode {
             TokenMode::Any => {
                 // ANY of the short tokens

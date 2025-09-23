@@ -2,7 +2,7 @@ use crate::app_gui::App;
 use crate::colors_helper::{Origin, REGISTRY};
 use crate::messages::Msg;
 use crate::widgets::color_wheel::WheelSearchProps;
-use iced::widget::{container, pick_list, scrollable, svg, text_input};
+use iced::widget::{container, image, pick_list, scrollable, svg, text_input};
 use iced::{Alignment, border, Element, Length};
 use crate::app_gui::app_helpers::origins_vec;
 use crate::brand;
@@ -11,6 +11,11 @@ impl App {
 
 
     pub fn view(&self) -> Element<Msg> {
+        // Show splash screen for 5 seconds
+        if self.show_splash {
+            return self.splash_view();
+        }
+
         // --- helpers ---
         fn u8_from_hex2(s: &str) -> u8 {
             if s.len() == 2 {
@@ -79,28 +84,8 @@ impl App {
 
 
 
-        let logo_el: iced::Element<_> = {
-            // Try the SVG first
-            let logo = svg(crate::brand::wordmark())
-                .width(Length::Fill)
-                .height(Length::Fixed(56.0));
-
-            container(logo)
-                .width(Length::Fill)
-                .align_x(Alignment::Center)
-                .padding([8, 4])
-                // Debug border so you can *see* the header box
-                .style(|_| iced::widget::container::Style {
-
-                    ..Default::default()
-                })
-                .into()
-        };
-
-
         let content = iced::widget::Column::new()
             // Center the wheel without forcing width; it will scale to the window.
-            .push(logo_el)
             .push(
                 container(wheel_view)
                     .width(Length::Fill)
@@ -127,5 +112,22 @@ impl App {
                 .align_x(Alignment::Center),
         )
         .into()
+    }
+
+    fn splash_view(&self) -> Element<Msg> {
+        let logo = image("src/assets/logo.png")
+            .width(Length::Fixed(600.0))
+            .height(Length::Fixed(279.0));
+
+        let content = container(logo)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_x(Alignment::Center)
+            .align_y(Alignment::Center);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 }

@@ -15,6 +15,16 @@ impl App {
     }
 
     pub fn update(&mut self, msg: Msg) -> Task<Msg> {
+        // Check splash timer on every update
+        if self.show_splash {
+            if let Some(start_time) = self.splash_start_time {
+                if start_time.elapsed() >= std::time::Duration::from_secs(5) {
+                    self.show_splash = false;
+                    self.splash_start_time = None;
+                }
+            }
+        }
+
         match msg {
             Msg::RawEvent(Event::Keyboard(iced::keyboard::Event::KeyPressed { key, .. })) => {
                 match key.as_ref() {
@@ -181,49 +191,40 @@ impl App {
                     self.last_query.clear();
                     self.last_results_idx.clear();
 
-                    // Optional: when blank, pick the first color in the current origin
-                    if q.is_empty() && !self.base.is_empty() {
-                        self.results_idx.push(0);
-                        self.sel_pos = Some(0);
-                        let (hex, name) = self.base[0];
-                        self.selected_name = Some(name.as_str().to_string());
-                        self.set_from_hex(hex.as_str());
-                        self.dropdown_open = true; // or false if you don't want the list open on blank
-                        self.last_results_idx = self.results_idx.clone();
+                    // When query is empty, show all colors for the current origin
+                    if q.is_empty() {
+                        self.selected_name = None;
+                        self.repopulate_full_results_capped();
+                        self.dropdown_open = true;
+                        // Optional: clear the color or keep the last selected color
+                        // self.rr.clear();
+                        // self.gg.clear();
+                        // self.bb.clear();
                     }
 
                     return Task::none();
                 }
 
-                // Fast name search (with seed-thinning)
-                let qlc = q.to_ascii_lowercase();
-                let prev = self.last_query.clone();
+                // Use Entity-aware search from search_in_origin
+                let mode = if q.contains(' ') {
+                    crate::colors_helper::TokenMode::All
+                } else {
+                    crate::colors_helper::TokenMode::Any
+                };
+
+                let hits = crate::colors_helper::search_in_origin(self.selected_origin, q, mode.clone());
 
                 self.results_idx.clear();
+                self.results_idx.reserve(hits.len().min(MAX_RESULTS));
 
-                if !prev.is_empty() && qlc.starts_with(&prev) && !self.last_results_idx.is_empty() {
-                    // Narrow down from previous results only
-                    for &i in &self.last_results_idx {
-                        if self.base_names_lc[i].contains(&qlc) {
-                            self.results_idx.push(i);
-                            if self.results_idx.len() >= MAX_RESULTS {
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    // Full scan over cached lowercase names
-                    for (i, name_lc) in self.base_names_lc.iter().enumerate() {
-                        if name_lc.contains(&qlc) {
-                            self.results_idx.push(i);
-                            if self.results_idx.len() >= MAX_RESULTS {
-                                break;
-                            }
-                        }
+                // Map search results back to indices in self.base
+                for (_hex, name) in hits.iter().take(MAX_RESULTS) {
+                    if let Some(&i) = self.base_index_by_name.get(name) {
+                        self.results_idx.push(i);
                     }
                 }
 
-                self.last_query = qlc.clone();
+                self.last_query = q.to_string();
                 self.last_results_idx = self.results_idx.clone();
 
                 self.sel_pos = if self.results_idx.is_empty() {
@@ -249,7 +250,7 @@ impl App {
 
                 self.selected_origin = o;
 
-                let slice = crate::colors_helper::colors_for(o);
+                let slice = crate::colors_helper::origin_slice(o);
                 self.base = slice.to_vec();
                 // (re)build caches
                 self.base_index_by_name.clear();
@@ -302,17 +303,25 @@ impl App {
                 if q.is_empty() {
                     self.repopulate_full_results_capped();
                 } else {
-                    let qlc = q.to_ascii_lowercase();
+                    // Use Entity-aware search for origin changes too
+                    let mode = if q.contains(' ') {
+                        crate::colors_helper::TokenMode::All
+                    } else {
+                        crate::colors_helper::TokenMode::Any
+                    };
+
+                    let hits = crate::colors_helper::search_in_origin(self.selected_origin, &q, mode);
+
                     self.results_idx.clear();
-                    for (i, name_lc) in self.base_names_lc.iter().enumerate() {
-                        if name_lc.contains(&qlc) {
+                    self.results_idx.reserve(hits.len().min(MAX_RESULTS));
+
+                    // Map search results back to indices in self.base
+                    for (_hex, name) in hits.iter().take(MAX_RESULTS) {
+                        if let Some(&i) = self.base_index_by_name.get(name) {
                             self.results_idx.push(i);
-                            // keep it snappy
-                            if self.results_idx.len() >= MAX_RESULTS {
-                                break;
-                            }
                         }
                     }
+
                     self.sel_pos = if self.results_idx.is_empty() {
                         None
                     } else {
@@ -397,6 +406,18 @@ impl App {
                 Task::none()
             }
 
+            Msg::Tick => {
+                if self.show_splash {
+                    if let Some(start_time) = self.splash_start_time {
+                        if start_time.elapsed() >= std::time::Duration::from_millis(2000) {
+                            self.show_splash = false;
+                            self.splash_start_time = None;
+                        }
+                    }
+                }
+                Task::none()
+            }
+
             _ => Task::none(),
         }
     }
@@ -404,6 +425,10 @@ impl App {
 
 #[inline]
 fn normalize_hex_query(q: &str) -> Option<String> {
+    // Only treat as hex if it starts with '#' or has at least 2 hex digits
+    // This prevents single letters like "a" from being treated as hex queries
+    let has_hash = q.trim().starts_with('#');
+
     // Trim, strip leading '#', remove spaces, upper-case
     let mut s = q
         .trim()
@@ -412,10 +437,17 @@ fn normalize_hex_query(q: &str) -> Option<String> {
     if s.is_empty() {
         return None;
     }
-    // HEX only, max 6 chars (allow 1..6 to support prefix)
+
+    // HEX only, max 6 chars
     if s.len() > 6 || !s.chars().all(|c| c.is_ascii_hexdigit()) {
         return None;
     }
+
+    // Require either '#' prefix or at least 2 characters to avoid false positives
+    if !has_hash && s.len() < 2 {
+        return None;
+    }
+
     s.make_ascii_uppercase();
     Some(s)
 }

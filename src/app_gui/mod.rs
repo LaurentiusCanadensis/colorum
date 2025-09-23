@@ -37,6 +37,10 @@ pub struct App {
     last_query: String,
     last_results_idx: Vec<usize>,
     pub base_hex_nopound: Vec<&'static str>, // NEW: "E53B3B" for "#E53B3B"
+
+    // Splash screen state
+    pub show_splash: bool,
+    pub splash_start_time: Option<std::time::Instant>,
 }
 
 impl Default for App {
@@ -44,7 +48,7 @@ impl Default for App {
         let selected_origin = crate::colors_helper::Origin::All;
 
         // materialize the current origin's list
-        let base = crate::colors_helper::colors_for(selected_origin).to_vec();
+        let base = crate::colors_helper::origin_slice(selected_origin).to_vec();
 
         // build name -> index map
         let mut base_index_by_name = HashMap::with_capacity(base.len());
@@ -75,6 +79,10 @@ impl Default for App {
             base_names_lc: Vec::new(),
             // ...include any other fields you have here unchanged...
             base_hex_nopound: vec![],
+
+            // Initialize splash screen
+            show_splash: true,
+            splash_start_time: Some(std::time::Instant::now()),
         };
         // populate lowercase cache and hex without pound once at startup
         s.base_names_lc = s
