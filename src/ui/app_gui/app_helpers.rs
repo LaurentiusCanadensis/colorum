@@ -377,7 +377,7 @@ pub fn origins_vec() -> Vec<Origin> {
     ]
 }
 
-pub const HEAVY_MIN_QUERY: usize = 2;
+pub const HEAVY_MIN_QUERY: usize = 1;
 
 pub fn is_heavy_origin(o: Origin) -> bool {
     match o {

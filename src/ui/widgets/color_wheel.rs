@@ -55,6 +55,20 @@ where
         self.view_with_size(label, r_hex, g_hex, b_hex, 300.0, false)
     }
 
+    /// Creates a compact wheel suitable for embedding in other projects.
+    /// This version has more robust positioning that works better in different layout contexts.
+    pub fn view_compact(
+        self,
+        label: &'static str,
+        r_hex: &str,
+        g_hex: &str,
+        b_hex: &str,
+        wheel_size: f32,
+    ) -> Element<'static, Msg> {
+        // For external projects, always hide inputs to avoid positioning issues
+        self.view_with_size(label, r_hex, g_hex, b_hex, wheel_size, true)
+    }
+
     /// Renders the wheel with customizable size and option to hide input overlays.
     pub fn view_with_size(
         self,
@@ -64,6 +78,20 @@ where
         b_hex: &str,
         size: f32,
         hide_inputs: bool,
+    ) -> Element<'static, Msg> {
+        self.view_with_color_info(label, r_hex, g_hex, b_hex, size, hide_inputs, None)
+    }
+
+    /// Renders the wheel with color information display.
+    pub fn view_with_color_info(
+        self,
+        label: &'static str,
+        r_hex: &str,
+        g_hex: &str,
+        b_hex: &str,
+        size: f32,
+        hide_inputs: bool,
+        color_name: Option<&str>,
     ) -> Element<'static, Msg> {
         use iced::widget::stack;
 
@@ -103,67 +131,145 @@ where
             .padding(padding)
             .into()
         } else {
-            // Helper to place an input at the north of a ring
-            let place_input =
-                |value: &str, placeholder: &'static str, on_input: fn(String) -> Msg, radius: f32| {
-                    let v_adjust = ring_thickness * 0.12;
+            // Scale input and title sizing
+            let (input_padding, input_font_size, input_w) = if size < 200.0 {
+                (3, 10, 22.0)  // Smaller for center positioning
+            } else if size < 270.0 {
+                (4, 11, 26.0)
+            } else {
+                (5, 12, 30.0)
+            };
 
-                    // Scale input size based on wheel size - more reasonable scaling
-                    let (input_padding, input_font_size, input_w) = if size < 200.0 {
-                        (4, 12, 28.0)  // Smaller inputs for small wheels
-                    } else if size < 270.0 {
-                        (5, 13, 30.0)  // Medium inputs for medium wheels
-                    } else {
-                        (6, 14, 33.0)  // Standard inputs for large wheels
-                    };
-
-                    let top_px = (center - radius - half_field_h + v_adjust).max(0.0);
-                    let left_px = (center - (input_w / 2.0)).clamp(0.0, size - input_w);
-
-                    let field = text_input(placeholder, value)
-                        .on_input(on_input)
-                        .padding(input_padding)
-                        .size(input_font_size)
-                        .width(Length::Fixed(input_w))
-                        .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
-                            background: Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.1)),
-                            border: Border {
-                                width: 0.5,
-                                color: Color::from_rgba(0.0, 0.0, 0.0, 0.15),
-                                radius: Radius::from(6.0),
-                            },
-
-                            icon: Color::from_rgb(0.35, 0.35, 0.35),
-                            placeholder: Color::from_rgba(1.0, 1.0, 1.0, 0.6),
-                            value: Color::WHITE,
-                            selection: Color::from_rgba(0.20, 0.55, 1.0, 0.35),
-                        });
-
-                    container(field)
-                        .width(Length::Fixed(size))
-                        .height(Length::Fixed(size))
-                        .padding(Padding {
-                            top: top_px,
-                            right: 0.0,
-                            bottom: 0.0,
-                            left: left_px,
-                        })
-                        .into()
-                };
-
-            let r_input_layer: Element<Msg> = place_input(r_hex, "RR", Msg::RChanged, r_outer);
-            let g_input_layer: Element<Msg> = place_input(g_hex, "GG", Msg::GChanged, r_mid);
-            let b_input_layer: Element<Msg> = place_input(b_hex, "BB", Msg::BChanged, r_inner);
-
-            // Scale title and spacing for smaller wheels too
             let title_size = if size < 200.0 { 16 } else if size < 270.0 { 17 } else { 18 };
             let spacing = if size < 200.0 { 6 } else if size < 270.0 { 7 } else { 8 };
             let padding = if size < 200.0 { 4 } else if size < 270.0 { 5 } else { 6 };
 
+            // Clean implementation without Stack overlays
+
+            // RGB inputs positioned in the center of the wheel using stack overlay
+            use iced::widget::Stack;
+
+            let row_width = input_w * 3.0 + 8.0; // 3 inputs + 2 gaps of 4px each
+            let row_height = input_font_size as f32 + (input_padding * 2) as f32;
+
+            // Center the RGB inputs in the wheel
+            let center = size / 2.0;
+            let row_top = center - row_height / 2.0;
+            let row_left = center - row_width / 2.0;
+
+            let input_overlay = Stack::new()
+                .push(
+                    container(
+                        iced::widget::row![
+                            text_input("R", r_hex)
+                                .on_input(Msg::RChanged)
+                                .padding(input_padding)
+                                .size(input_font_size)
+                                .width(Length::Fixed(input_w))
+                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
+                                    background: Background::Color(Color::from_rgba(1.0, 0.95, 0.95, 0.95)),
+                                    border: Border {
+                                        width: 1.5,
+                                        color: Color::from_rgba(1.0, 0.0, 0.0, 0.8),
+                                        radius: Radius::from(3.0),
+                                    },
+                                    icon: Color::from_rgb(0.5, 0.0, 0.0),
+                                    placeholder: Color::from_rgba(1.0, 0.0, 0.0, 0.5),
+                                    value: Color::from_rgb(0.8, 0.0, 0.0),
+                                    selection: Color::from_rgba(1.0, 0.0, 0.0, 0.3),
+                                }),
+                            text_input("G", g_hex)
+                                .on_input(Msg::GChanged)
+                                .padding(input_padding)
+                                .size(input_font_size)
+                                .width(Length::Fixed(input_w))
+                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
+                                    background: Background::Color(Color::from_rgba(0.95, 1.0, 0.95, 0.95)),
+                                    border: Border {
+                                        width: 1.5,
+                                        color: Color::from_rgba(0.0, 1.0, 0.0, 0.8),
+                                        radius: Radius::from(3.0),
+                                    },
+                                    icon: Color::from_rgb(0.0, 0.5, 0.0),
+                                    placeholder: Color::from_rgba(0.0, 1.0, 0.0, 0.5),
+                                    value: Color::from_rgb(0.0, 0.8, 0.0),
+                                    selection: Color::from_rgba(0.0, 1.0, 0.0, 0.3),
+                                }),
+                            text_input("B", b_hex)
+                                .on_input(Msg::BChanged)
+                                .padding(input_padding)
+                                .size(input_font_size)
+                                .width(Length::Fixed(input_w))
+                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
+                                    background: Background::Color(Color::from_rgba(0.95, 0.95, 1.0, 0.95)),
+                                    border: Border {
+                                        width: 1.5,
+                                        color: Color::from_rgba(0.0, 0.0, 1.0, 0.8),
+                                        radius: Radius::from(3.0),
+                                    },
+                                    icon: Color::from_rgb(0.0, 0.0, 0.5),
+                                    placeholder: Color::from_rgba(0.0, 0.0, 1.0, 0.5),
+                                    value: Color::from_rgb(0.0, 0.0, 0.8),
+                                    selection: Color::from_rgba(0.0, 0.0, 1.0, 0.3),
+                                }),
+                        ]
+                        .spacing(4)
+                        .align_y(Alignment::Center)
+                    )
+                    .width(Length::Fixed(size))
+                    .height(Length::Fixed(size))
+                    .padding(Padding {
+                        top: row_top.max(0.0),
+                        left: row_left.clamp(0.0, size - row_width),
+                        right: 0.0,
+                        bottom: 0.0,
+                    })
+                );
+
             container(
                 column![
                     text(label).size(title_size),
-                    stack![canvas, r_input_layer, g_input_layer, b_input_layer,],
+                    Stack::new()
+                        .push(canvas)
+                        .push(input_overlay),
+                    // Show color info below wheel only when there's a selection
+                    {
+                        let has_color = !r_hex.is_empty() && !g_hex.is_empty() && !b_hex.is_empty();
+                        let has_name = color_name.is_some() && !color_name.unwrap_or("").is_empty();
+
+                        let info_element: Element<'_, Msg> = if has_color || has_name {
+                            let hex_element: Element<'_, Msg> = if has_color {
+                                text(format!("#{}{}{}", r_hex, g_hex, b_hex))
+                                    .size(title_size - 2)
+                                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
+                                        color: Some(Color::from_rgb(0.2, 0.2, 0.2)),
+                                    })
+                                    .into()
+                            } else {
+                                text("").into()
+                            };
+
+                            let name_element: Element<'_, Msg> = if has_name {
+                                text(color_name.unwrap_or("").to_string())
+                                    .size(title_size - 4)
+                                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
+                                        color: Some(Color::from_rgb(0.4, 0.4, 0.4)),
+                                    })
+                                    .into()
+                            } else {
+                                text("").into()
+                            };
+
+                            column![hex_element, name_element]
+                                .spacing(2)
+                                .align_x(Alignment::Center)
+                                .into()
+                        } else {
+                            text("").into() // Show nothing when no color is selected
+                        };
+
+                        info_element
+                    },
                 ]
                 .spacing(spacing)
                 .width(Length::Fixed(size))
@@ -557,8 +663,8 @@ where
         let r_mid = r_outer - (ring_thickness + gap);
         let r_inner = r_mid - (ring_thickness + gap);
 
-        // Make the inner circle a bit bigger
-        let inner_radius = (r_inner - ring_thickness * 0.40).max(24.0);
+        // Make the inner circle smaller to not interfere with RGB inputs
+        let inner_radius = (r_inner - ring_thickness * 1.0).max(16.0);
         let circle = Path::circle(center, inner_radius);
         let combined = Color::from_rgb8(self.r, self.g, self.b);
         overlay.fill(&circle, combined);
@@ -634,32 +740,33 @@ where
         let (hex_size, name_size, _max_hex, max_name) = compute_typography(inner_radius);
         let wrapped_name = greedy_wrap(name_str, max_name, 2);
 
-        overlay.with_save(|frame| {
-            // No `frame.clip` available in this Iced version. We keep text within the
-            // inner disc by sizing/wrapping conservatively in `compute_typography`.
-
-            // HEX line (centered, slightly above)
-            frame.fill_text(canvas::Text {
-                content: hex_str.to_string(),
-                position: center + iced::Vector::new(0.0, -name_size * 0.6),
-                color: text_color,
-                size: iced::Pixels(hex_size),
-                horizontal_alignment: alignment::Horizontal::Center,
-                vertical_alignment: alignment::Vertical::Center,
-                ..Default::default()
-            });
-
-            // Wrapped name (centered, below)
-            frame.fill_text(canvas::Text {
-                content: wrapped_name,
-                position: center + iced::Vector::new(0.0, name_size * 0.25),
-                color: text_color,
-                size: iced::Pixels(name_size),
-                horizontal_alignment: alignment::Horizontal::Center,
-                vertical_alignment: alignment::Vertical::Top,
-                ..Default::default()
-            });
-        });
+        // Comment out center text since RGB inputs are now displayed in the center
+        // overlay.with_save(|frame| {
+        //     // No `frame.clip` available in this Iced version. We keep text within the
+        //     // inner disc by sizing/wrapping conservatively in `compute_typography`.
+        //
+        //     // HEX line (centered, slightly above)
+        //     frame.fill_text(canvas::Text {
+        //         content: hex_str.to_string(),
+        //         position: center + iced::Vector::new(0.0, -name_size * 0.6),
+        //         color: text_color,
+        //         size: iced::Pixels(hex_size),
+        //         horizontal_alignment: alignment::Horizontal::Center,
+        //         vertical_alignment: alignment::Vertical::Center,
+        //         ..Default::default()
+        //     });
+        //
+        //     // Wrapped name (centered, below)
+        //     frame.fill_text(canvas::Text {
+        //         content: wrapped_name,
+        //         position: center + iced::Vector::new(0.0, name_size * 0.25),
+        //         color: text_color,
+        //         size: iced::Pixels(name_size),
+        //         horizontal_alignment: alignment::Horizontal::Center,
+        //         vertical_alignment: alignment::Vertical::Top,
+        //         ..Default::default()
+        //     });
+        // });
 
         vec![rings, overlay.into_geometry()]
     }

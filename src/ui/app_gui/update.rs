@@ -18,7 +18,7 @@ impl App {
         // Check splash timer on every update
         if self.show_splash {
             if let Some(start_time) = self.splash_start_time {
-                if start_time.elapsed() >= std::time::Duration::from_secs(5) {
+                if start_time.elapsed() >= std::time::Duration::from_secs(1) {
                     self.show_splash = false;
                     self.splash_start_time = None;
                 }
@@ -144,7 +144,7 @@ impl App {
 
                 let is_heavy = matches!(self.selected_origin, Origin::All);
 
-                const HEAVY_MIN: usize = 2;
+                const HEAVY_MIN: usize = 1;
                 const MAX_RESULTS: usize = 200;
 
                 // If it *looks* like a hex query, run HEX reverse search and bypass gating
