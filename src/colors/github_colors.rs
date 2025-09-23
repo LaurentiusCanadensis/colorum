@@ -1,4 +1,4 @@
-use crate::color_types::{HexCode, ColorName};
+use crate::core::color_types::{HexCode, ColorName};
 
 #[cfg(feature = "github-colors")]
 pub const COLORS_GITHUB: &[(HexCode, ColorName)] = &[
