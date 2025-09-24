@@ -32,13 +32,13 @@ impl App {
         let is_small_window = self.window_width < 500.0 || self.window_height < 450.0;
         let is_very_small_window = self.window_width < 350.0 || self.window_height < 350.0;
 
-        // Make wheel size responsive to window size - much smaller for narrow windows
+        // Make wheel size responsive to window size - increased by ~45px due to removing text below wheel
         let wheel_size = if is_very_small_window {
-            (self.window_width.min(self.window_height) * 0.4).min(200.0).max(150.0)
+            (self.window_width.min(self.window_height) * 0.4).min(245.0).max(195.0)
         } else if is_small_window {
-            (self.window_width.min(self.window_height) * 0.5).min(280.0).max(200.0)
+            (self.window_width.min(self.window_height) * 0.5).min(325.0).max(245.0)
         } else {
-            (self.window_width.min(self.window_height) * 0.6).min(400.0).max(280.0)
+            (self.window_width.min(self.window_height) * 0.6).min(445.0).max(325.0)
         };
 
         // Only hide inputs on very small screens

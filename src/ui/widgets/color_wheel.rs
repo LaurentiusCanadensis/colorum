@@ -91,7 +91,7 @@ where
         b_hex: &str,
         size: f32,
         hide_inputs: bool,
-        color_name: Option<&str>,
+        _color_name: Option<&str>,
     ) -> Element<'static, Msg> {
 
         // Base wheel canvas
@@ -210,44 +210,6 @@ where
                     Stack::new()
                         .push(canvas)
                         .push(input_overlay),
-                    // Show color info below wheel only when there's a selection
-                    {
-                        let has_color = !r_hex.is_empty() && !g_hex.is_empty() && !b_hex.is_empty();
-                        let has_name = color_name.is_some() && !color_name.unwrap_or("").is_empty();
-
-                        let info_element: Element<'_, Msg> = if has_color || has_name {
-                            let hex_element: Element<'_, Msg> = if has_color {
-                                text(format!("#{}{}{}", r_hex, g_hex, b_hex))
-                                    .size(title_size - 2)
-                                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
-                                        color: Some(Color::from_rgb(0.2, 0.2, 0.2)),
-                                    })
-                                    .into()
-                            } else {
-                                text("").into()
-                            };
-
-                            let name_element: Element<'_, Msg> = if has_name {
-                                text(color_name.unwrap_or("").to_string())
-                                    .size(title_size - 4)
-                                    .style(|_theme: &iced::Theme| iced::widget::text::Style {
-                                        color: Some(Color::from_rgb(0.4, 0.4, 0.4)),
-                                    })
-                                    .into()
-                            } else {
-                                text("").into()
-                            };
-
-                            column![hex_element, name_element]
-                                .spacing(2)
-                                .align_x(Alignment::Center)
-                                .into()
-                        } else {
-                            text("").into() // Show nothing when no color is selected
-                        };
-
-                        info_element
-                    },
                 ]
                 .spacing(spacing)
                 .width(Length::Fixed(size))

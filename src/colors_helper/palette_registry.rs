@@ -16,19 +16,8 @@ pub trait ColorPalette {
 
 /// Macro to easily define and register a new color palette
 ///
-/// Usage:
-/// ```rust
-/// define_palette!(
-///     MyColors,           // Struct name
-///     Origin::MyColors,   // Origin enum variant (add to Origin enum first)
-///     "My Colors",        // Display name
-///     [
-///         ("#FF0000", "red"),
-///         ("#00FF00", "green"),
-///         ("#0000FF", "blue"),
-///     ]
-/// );
-/// ```
+/// This macro would be used to define new color palettes with a struct name,
+/// origin enum variant, display name, and color data.
 #[macro_export]
 macro_rules! define_palette {
     ($struct_name:ident, $origin:expr, $display_name:literal, [$(($hex:literal, $name:literal)),* $(,)?]) => {

@@ -403,6 +403,47 @@ impl App {
                        (current_lab.a - white_lab.a).powi(2) +
                        (current_lab.b - white_lab.b).powi(2)).sqrt();
 
+        // Calculate WCAG contrast ratios for text readability
+        fn relative_luminance(r: u8, g: u8, b: u8) -> f32 {
+            let to_linear = |c: u8| {
+                let c = c as f32 / 255.0;
+                if c <= 0.03928 {
+                    c / 12.92
+                } else {
+                    ((c + 0.055) / 1.055).powf(2.4)
+                }
+            };
+            0.2126 * to_linear(r) + 0.7152 * to_linear(g) + 0.0722 * to_linear(b)
+        }
+
+        fn contrast_ratio(l1: f32, l2: f32) -> f32 {
+            let lighter = l1.max(l2);
+            let darker = l1.min(l2);
+            (lighter + 0.05) / (darker + 0.05)
+        }
+
+        let current_luminance = relative_luminance(r, g, b);
+        let white_luminance = relative_luminance(255, 255, 255);
+        let black_luminance = relative_luminance(0, 0, 0);
+
+        let contrast_white = contrast_ratio(current_luminance, white_luminance);
+        let contrast_black = contrast_ratio(current_luminance, black_luminance);
+
+        // CMYK conversion (simple RGB to CMYK)
+        let r_norm = r as f32 / 255.0;
+        let g_norm = g as f32 / 255.0;
+        let b_norm = b as f32 / 255.0;
+
+        let k = 1.0 - r_norm.max(g_norm).max(b_norm);
+        let c = if k == 1.0 { 0.0 } else { (1.0 - r_norm - k) / (1.0 - k) };
+        let m = if k == 1.0 { 0.0 } else { (1.0 - g_norm - k) / (1.0 - k) };
+        let y = if k == 1.0 { 0.0 } else { (1.0 - b_norm - k) / (1.0 - k) };
+
+        let c_percent = (c * 100.0) as u8;
+        let m_percent = (m * 100.0) as u8;
+        let y_percent = (y * 100.0) as u8;
+        let k_percent = (k * 100.0) as u8;
+
         let analytics_content = column![]
             .spacing(6)
             .padding([10, 12])
@@ -475,6 +516,58 @@ impl App {
                         )
                         .padding([4, 8])
                         .on_press(Msg::CopyHex(format!("{:.1}", distance)))
+                        .style(|_theme: &iced::Theme, _status| {
+                            iced::widget::button::Style {
+                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
+                                border: border::Border {
+                                    radius: 4.0.into(),
+                                    width: 1.0,
+                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                                },
+                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
+                                ..Default::default()
+                            }
+                        })
+                    )
+            )
+            .push(
+                // Text readability row
+                row![]
+                    .spacing(3)
+                    .push(
+                        button(
+                            text(format!("Text: {:.1}:1 / {:.1}:1", contrast_white, contrast_black))
+                                .size(16)
+                                .color(Color::from_rgb(0.2, 0.2, 0.2))
+                        )
+                        .padding([4, 8])
+                        .on_press(Msg::CopyHex(format!("White: {:.1}:1, Black: {:.1}:1", contrast_white, contrast_black)))
+                        .style(|_theme: &iced::Theme, _status| {
+                            iced::widget::button::Style {
+                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
+                                border: border::Border {
+                                    radius: 4.0.into(),
+                                    width: 1.0,
+                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                                },
+                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
+                                ..Default::default()
+                            }
+                        })
+                    )
+            )
+            .push(
+                // CMYK preview row
+                row![]
+                    .spacing(3)
+                    .push(
+                        button(
+                            text(format!("C{} M{} Y{} K{}", c_percent, m_percent, y_percent, k_percent))
+                                .size(16)
+                                .color(Color::from_rgb(0.2, 0.2, 0.2))
+                        )
+                        .padding([4, 8])
+                        .on_press(Msg::CopyHex(format!("C{} M{} Y{} K{}", c_percent, m_percent, y_percent, k_percent)))
                         .style(|_theme: &iced::Theme, _status| {
                             iced::widget::button::Style {
                                 background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
