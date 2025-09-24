@@ -1,11 +1,8 @@
 use crate::ui::app_gui::App;
-use crate::colors_helper::{Origin, REGISTRY};
 use crate::ui::messages::Msg;
-use crate::ui::widgets::color_wheel::WheelSearchProps;
-use iced::widget::{container, image, pick_list, scrollable, svg, text_input};
-use iced::{Alignment, border, Element, Length};
+use iced::widget::{container, image, scrollable};
+use iced::{Alignment, Element, Length};
 use crate::ui::app_gui::app_helpers::origins_vec;
-use crate::brand;
 
 impl App {
 

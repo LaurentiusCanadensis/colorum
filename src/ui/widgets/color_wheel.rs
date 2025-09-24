@@ -7,12 +7,12 @@ use iced::widget::canvas::stroke;
 use iced::widget::canvas::{self, Canvas, Frame, Geometry, Path, Program, Stroke};
 use iced::widget::text_input as ti;
 use iced::{
-    Alignment, Background, Border, Color, Element, Length, Padding, Point, Rectangle, alignment,
+    Alignment, Background, Border, Color, Element, Length, Padding, Point, Rectangle,
     mouse,
     widget::{column, container, text, text_input},
 };
 
-use crate::core::hex_to_rgb;
+use crate::core::rgb::hex_to_rgb;
 
 #[derive(Default)]
 pub struct WheelState {
@@ -93,7 +93,6 @@ where
         hide_inputs: bool,
         color_name: Option<&str>,
     ) -> Element<'static, Msg> {
-        use iced::widget::stack;
 
         // Base wheel canvas
         let canvas = Canvas::new(self)
@@ -101,16 +100,16 @@ where
             .height(Length::Fixed(size));
 
         // Geometry parameters
-        let center = size / 2.0;
+        let _center = size / 2.0;
         let outer_radius = size.min(size) * 0.45;
         let ring_thickness = outer_radius * 0.18;
         let gap = ring_thickness * 0.08;
 
         let r_outer = outer_radius; // R
         let r_mid = r_outer - (ring_thickness + gap); // G
-        let r_inner = r_mid - (ring_thickness + gap); // B
+        let _r_inner = r_mid - (ring_thickness + gap); // B
 
-        let half_field_h = 18.0_f32;
+        let _half_field_h = 18.0_f32;
 
         if hide_inputs {
             // Scale title and spacing for smaller wheels
@@ -725,7 +724,7 @@ where
         let luminance = 0.2126 * (self.r as f32 / 255.0)
             + 0.7152 * (self.g as f32 / 255.0)
             + 0.0722 * (self.b as f32 / 255.0);
-        let text_color = if luminance > 0.6 {
+        let _text_color = if luminance > 0.6 {
             Color::from_rgb(0.1, 0.1, 0.1)
         } else {
             Color::WHITE
@@ -733,12 +732,12 @@ where
 
         // --- Wrapped center label (no clip, just width budget) ---
         // Split the composed label into hex and name lines
-        let hex_str = label.lines().next().unwrap_or(&combined_hex);
+        let _hex_str = label.lines().next().unwrap_or(&combined_hex);
         let name_str = label.split_once('\n').map(|(_, n)| n).unwrap_or("");
 
         // Scale typography to inner disc and wrap name to fit
-        let (hex_size, name_size, _max_hex, max_name) = compute_typography(inner_radius);
-        let wrapped_name = greedy_wrap(name_str, max_name, 2);
+        let (_hex_size, _name_size, _max_hex, max_name) = compute_typography(inner_radius);
+        let _wrapped_name = greedy_wrap(name_str, max_name, 2);
 
         // Comment out center text since RGB inputs are now displayed in the center
         // overlay.with_save(|frame| {

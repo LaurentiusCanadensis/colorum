@@ -1,8 +1,5 @@
 use crate::ui::app_gui::App;
-use crate::colors_helper::{
-    HEAVY_MIN_QUERY, MAX_RESULTS, Origin, TokenMode, is_heavy_origin, origin_rank, sanitize_hex2,
-    search_in_origin,
-};
+use crate::colors_helper::{MAX_RESULTS, Origin, sanitize_hex2};
 use crate::core::hex::combine_hex;
 use crate::ui::messages::Msg;
 use iced::keyboard::Key;
@@ -60,14 +57,17 @@ impl App {
             }
             Msg::RChanged(s) => {
                 self.rr = sanitize_hex2(&s);
+                self.clear_name_if_color_mismatch();
                 Task::none()
             }
             Msg::GChanged(s) => {
                 self.gg = sanitize_hex2(&s);
+                self.clear_name_if_color_mismatch();
                 Task::none()
             }
             Msg::BChanged(s) => {
                 self.bb = sanitize_hex2(&s);
+                self.clear_name_if_color_mismatch();
                 Task::none()
             }
 
@@ -78,6 +78,8 @@ impl App {
                     crate::ui::messages::Channel::G => self.gg = hh,
                     crate::ui::messages::Channel::B => self.bb = hh,
                 }
+                // Clear selected name if the new color doesn't match
+                self.clear_name_if_color_mismatch();
                 Task::none()
             }
 

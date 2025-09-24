@@ -1,21 +1,9 @@
-use crate::colors_helper::{
-    self, MAX_RESULTS, Origin,
-};
-use crate::core::color_types::{HexCode, ColorName};
+use crate::colors_helper::{MAX_RESULTS, Origin};
 use crate::ui::app_gui::App;
-use iced::keyboard::{self, Event as KEvent, Key, key::Named};
-use iced::{Event, Subscription};
-
-use crate::core::hex::{combine_hex, sanitize_hex2};
 use crate::ui::messages::Msg;
 use crate::core::rgb::hex_to_rgb;
-use iced::widget::{
-    PickList, Space, button, column, container, mouse_area, pick_list, row, scrollable, text,
-    text_input,
-};
-use iced::{
-    Alignment, Background, Color, Element, Length, Renderer, Task, Theme, border, clipboard,
-};
+use iced::widget::{column, container, mouse_area, scrollable, text};
+use iced::{Alignment, Background, Color, Element, Length, Task, border};
 
 impl App {
     pub(crate) fn apply_selected_name(&mut self, name: &str) {
@@ -123,54 +111,12 @@ impl App {
         names
     }
 
-    pub(crate) fn filtered_names_old(&self) -> Vec<&'static str> {
-        use crate::colors_helper::{
-            HEAVY_MIN_QUERY, MAX_RESULTS, is_heavy_origin, origin_names, origin_rank,
-        };
-        use crate::colors_helper::{TokenMode, search_in_origin};
-
-        let q = self.search.trim();
-
-        // HEAVY ORIGINS: when query is empty (or too short), return empty list to keep dropdown light
-        if is_heavy_origin(self.selected_origin) {
-            if q.len() < HEAVY_MIN_QUERY {
-                return Vec::new();
-            }
-        } else {
-            // LIGHT ORIGINS: empty query → precomputed, already sorted
-            if q.is_empty() {
-                return origin_names(self.selected_origin).to_vec(); // pointer copies only
-            }
-        }
-
-        // Non-empty query → use token index
-        let mode = if q.contains(' ') {
-            TokenMode::All
-        } else {
-            TokenMode::Any
-        };
-        let hits = search_in_origin(self.selected_origin, q, mode);
-
-        // Keep names only
-        let mut names: Vec<&'static str> = hits.into_iter().map(|(_hex, name)| name.as_str()).collect();
-
-        // Order by precomputed rank (no per-keystroke lowercase cost)
-        let rank = origin_rank(self.selected_origin);
-        names.sort_unstable_by_key(|n| rank.get(n).copied().unwrap_or(usize::MAX));
-
-        // Cap results so pick_list stays fast
-        if names.len() > MAX_RESULTS {
-            names.truncate(MAX_RESULTS);
-        }
-
-        names
-    }
 
     /// Filter names by origin *and* search, then sort alphabetically
 
     /// Get HEX for a name, *restricted to the active origin*.
     pub(crate) fn hex_for_name_in_origin(&self, name: &str) -> Option<&'static str> {
-        let set = colors_helper::origin_slice(self.selected_origin);
+        let set = crate::colors_helper::origin_slice(self.selected_origin);
         set.iter()
             .find(|(_hex, nm)| nm.as_str().eq_ignore_ascii_case(name))
             .map(|(hex, _)| hex.as_str())
@@ -185,15 +131,6 @@ fn u8_from_hex2(s: &str) -> u8 {
     }
 }
 
-pub fn colors_for_origin(origin: Origin) -> &'static [(HexCode, ColorName)] {
-    crate::colors_helper::origin_slice(origin)
-}
-
-// Use centralized lookup functions from colors_helper
-
-// Use centralized search functions from colors_helper
-
-// Duplicate search functions removed - use colors_helper module instead
 
 
 impl App {
@@ -234,52 +171,6 @@ impl App {
         )
     }
 
-    /// Rebuild the `base` list & index for the current origin.
-    pub fn reindex_origin(&mut self) {
-        self.base = crate::colors_helper::origin_slice(self.selected_origin).to_vec();
-
-        self.base_index_by_name.clear();
-        self.base_index_by_name.reserve(self.base.len());
-        for (i, (_h, n)) in self.base.iter().enumerate() {
-            self.base_index_by_name.insert(*n, i);
-        }
-
-        // Reset results & cursor (query will repopulate)
-        self.results_idx.clear();
-        self.sel_pos = None;
-    }
-
-    /// Refilter into `results_idx` using the current query (index only).
-    pub fn rebuild_results(&mut self) {
-        let q = self.query.trim();
-        if q.is_empty() {
-            self.results_idx.clear();
-            self.sel_pos = None;
-            return;
-        }
-
-        // Use your fast ranked search, then map names to indices in `base`.
-        let hits = crate::colors_helper::search_in_origin(
-            self.selected_origin,
-            q,
-            crate::colors_helper::TokenMode::Any,
-        );
-
-        self.results_idx.clear();
-        self.results_idx.reserve(hits.len());
-
-        for (_hex, name) in hits.iter() {
-            if let Some(&i) = self.base_index_by_name.get(name) {
-                self.results_idx.push(i);
-            }
-        }
-
-        self.sel_pos = if self.results_idx.is_empty() {
-            None
-        } else {
-            Some(0)
-        };
-    }
 
     pub fn move_selection(&mut self, delta: i32) {
         let len = self.results_idx.len() as i32;
@@ -347,14 +238,34 @@ impl App {
         self.sel_pos = if n > 0 { Some(0) } else { None };
     }
 
+    /// Check if the current RGB values match the selected color name
+    pub(crate) fn current_color_matches_selected_name(&self) -> bool {
+        let Some(ref selected_name) = self.selected_name else {
+            return false;
+        };
+
+        let Some(hex) = self.hex_for_name_in_origin(selected_name) else {
+            return false;
+        };
+
+        // Convert current RGB to hex and compare
+        let current_hex = crate::core::hex::combine_hex(&self.rr, &self.gg, &self.bb);
+        let normalized_current = current_hex.trim_start_matches('#').to_uppercase();
+        let normalized_selected = hex.trim_start_matches('#').to_uppercase();
+
+        normalized_current == normalized_selected
+    }
+
+    /// Clear the selected name if the current color doesn't match it
+    pub(crate) fn clear_name_if_color_mismatch(&mut self) {
+        if !self.current_color_matches_selected_name() {
+            self.selected_name = None;
+        }
+    }
+
 
 
 }
-
-// Removed duplicate ColorCatalog - use the one from colors_helper
-
-
-// Use centralized registry from colors_helper module
 
 pub fn origins_vec() -> Vec<Origin> {
     vec![
@@ -371,19 +282,7 @@ pub fn origins_vec() -> Vec<Origin> {
         Origin::KelvinColors,
         #[cfg(feature = "github-colors")]
         Origin::GitHub,
-        // New simplified palette system
         Origin::Seasons,
         Origin::CanadianProvinces,
     ]
-}
-
-pub const HEAVY_MIN_QUERY: usize = 1;
-
-pub fn is_heavy_origin(o: Origin) -> bool {
-    match o {
-        Origin::All => true,
-        #[cfg(feature = "github-colors")]
-        Origin::GitHub => true,
-        _ => false,
-    }
 }
