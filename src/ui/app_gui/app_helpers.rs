@@ -1,9 +1,10 @@
 use crate::colors_helper::{MAX_RESULTS, Origin};
 use crate::ui::app_gui::App;
 use crate::ui::messages::Msg;
-use crate::core::rgb::hex_to_rgb;
-use iced::widget::{column, container, mouse_area, scrollable, text};
-use iced::{Alignment, Background, Color, Element, Length, Task, border};
+use crate::core::rgb::{hex_to_rgb, rgb_to_hsl, Rgb, rgb_to_hex};
+use iced::widget::{column, container, mouse_area, text, row, button, text_input, pick_list};
+use iced::{Alignment, Background, Element, Length, Task, border, Color};
+use palette::{Srgb, Lab, IntoColor, FromColor};
 
 impl App {
     pub(crate) fn apply_selected_name(&mut self, name: &str) {
@@ -17,7 +18,7 @@ impl App {
         }
     }
 
-    pub(crate) fn view_dropdown(&self) -> iced::Element<Msg> {
+    pub(crate) fn view_dropdown(&self) -> iced::Element<'_, Msg> {
         use iced::border;
         use iced::widget::{Space, column, container, mouse_area, scrollable, text};
         use iced::{Alignment, Background, Color, Length};
@@ -27,10 +28,10 @@ impl App {
         }
 
         let mut col = column![]
-            .spacing(2)
-            .padding(4)
+            .spacing(1)
+            .padding(3)
             .align_x(Alignment::Start)
-            .width(Length::Fill);
+            .width(Length::Shrink);
 
         for (row, &idx) in self.results_idx.iter().enumerate() {
             let (hex, name) = self.base[idx];
@@ -42,7 +43,7 @@ impl App {
             };
 
             let row_body = container(text(label))
-                .padding([6, 8])
+                .padding([4, 6])
                 .width(Length::Fill)
                 .style(move |_theme: &iced::Theme| {
                     if is_sel {
@@ -70,7 +71,7 @@ impl App {
 
         scrollable(col)
             .id(self.dropdown_scroll_id.clone())
-            .height(Length::Fixed(220.0))
+            .height(Length::Fixed(150.0))
             .width(Length::Fill)
             .into()
     }
@@ -263,7 +264,373 @@ impl App {
         }
     }
 
+    /// Add a color to the recently used history
+    /// - Removes duplicates if the color already exists
+    /// - Adds to front of queue
+    /// - Maintains max 10 colors (FIFO)
+    pub(crate) fn add_to_color_history(&mut self, hex: &str) {
+        // Normalize the hex color (ensure it starts with #)
+        let normalized_hex = if hex.starts_with('#') {
+            hex.to_string()
+        } else {
+            format!("#{}", hex)
+        };
 
+        // Remove existing instance if present
+        if let Some(pos) = self.color_history.iter().position(|h| h == &normalized_hex) {
+            self.color_history.remove(pos);
+        }
+
+        // Add to front
+        self.color_history.push_front(normalized_hex);
+
+        // Maintain max 10 colors
+        while self.color_history.len() > 10 {
+            self.color_history.pop_back();
+        }
+    }
+
+    /// Create the recently used colors panel view
+    pub(crate) fn view_recently_used_colors(&self) -> Option<Element<'_, Msg>> {
+        // Only show if there are colors in history
+        if self.color_history.is_empty() {
+            return None;
+        }
+
+        let mut row = iced::widget::Row::new()
+            .spacing(2)
+            .align_y(iced::Alignment::Center);
+
+        // Add label
+        row = row.push(
+            iced::widget::text("Recent:")
+                .size(16)
+                .color(iced::Color::from_rgb(0.5, 0.5, 0.5))
+        );
+
+        // Add color swatches
+        for hex in self.color_history.iter() {
+            let swatch = self.create_color_swatch(hex);
+            row = row.push(swatch);
+        }
+
+        Some(
+            container(row)
+                .width(Length::Fill)
+                .align_x(Alignment::Center)
+                .padding([2, 0])
+                .into()
+        )
+    }
+
+    /// Create a single color swatch for the history panel
+    fn create_color_swatch(&self, hex: &str) -> Element<'_, Msg> {
+        // Parse hex to RGB for background color
+        let background_color = if let Some(rgb) = hex_to_rgb(hex) {
+            iced::Color::from_rgb8(rgb.r, rgb.g, rgb.b)
+        } else {
+            iced::Color::BLACK
+        };
+
+        // Create a clickable color square
+        let swatch_size = 30.0;
+        let swatch_content = iced::widget::container(
+            iced::widget::Space::with_width(Length::Fixed(swatch_size))
+        )
+        .width(Length::Fixed(swatch_size))
+        .height(Length::Fixed(swatch_size))
+        .style(move |_theme: &iced::Theme| {
+            iced::widget::container::Style {
+                background: Some(Background::Color(background_color)),
+                border: border::Border {
+                    radius: 4.0.into(),
+                    width: 1.0,
+                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                },
+                ..Default::default()
+            }
+        });
+
+        // Make it clickable
+        mouse_area(swatch_content)
+            .on_press(Msg::SelectFromHistory(hex.to_string()))
+            .into()
+    }
+
+    pub(crate) fn view_color_analytics(&self) -> Element<'_, Msg> {
+        self.view_color_analytics_with_width(300.0)
+    }
+
+    pub(crate) fn view_color_analytics_with_width(&self, width: f32) -> Element<'_, Msg> {
+        fn u8_from_hex2(s: &str) -> u8 {
+            if s.len() == 2 {
+                u8::from_str_radix(s, 16).unwrap_or(0)
+            } else {
+                0
+            }
+        }
+
+        let r = u8_from_hex2(&self.rr);
+        let g = u8_from_hex2(&self.gg);
+        let b = u8_from_hex2(&self.bb);
+
+        let _hsl = rgb_to_hsl(Rgb { r, g, b });
+
+        // Try to get exact name first, then find closest name from COMBINED_NAMES
+        let exact_name = crate::core::hex::name_for_hex(rgb_to_hex(Rgb { r, g, b }));
+
+        let closest_name = if exact_name.is_none() {
+            // Find closest color name from COMBINED_NAMES
+            crate::colors_helper::find_closest_color_name(Rgb { r, g, b })
+        } else {
+            exact_name
+        };
+
+        let color_name = self.selected_name.as_deref()
+            .or(closest_name)
+            .unwrap_or("Unnamed Color");
+
+        // Calculate color distance using CIEDE2000 in Lab color space
+        let current_rgb = Srgb::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
+        let current_lab: Lab = current_rgb.into_color();
+
+        // Calculate distance from white (as a reference point)
+        let white_rgb = Srgb::new(1.0, 1.0, 1.0);
+        let white_lab: Lab = white_rgb.into_color();
+
+        // Simple Euclidean distance in Lab space
+        let distance = ((current_lab.l - white_lab.l).powi(2) +
+                       (current_lab.a - white_lab.a).powi(2) +
+                       (current_lab.b - white_lab.b).powi(2)).sqrt();
+
+        let analytics_content = column![]
+            .spacing(6)
+            .padding([10, 12])
+            .push(
+                text("Color Analytics")
+                    .size(18)
+                    .color(Color::from_rgb(0.1, 0.1, 0.1))
+            )
+            .push(
+                // Color name row
+                row![]
+                    .spacing(3)
+                    .push(
+                        button(
+                            text(color_name)
+                                .size(16)
+                                .color(Color::from_rgb(0.2, 0.2, 0.2))
+                        )
+                        .padding([4, 8])
+                        .on_press(Msg::CopyHex(color_name.to_string()))
+                        .style(|_theme: &iced::Theme, _status| {
+                            iced::widget::button::Style {
+                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
+                                border: border::Border {
+                                    radius: 4.0.into(),
+                                    width: 1.0,
+                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                                },
+                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
+                                ..Default::default()
+                            }
+                        })
+                    )
+            )
+            .push(
+                // Hex color row
+                row![]
+                    .spacing(3)
+                    .push(
+                        button(
+                            text(format!("#{:02X}{:02X}{:02X}", r, g, b))
+                                .size(16)
+                                .color(Color::from_rgb(0.2, 0.2, 0.2))
+                        )
+                        .padding([4, 8])
+                        .on_press(Msg::CopyHex(format!("#{:02X}{:02X}{:02X}", r, g, b)))
+                        .style(|_theme: &iced::Theme, _status| {
+                            iced::widget::button::Style {
+                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
+                                border: border::Border {
+                                    radius: 4.0.into(),
+                                    width: 1.0,
+                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                                },
+                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
+                                ..Default::default()
+                            }
+                        })
+                    )
+            )
+            .push(
+                // Color distance row
+                row![]
+                    .spacing(3)
+                    .push(
+                        button(
+                            text(format!("Distance: {:.1}", distance))
+                                .size(16)
+                                .color(Color::from_rgb(0.2, 0.2, 0.2))
+                        )
+                        .padding([4, 8])
+                        .on_press(Msg::CopyHex(format!("{:.1}", distance)))
+                        .style(|_theme: &iced::Theme, _status| {
+                            iced::widget::button::Style {
+                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
+                                border: border::Border {
+                                    radius: 4.0.into(),
+                                    width: 1.0,
+                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                                },
+                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
+                                ..Default::default()
+                            }
+                        })
+                    )
+            );
+
+        container(analytics_content)
+            .style(|_theme: &iced::Theme| {
+                iced::widget::container::Style {
+                    background: Some(Background::Color(Color::from_rgb(0.95, 0.95, 0.95))),
+                    border: border::rounded(8),
+                    ..Default::default()
+                }
+            })
+            .width(Length::Fixed(width))
+            .into()
+    }
+
+    pub(crate) fn view_search_block(&self) -> Element<'_, Msg> {
+        self.view_search_block_with_width(300.0)
+    }
+
+    pub(crate) fn view_search_block_with_width(&self, width: f32) -> Element<'_, Msg> {
+        let origins_list = origins_vec();
+
+        // Create the search UI elements
+        let create_search_elements = || {
+            let origin_dd = pick_list(
+                origins_list.clone(),
+                Some(self.selected_origin),
+                Msg::OriginPicked,
+            )
+            .placeholder("Origin")
+            .width(Length::Fill);
+
+            let clear_btn = button("Clear")
+                .on_press(Msg::Clear)
+                .padding([2, 4]);
+
+            let search_box = text_input("Search color name…", &self.query)
+                .id(self.search_input_id.clone())
+                .on_input(Msg::QueryChanged)
+                .on_submit(Msg::PressedEnter)
+                .padding(3)
+                .width(Length::Fill);
+
+            let search_row = row![]
+                .push(search_box)
+                .push(clear_btn)
+                .spacing(3)
+                .align_y(Alignment::Center);
+
+            (origin_dd, search_row)
+        };
+
+        // Build the final content based on whether dropdown is open
+        let final_content = if self.dropdown_open && !self.results_idx.is_empty() {
+            let (origin_dd, search_row) = create_search_elements();
+            let dropdown = self.view_dropdown();
+
+            column![]
+                .spacing(4)
+                .padding([8, 10])
+                .push(
+                    text("Search")
+                        .size(18)
+                        //.color(Color::from_rgb(0.1, 0.1, 0.1))
+                )
+                .push(
+                    container(
+                        column![]
+                            .spacing(4)
+                            .push(origin_dd)
+                            .push(search_row)
+                            .push(
+                                container(dropdown)
+                                    .style(|_theme: &iced::Theme| {
+                                        iced::widget::container::Style {
+                                           // background: Some(Background::Color(Color::from_rgb(0.05, 0.05, 0.05))),
+                                            border: border::Border {
+                                                radius: 4.0.into(),
+                                                width: 1.0,
+                                                color: iced::Color::from_rgb(0.2, 0.2, 0.2),
+                                            },
+                                            ..Default::default()
+                                        }
+                                    })
+                                    .padding([2, 2])
+                            )
+                    )
+                    .style(|_theme: &iced::Theme| {
+                        iced::widget::container::Style {
+                            //background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
+                            border: border::Border {
+                                radius: 4.0.into(),
+                                width: 1.0,
+                                color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                            },
+                            ..Default::default()
+                        }
+                    })
+                    .padding([4, 6])
+                )
+        } else {
+            let (origin_dd, search_row) = create_search_elements();
+
+            column![]
+                .spacing(4)
+                .padding([8, 10])
+                .push(
+                    text("Search")
+                        .size(18)
+                        .color(Color::from_rgb(0.1, 0.1, 0.1))
+                )
+                .push(
+                    container(
+                        column![]
+                            .spacing(4)
+                            .push(origin_dd)
+                            .push(search_row)
+                    )
+                    .style(|_theme: &iced::Theme| {
+                        iced::widget::container::Style {
+                            background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
+                            border: border::Border {
+                                radius: 4.0.into(),
+                                width: 1.0,
+                                color: iced::Color::from_rgb(0.7, 0.7, 0.7),
+                            },
+                            ..Default::default()
+                        }
+                    })
+                    .padding([4, 6])
+                )
+        };
+
+        container(final_content)
+            .style(|_theme: &iced::Theme| {
+                iced::widget::container::Style {
+                    background: Some(Background::Color(Color::from_rgb(0.95, 0.95, 0.95))),
+                    border: border::rounded(8),
+                    ..Default::default()
+                }
+            })
+            .width(Length::Fixed(width))
+            .into()
+    }
 
 }
 

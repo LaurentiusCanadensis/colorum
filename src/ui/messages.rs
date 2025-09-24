@@ -31,6 +31,7 @@ pub enum Msg {
     OriginPicked(crate::colors_helper::Origin), // <— NEW
 
     KeyPressed(iced::keyboard::Key),
+    KeyPressedWithMods(iced::keyboard::Key, iced::keyboard::Modifiers),
     MoveSelection(i32), // +1 down, -1 up; you can also use ±10 for paging
     ActivateSelection,  // Enter / Right
     OpenDropdown,
@@ -38,4 +39,12 @@ pub enum Msg {
     RawEvent(Event),
     Tick,
     WindowResized(f32, f32), // width, height
+
+    // New keyboard shortcuts
+    FocusSearch,        // Ctrl+F - Focus search box
+    CopyCurrentColor,   // Ctrl+C - Copy current color
+    AdjustColorWheel(Channel, i8), // Arrow keys - Fine color adjustments
+
+    // Recently used colors
+    SelectFromHistory(String), // Select a color from history by hex string
 }

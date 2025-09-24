@@ -1,4 +1,5 @@
-#![warn(dead_code, unused_imports, unused_mut, unused_variables)]
+#![warn(unused_imports, unused_mut, unused_variables)]
+#![allow(dead_code)] // Allow dead code for unused features and utilities
 mod colors_helper;
 mod core;
 mod ui;

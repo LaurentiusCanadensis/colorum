@@ -1,6 +1,7 @@
 use crate::ui::app_gui::App;
 use crate::colors_helper::{MAX_RESULTS, Origin, sanitize_hex2};
 use crate::core::hex::combine_hex;
+use crate::core::rgb::{hex_to_rgb, format_rgb};
 use crate::ui::messages::Msg;
 use iced::keyboard::Key;
 use iced::keyboard::key::Named;
@@ -15,7 +16,7 @@ impl App {
         // Check splash timer on every update
         if self.show_splash {
             if let Some(start_time) = self.splash_start_time {
-                if start_time.elapsed() >= std::time::Duration::from_secs(2) {
+                if start_time.elapsed() >= std::time::Duration::from_millis(600) {
                     self.show_splash = false;
                     self.splash_start_time = None;
                 }
@@ -80,6 +81,11 @@ impl App {
                 }
                 // Clear selected name if the new color doesn't match
                 self.clear_name_if_color_mismatch();
+
+                // Add current color to history when wheel is manually changed
+                let current_hex = crate::core::hex::combine_hex(&self.rr, &self.gg, &self.bb);
+                self.add_to_color_history(&current_hex);
+
                 Task::none()
             }
 
@@ -99,6 +105,8 @@ impl App {
                 self.apply_selected_name(name);
                 if let Some(hex) = self.hex_for_name_in_origin(&name) {
                     self.set_from_hex(hex);
+                    // Add to color history when a color is picked from search
+                    self.add_to_color_history(hex);
                 }
                 Task::none()
             }
@@ -109,7 +117,27 @@ impl App {
             }
 
             Msg::CenterClicked => {
-                let text = combine_hex(&self.rr, &self.gg, &self.bb);
+                // Cycle to the next format
+                self.copy_format = self.copy_format.next();
+
+                // Get the current color as hex first
+                let hex = combine_hex(&self.rr, &self.gg, &self.bb);
+
+                // Add current color to history when copied
+                self.add_to_color_history(&hex);
+
+                // Convert to RGB and then format according to the current copy format
+                let text = if let Some(rgb) = hex_to_rgb(&hex) {
+                    format_rgb(rgb, self.copy_format)
+                } else {
+                    // Fallback to hex if parsing fails
+                    hex
+                };
+
+                // Set format feedback message
+                let feedback_msg = format!("Copied as {}: {}", self.copy_format.display_name(), text);
+                self.format_feedback = Some((feedback_msg, std::time::Instant::now()));
+
                 clipboard::write(text)
             }
 
@@ -130,6 +158,9 @@ impl App {
 
                 self.selected_name = None;
                 self.status.clear();
+
+                // Clear format feedback
+                self.format_feedback = None;
 
                 // Keep the current origin, or reset if you prefer:
                 // self.selected_origin = Origin::All;
@@ -367,37 +398,87 @@ impl App {
                 Task::none()
             }
 
-            Msg::KeyPressed(key) => {
+            // Handle keyboard with modifiers (new enhanced handler)
+            Msg::KeyPressedWithMods(key, mods) => {
                 use iced::keyboard::{Key, key::Named};
-                let mut moved = false;
-                match key {
-                    Key::Named(Named::ArrowDown) => {
-                        self.move_selection(1);
-                        moved = true;
+
+                // Check if dropdown is open for navigation
+                if self.dropdown_open && !self.results_idx.is_empty() {
+                    let mut moved = false;
+                    match key {
+                        Key::Named(Named::ArrowDown) => {
+                            self.move_selection(1);
+                            moved = true;
+                        }
+                        Key::Named(Named::ArrowUp) => {
+                            self.move_selection(-1);
+                            moved = true;
+                        }
+                        Key::Named(Named::ArrowRight) => {
+                            self.move_selection(10);
+                            moved = true;
+                        }
+                        Key::Named(Named::ArrowLeft) => {
+                            self.move_selection(-10);
+                            moved = true;
+                        }
+                        Key::Named(Named::Enter) => {
+                            self.activate_selected();
+                            return Task::none();
+                        }
+                        _ => {}
                     }
-                    Key::Named(Named::ArrowUp) => {
-                        self.move_selection(-1);
-                        moved = true;
+                    if moved {
+                        self.activate_selected(); // wheel updates immediately
+                        return self.scroll_to_selected(); // pin in view
                     }
-                    Key::Named(Named::ArrowRight) => {
-                        self.move_selection(10);
-                        moved = true;
+                } else {
+                    // Dropdown not open, use arrow keys for color wheel navigation
+                    // Use smaller increments for more precision
+                    let increment = if mods.shift() { 1 } else { 3 };
+
+                    match key {
+                        Key::Named(Named::ArrowUp) => {
+                            if mods.shift() {
+                                // Shift+Up: increase blue value
+                                return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::B, increment));
+                            } else {
+                                // Up: increase green value (brighter)
+                                return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::G, increment));
+                            }
+                        }
+                        Key::Named(Named::ArrowDown) => {
+                            if mods.shift() {
+                                // Shift+Down: decrease blue value
+                                return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::B, -increment));
+                            } else {
+                                // Down: decrease green value (darker)
+                                return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::G, -increment));
+                            }
+                        }
+                        Key::Named(Named::ArrowRight) => {
+                            // Right arrow increases red value (redder)
+                            return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::R, increment));
+                        }
+                        Key::Named(Named::ArrowLeft) => {
+                            // Left arrow decreases red value (less red)
+                            return self.update(Msg::AdjustColorWheel(crate::ui::messages::Channel::R, -increment));
+                        }
+                        Key::Named(Named::Enter) => {
+                            // Enter with no dropdown - no action for now
+                            return Task::none();
+                        }
+                        _ => {}
                     }
-                    Key::Named(Named::ArrowLeft) => {
-                        self.move_selection(-10);
-                        moved = true;
-                    }
-                    Key::Named(Named::Enter) => {
-                        self.activate_selected();
-                        return Task::none();
-                    }
-                    _ => {}
-                }
-                if moved {
-                    self.activate_selected(); // wheel updates immediately
-                    return self.scroll_to_selected(); // pin in view
                 }
                 Task::none()
+            }
+
+            // Legacy keyboard handler for backward compatibility
+            Msg::KeyPressed(key) => {
+                // Fallback to new handler without modifiers
+                let empty_mods = iced::keyboard::Modifiers::empty();
+                return self.update(Msg::KeyPressedWithMods(key, empty_mods));
             }
             Msg::PressedEnter => {
                 self.activate_selected();
@@ -417,6 +498,14 @@ impl App {
                         }
                     }
                 }
+
+                // Clear format feedback after 3 seconds
+                if let Some((_, timestamp)) = self.format_feedback {
+                    if timestamp.elapsed() >= std::time::Duration::from_secs(3) {
+                        self.format_feedback = None;
+                    }
+                }
+
                 Task::none()
             }
 
@@ -424,6 +513,76 @@ impl App {
                 self.window_width = width;
                 self.window_height = height;
                 Task::none()
+            }
+
+            // New keyboard shortcuts
+            Msg::FocusSearch => {
+                iced::widget::text_input::focus(self.search_input_id.clone())
+            }
+
+            Msg::CopyCurrentColor => {
+                // Get the current color as hex
+                let hex = combine_hex(&self.rr, &self.gg, &self.bb);
+
+                // Convert to RGB and format according to current copy format
+                let text = if let Some(rgb) = hex_to_rgb(&hex) {
+                    format_rgb(rgb, self.copy_format)
+                } else {
+                    // Fallback to hex if parsing fails
+                    hex
+                };
+
+                // Set format feedback message
+                let feedback_msg = format!("Copied as {}: {}", self.copy_format.display_name(), text);
+                self.format_feedback = Some((feedback_msg, std::time::Instant::now()));
+
+                clipboard::write(text)
+            }
+
+            Msg::AdjustColorWheel(channel, delta) => {
+                // Adjust color channel by delta (small increments for fine control)
+                match channel {
+                    crate::ui::messages::Channel::R => {
+                        if let Ok(current) = u8::from_str_radix(&self.rr, 16) {
+                            let new_val = (current as i16 + delta as i16).clamp(0, 255) as u8;
+                            self.rr = format!("{:02X}", new_val);
+                        }
+                    }
+                    crate::ui::messages::Channel::G => {
+                        if let Ok(current) = u8::from_str_radix(&self.gg, 16) {
+                            let new_val = (current as i16 + delta as i16).clamp(0, 255) as u8;
+                            self.gg = format!("{:02X}", new_val);
+                        }
+                    }
+                    crate::ui::messages::Channel::B => {
+                        if let Ok(current) = u8::from_str_radix(&self.bb, 16) {
+                            let new_val = (current as i16 + delta as i16).clamp(0, 255) as u8;
+                            self.bb = format!("{:02X}", new_val);
+                        }
+                    }
+                }
+                // Clear selected name as color changed manually
+                self.clear_name_if_color_mismatch();
+                Task::none()
+            }
+
+            Msg::SelectFromHistory(hex) => {
+                // Set color from history and copy it
+                self.set_from_hex(&hex);
+                self.clear_name_if_color_mismatch();
+
+                // Copy the color using current format
+                let text = if let Some(rgb) = hex_to_rgb(&hex) {
+                    format_rgb(rgb, self.copy_format)
+                } else {
+                    hex.clone()
+                };
+
+                // Set format feedback message
+                let feedback_msg = format!("Selected from history and copied as {}: {}", self.copy_format.display_name(), text);
+                self.format_feedback = Some((feedback_msg, std::time::Instant::now()));
+
+                clipboard::write(text)
             }
 
             _ => Task::none(),

@@ -6,13 +6,23 @@ impl App {
 
     // then in Application::subscription():
     pub fn subscription(&self) -> iced::Subscription<Msg> {
-        let keyboard = iced::keyboard::on_key_press(|key, _mods| match key {
+        let keyboard = iced::keyboard::on_key_press(|key, mods| match key {
+            // Handle arrow keys with/without shift for blue adjustments
             iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowUp)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowDown)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowLeft)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowRight)
             | iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) => {
-                Some(Msg::KeyPressed(key))
+                // Pass modifiers with key message for shift handling
+                Some(Msg::KeyPressedWithMods(key, mods))
+            }
+            // Ctrl+F for search focus
+            iced::keyboard::Key::Character(ref c) if c == "f" && mods.control() => {
+                Some(Msg::FocusSearch)
+            }
+            // Ctrl+C for copying current color
+            iced::keyboard::Key::Character(ref c) if c == "c" && mods.control() => {
+                Some(Msg::CopyCurrentColor)
             }
             _ => None,
         });

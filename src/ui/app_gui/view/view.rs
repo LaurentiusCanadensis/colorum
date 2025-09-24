@@ -1,13 +1,12 @@
 use crate::ui::app_gui::App;
 use crate::ui::messages::Msg;
-use iced::widget::{container, image, scrollable};
+use iced::widget::{container, row, column, image};
 use iced::{Alignment, Element, Length};
-use crate::ui::app_gui::app_helpers::origins_vec;
 
 impl App {
 
 
-    pub fn view(&self) -> Element<Msg> {
+    pub fn view(&self) -> Element<'_, Msg> {
         // Show splash screen for 2 seconds
         if self.show_splash {
             return self.splash_view();
@@ -33,13 +32,13 @@ impl App {
         let is_small_window = self.window_width < 500.0 || self.window_height < 450.0;
         let is_very_small_window = self.window_width < 350.0 || self.window_height < 350.0;
 
-        // Better proportional sizing - reduce by about 1/3 each step
+        // Make wheel size responsive to window size - much smaller for narrow windows
         let wheel_size = if is_very_small_window {
-            180.0  // Very small screens - still usable
+            (self.window_width.min(self.window_height) * 0.4).min(200.0).max(150.0)
         } else if is_small_window {
-            240.0  // Small screens - moderate reduction
+            (self.window_width.min(self.window_height) * 0.5).min(280.0).max(200.0)
         } else {
-            300.0  // Normal screens - back to original
+            (self.window_width.min(self.window_height) * 0.6).min(400.0).max(280.0)
         };
 
         // Only hide inputs on very small screens
@@ -56,124 +55,127 @@ impl App {
             self.selected_name.as_deref(),
         );
 
-        // --- filtered names (FAST; uses your cached/indexed search) ---
-        let filtered_names: Vec<&'static str> = self.filtered_names();
+        // Calculate panel width - larger at startup, scales with wheel
+        let panel_width = (wheel_size * 0.4).max(200.0).min(300.0);
 
-        // Keep selected if still present
-        let _selected_opt: Option<&'static str> = self.selected_name.as_deref().and_then(|cur| {
-            filtered_names
-                .iter()
-                .copied()
-                .find(|s| s.eq_ignore_ascii_case(cur))
-        });
+        // Create the new analytics and search panels with proportional sizing
+        let color_analytics = self.view_color_analytics_with_width(panel_width);
+        let search_block = self.view_search_block_with_width(panel_width);
 
-        // Old:
-        // let origins_list = vec![Origin::All, Origin::XKCD, ...];
-
-        // New: derive from REGISTRY so it auto-includes new palettes
-        let origins_list = origins_vec();
-
-        let origin_dd = iced::widget::pick_list(
-            origins_list,
-            Some(self.selected_origin), // <- must be Some(current)
-            Msg::OriginPicked,          // <- on_select
-        )
-        .placeholder("Origin")
-        .width(iced::Length::Shrink);
-
-        // Clear button next to origin dropdown
-        let clear_btn = iced::widget::button("Clear")
-            .on_press(Msg::Clear)
-            .padding([6, 10]);
-
-        // Create a row with origin dropdown and clear button
-        let origin_row = iced::widget::Row::new()
-            .push(origin_dd)
-            .push(clear_btn)
-            .spacing(10)
-            .align_y(iced::Alignment::Center);
-
-
-
-        // Search box and dropdown
-        let search_box = iced::widget::text_input("Search color name…", &self.query)
-            .on_input(Msg::QueryChanged)
-            .on_submit(Msg::PressedEnter)
-            .padding(8)
-            .width(Length::Fill);
-
-        // Create dropdown if we have results
-        let dropdown: Option<iced::Element<'_, Msg>> = if self.dropdown_open && !self.results_idx.is_empty() {
-            Some(self.view_dropdown())
+        // Hide panels for very small windows - show only the wheel
+        // For wide windows, be very lenient with height requirement
+        let show_panels = if self.window_width > 800.0 {
+            // Very wide windows: almost always show panels
+            self.window_height > 200.0
         } else {
-            None
+            // Normal windows: standard requirements
+            self.window_width > 400.0 && self.window_height > 250.0
         };
 
-        let content = iced::widget::Column::new()
-            // Center the wheel
-            .push(
-                container(wheel_only)
-                    .width(Length::Fill)
-                    .align_x(Alignment::Center)
-                    .padding([4, 0]),
-            )
-            // Origin selector and clear button below wheel
-            .push(
-                container(origin_row)
-                    .width(Length::Fill)
-                    .align_x(Alignment::Center)
-                    .padding([4, 0]),
-            )
-            // Search box
-            .push(
-                container(search_box)
-                    .width(Length::Fill)
-                    .align_x(Alignment::Center)
-                    .padding([0, 8]),
-            );
+        // Always stack panels vertically - analytics on top, search below
+        let side_panels: Element<'_, Msg> = if show_panels {
+            column![]
+                .push(color_analytics)
+                .push(search_block)
+                .spacing(6)
+                .align_x(Alignment::Start)
+                .into()
+        } else {
+            // Empty space when panels are hidden
+            iced::widget::Space::with_height(Length::Fixed(0.0)).into()
+        };
 
-        // Add dropdown if present
-        let mut final_content = content;
-        if let Some(dd) = dropdown {
-            final_content = final_content.push(
-                container(dd)
-                    .width(Length::Fill)
-                    .align_x(Alignment::Center)
-                    .padding([0, 8]),
+        // Create main content with wheel and panels
+        let wheel_container = container(wheel_only)
+            .width(Length::Shrink)
+            .align_x(Alignment::Center);
+
+        let main_content = if !show_panels {
+            // Very small window: show only the wheel, centered
+            container(wheel_container)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .align_x(Alignment::Center)
+                .align_y(Alignment::Center)
+        } else if self.window_width > 450.0 {
+            // Wide enough for side-by-side layout: wheel left, panels right
+            let horizontal_layout = row![]
+                .push(wheel_container)
+                .push(side_panels)
+                .spacing(20)
+                .align_y(Alignment::Start);
+
+            container(horizontal_layout)
+                .width(Length::Fill)
+                .align_x(Alignment::Center)
+        } else {
+            // Medium window: wheel on top, panels below
+            let vertical_layout = column![]
+                .push(wheel_container)
+                .push(side_panels)
+                .spacing(10)
+                .align_x(Alignment::Center);
+
+            container(vertical_layout)
+                .width(Length::Fill)
+                .align_x(Alignment::Center)
+        };
+
+        let mut content = column![]
+            .push(main_content)
+            .align_x(Alignment::Center)
+            .width(Length::Fill);
+
+        // Add format feedback if present
+        if let Some((feedback_msg, _)) = &self.format_feedback {
+            content = content.push(
+                container(
+                    iced::widget::text(feedback_msg)
+                        .size(14)
+                        .color(iced::Color::from_rgb(0.3, 0.8, 0.3)), // Green color
+                )
+                .width(Length::Fill)
+                .align_x(Alignment::Center)
+                .padding([1, 0]),
             );
         }
 
-        // Adjust spacing and padding based on window size
+        // Add recently used colors panel if there are any
+        if let Some(recent_colors) = self.view_recently_used_colors() {
+            content = content.push(recent_colors);
+        }
+
+        let final_content = content;
+
+        // Ultra compact spacing and padding for all window sizes
         let spacing = if is_very_small_window {
-            2  // Very tight spacing
+            0  // No spacing
         } else if is_small_window {
-            4  // Moderate spacing
+            0  // No spacing
         } else {
-            6  // Normal spacing
+            1  // Minimal spacing
         };
 
         let padding = if is_very_small_window {
-            [2, 2]  // Very tight padding
+            [0, 0]  // No padding
         } else if is_small_window {
-            [4, 4]  // Moderate padding
+            [0, 0]  // No padding
         } else {
-            [8, 8]  // Normal padding
+            [1, 1]  // Minimal padding
         };
 
-        final_content = final_content
+        let final_content = final_content
             .align_x(Alignment::Center)
             .spacing(spacing)
             .padding(padding);
 
-        scrollable(
-            container(final_content)
-                .width(Length::Fill)
-                .align_x(Alignment::Center),
-        )
-        .into()
+        container(final_content)
+            .width(Length::Fill)
+            .align_x(Alignment::Center)
+            .into()
     }
 
-    fn splash_view(&self) -> Element<Msg> {
+    fn splash_view(&self) -> Element<'_, Msg> {
         let logo = image("src/assets/logo.png")
             .width(Length::Fixed(1080.0))  // 600.0 * 1.8 = 80% bigger
             .height(Length::Fixed(502.2));  // 279.0 * 1.8 = 80% bigger

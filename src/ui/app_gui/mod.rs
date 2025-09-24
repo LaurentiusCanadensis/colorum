@@ -1,6 +1,7 @@
 use iced::widget::scrollable;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use crate::core::color_types::{HexCode, ColorName};
+use crate::core::rgb::CopyFormat;
 
 pub mod app_helpers;
 pub mod subscription;
@@ -26,6 +27,7 @@ pub struct App {
     pub query: String,
 
     pub dropdown_scroll_id: scrollable::Id,
+    pub search_input_id: iced::widget::text_input::Id,
 
     // Index-driven dropdown state
     pub base: Vec<(HexCode, ColorName)>,
@@ -44,6 +46,13 @@ pub struct App {
     // Window size for responsive behavior
     pub window_width: f32,
     pub window_height: f32,
+
+    // Copy format cycling for center click
+    pub copy_format: CopyFormat,
+    pub format_feedback: Option<(String, std::time::Instant)>, // (message, timestamp)
+
+    // Recently used colors history (max 10 colors, FIFO)
+    pub color_history: VecDeque<String>, // Store hex colors as strings like "#FF0000"
 }
 
 impl Default for App {
@@ -78,6 +87,7 @@ impl Default for App {
 
             sel_pos: None,
             dropdown_scroll_id: scrollable::Id::unique(),
+            search_input_id: iced::widget::text_input::Id::unique(),
             dropdown_open: false,
             base_names_lc: Vec::new(),
             // ...include any other fields you have here unchanged...
@@ -90,6 +100,13 @@ impl Default for App {
             // Initialize window size (will be updated by window events)
             window_width: 800.0,
             window_height: 600.0,
+
+            // Initialize copy format
+            copy_format: CopyFormat::default(),
+            format_feedback: None,
+
+            // Initialize empty color history
+            color_history: VecDeque::new(),
         };
         // populate lowercase cache and hex without pound once at startup
         s.base_names_lc = s

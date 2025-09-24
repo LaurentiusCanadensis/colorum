@@ -1,3 +1,4 @@
+#[cfg(feature = "github-colors")]
 use crate::core::color_types::{HexCode, ColorName};
 
 #[cfg(feature = "github-colors")]

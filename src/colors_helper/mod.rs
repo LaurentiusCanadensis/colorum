@@ -256,3 +256,30 @@ pub static REGISTRY_MAP: LazyLock<
     }
     m
 });
+
+/// Find the closest color name to the given RGB value from COMBINED_COLORS
+pub fn find_closest_color_name(target_rgb: crate::core::rgb::Rgb) -> Option<&'static str> {
+    let mut closest_distance = u32::MAX;
+    let mut closest_name: Option<&'static str> = None;
+
+    for (hex_code, color_name) in COMBINED_COLORS.iter() {
+        if let Some(rgb) = crate::core::rgb::hex_to_rgb(hex_code.as_str()) {
+            let distance = color_distance(target_rgb, rgb);
+            if distance < closest_distance {
+                closest_distance = distance;
+                closest_name = Some(color_name.as_str());
+            }
+        }
+    }
+
+    closest_name
+}
+
+/// Calculate the Euclidean distance between two RGB colors
+fn color_distance(rgb1: crate::core::rgb::Rgb, rgb2: crate::core::rgb::Rgb) -> u32 {
+    let dr = rgb1.r as i32 - rgb2.r as i32;
+    let dg = rgb1.g as i32 - rgb2.g as i32;
+    let db = rgb1.b as i32 - rgb2.b as i32;
+
+    (dr * dr + dg * dg + db * db) as u32
+}

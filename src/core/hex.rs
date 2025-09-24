@@ -106,7 +106,7 @@ pub fn hex_for_name(name: &str) -> Option<&'static str> {
 }
 
 /// Find name for a given `hex` (case-insensitive) from `colors::COMBINED_COLORS`.
-pub fn name_for_hex(hex: &str) -> Option<&'static str> {
+pub fn name_for_hex(hex: String) -> Option<&'static str> {
     let h = hex.trim();
     crate::colors_helper::COMBINED_COLORS
         .iter()

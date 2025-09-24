@@ -131,7 +131,7 @@ where
             .into()
         } else {
             // Scale input and title sizing
-            let (input_padding, input_font_size, input_w) = if size < 200.0 {
+            let (_input_padding, _input_font_size, _input_w) = if size < 200.0 {
                 (3, 10, 22.0)  // Smaller for center positioning
             } else if size < 270.0 {
                 (4, 11, 26.0)
@@ -143,87 +143,66 @@ where
             let spacing = if size < 200.0 { 6 } else if size < 270.0 { 7 } else { 8 };
             let padding = if size < 200.0 { 4 } else if size < 270.0 { 5 } else { 6 };
 
-            // Clean implementation without Stack overlays
-
-            // RGB inputs positioned in the center of the wheel using stack overlay
+            // RGB inputs positioned over the rings
             use iced::widget::Stack;
 
-            let row_width = input_w * 3.0 + 8.0; // 3 inputs + 2 gaps of 4px each
-            let row_height = input_font_size as f32 + (input_padding * 2) as f32;
-
-            // Center the RGB inputs in the wheel
+            // Calculate ring positions
             let center = size / 2.0;
-            let row_top = center - row_height / 2.0;
-            let row_left = center - row_width / 2.0;
+            let outer_radius = size.min(size) * 0.45;
+            let ring_thickness = outer_radius * 0.18;
+            let gap = ring_thickness * 0.08;
+            let r_outer = outer_radius; // R ring
+            let r_mid = r_outer - (ring_thickness + gap); // G ring
+            let r_inner = r_mid - (ring_thickness + gap); // B ring
+
+            let half_field_h = 18.0_f32;
+
+            // Helper to place an input at the north of a ring
+            let place_input =
+                |value: &str, placeholder: &'static str, on_input: fn(String) -> Msg, radius: f32| {
+                    let v_adjust = ring_thickness * 0.12;
+                    let input_w = 33.0_f32;
+                    let top_px = (center - radius - half_field_h + v_adjust).max(0.0);
+                    let left_px = (center - (input_w / 2.0)).clamp(0.0, size - input_w);
+
+                    let field = text_input(placeholder, value)
+                        .on_input(on_input)
+                        .padding(6)
+                        .size(14)
+                        .width(Length::Fixed(input_w))
+                        .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
+                            background: Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.9)),
+                            border: Border {
+                                width: 0.5,
+                                color: Color::from_rgba(0.0, 0.0, 0.0, 0.15),
+                                radius: Radius::from(6.0),
+                            },
+                            icon: Color::from_rgb(0.35, 0.35, 0.35),
+                            placeholder: Color::from_rgba(0.5, 0.5, 0.5, 0.6),
+                            value: Color::from_rgb(0.2, 0.2, 0.2),
+                            selection: Color::from_rgba(0.20, 0.55, 1.0, 0.35),
+                        });
+
+                    container(field)
+                        .width(Length::Fixed(size))
+                        .height(Length::Fixed(size))
+                        .padding(Padding {
+                            top: top_px,
+                            right: 0.0,
+                            bottom: 0.0,
+                            left: left_px,
+                        })
+                        .into()
+                };
+
+            let r_input_layer: Element<Msg> = place_input(r_hex, "RR", Msg::RChanged, r_outer);
+            let g_input_layer: Element<Msg> = place_input(g_hex, "GG", Msg::GChanged, r_mid);
+            let b_input_layer: Element<Msg> = place_input(b_hex, "BB", Msg::BChanged, r_inner);
 
             let input_overlay = Stack::new()
-                .push(
-                    container(
-                        iced::widget::row![
-                            text_input("R", r_hex)
-                                .on_input(Msg::RChanged)
-                                .padding(input_padding)
-                                .size(input_font_size)
-                                .width(Length::Fixed(input_w))
-                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
-                                    background: Background::Color(Color::from_rgba(1.0, 0.95, 0.95, 0.95)),
-                                    border: Border {
-                                        width: 1.5,
-                                        color: Color::from_rgba(1.0, 0.0, 0.0, 0.8),
-                                        radius: Radius::from(3.0),
-                                    },
-                                    icon: Color::from_rgb(0.5, 0.0, 0.0),
-                                    placeholder: Color::from_rgba(1.0, 0.0, 0.0, 0.5),
-                                    value: Color::from_rgb(0.8, 0.0, 0.0),
-                                    selection: Color::from_rgba(1.0, 0.0, 0.0, 0.3),
-                                }),
-                            text_input("G", g_hex)
-                                .on_input(Msg::GChanged)
-                                .padding(input_padding)
-                                .size(input_font_size)
-                                .width(Length::Fixed(input_w))
-                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
-                                    background: Background::Color(Color::from_rgba(0.95, 1.0, 0.95, 0.95)),
-                                    border: Border {
-                                        width: 1.5,
-                                        color: Color::from_rgba(0.0, 1.0, 0.0, 0.8),
-                                        radius: Radius::from(3.0),
-                                    },
-                                    icon: Color::from_rgb(0.0, 0.5, 0.0),
-                                    placeholder: Color::from_rgba(0.0, 1.0, 0.0, 0.5),
-                                    value: Color::from_rgb(0.0, 0.8, 0.0),
-                                    selection: Color::from_rgba(0.0, 1.0, 0.0, 0.3),
-                                }),
-                            text_input("B", b_hex)
-                                .on_input(Msg::BChanged)
-                                .padding(input_padding)
-                                .size(input_font_size)
-                                .width(Length::Fixed(input_w))
-                                .style(|_: &iced::Theme, _status: ti::Status| ti::Style {
-                                    background: Background::Color(Color::from_rgba(0.95, 0.95, 1.0, 0.95)),
-                                    border: Border {
-                                        width: 1.5,
-                                        color: Color::from_rgba(0.0, 0.0, 1.0, 0.8),
-                                        radius: Radius::from(3.0),
-                                    },
-                                    icon: Color::from_rgb(0.0, 0.0, 0.5),
-                                    placeholder: Color::from_rgba(0.0, 0.0, 1.0, 0.5),
-                                    value: Color::from_rgb(0.0, 0.0, 0.8),
-                                    selection: Color::from_rgba(0.0, 0.0, 1.0, 0.3),
-                                }),
-                        ]
-                        .spacing(4)
-                        .align_y(Alignment::Center)
-                    )
-                    .width(Length::Fixed(size))
-                    .height(Length::Fixed(size))
-                    .padding(Padding {
-                        top: row_top.max(0.0),
-                        left: row_left.clamp(0.0, size - row_width),
-                        right: 0.0,
-                        bottom: 0.0,
-                    })
-                );
+                .push(r_input_layer)
+                .push(g_input_layer)
+                .push(b_input_layer);
 
             container(
                 column![
@@ -469,119 +448,134 @@ where
     /// Render wheel **plus** search + dropdown, using the host app's state/callbacks.
     pub fn view_with_search_props<'a>(
         self,
-        title: &'static str,
+        _title: &'static str,
         rr: &'a str,
         gg: &'a str,
         bb: &'a str,
         props: WheelSearchProps<'a>,
     ) -> iced::Element<'a, crate::ui::messages::Msg> {
         use crate::ui::messages::Msg;
-        use iced::widget::container as container_widget;
-        use iced::widget::{Space, column, container, mouse_area, scrollable, text, text_input};
-        use iced::{Alignment, Background, Color, Length, Renderer, Theme};
+        use iced::widget::{column, container, row, text, text_input};
+        use iced::{Color, Length};
 
-        // Determine if we should use small widget mode based on window/container size
-        // For now, we'll use a simple heuristic - in a real app you'd pass size info
-        let is_small = false; // This could be determined by container bounds
+        // Create color wheel
+        let wheel_size = 160.0;
+        let small_wheel = iced::widget::Canvas::new(self)
+            .width(iced::Length::Fixed(wheel_size))
+            .height(iced::Length::Fixed(wheel_size));
 
-        // Core wheel (this consumes `self`, same as `view`)
-        let wheel_core: iced::Element<'a, Msg> = if is_small {
-            self.view_with_size(title, rr, gg, bb, 250.0, true)
-        } else {
-            self.view(title, rr, gg, bb)
-        };
+        // Create RGB inputs vertically to the right of the wheel
+        let rgb_inputs = column![
+            text_input("R", rr)
+                .on_input(|s| crate::ui::messages::Msg::RChanged(s))
+                .width(Length::Fixed(60.0))
+                .padding(4),
+            text_input("G", gg)
+                .on_input(|s| crate::ui::messages::Msg::GChanged(s))
+                .width(Length::Fixed(60.0))
+                .padding(4),
+            text_input("B", bb)
+                .on_input(|s| crate::ui::messages::Msg::BChanged(s))
+                .width(Length::Fixed(60.0))
+                .padding(4),
+        ]
+        .spacing(8)
+        .align_x(iced::Alignment::Center);
 
-        // Search box wired to your app callbacks
-        let search_box: iced::widget::TextInput<'a, Msg, Theme, Renderer> =
-            text_input("Search color name…", props.query)
-                .on_input(props.on_query)
-                .on_submit((props.on_enter)())
+        // Combine wheel and RGB inputs horizontally
+        let wheel_with_inputs = row![
+            small_wheel,
+            rgb_inputs
+        ]
+        .spacing(16)
+        .align_y(iced::Alignment::Center);
+
+        // Basic search box
+        let search_box = text_input("Search colors...", props.query)
+            .on_input(props.on_query)
+            .width(Length::Fixed(250.0))
+            .padding(8);
+
+        // Search results with proper selection and scrolling
+        let mut results_column = column![].spacing(4);
+        for (row, &idx) in props.results_idx.iter().take(8).enumerate() {
+            let (hex, name) = props.base[idx];
+            let is_selected = props.sel_pos == Some(row);
+            let color_text = if is_selected {
+                format!("▶ {} {}", name.as_str(), hex.as_str())
+            } else {
+                format!("  {} {}", name.as_str(), hex.as_str())
+            };
+
+            let result_item = container(text(color_text).size(12))
                 .padding(4)
-                .size(14)
-                .width(Length::Fill);
-
-        // Dropdown built from *indices* (no recompute here)
-        fn dropdown<'a>(props: &WheelSearchProps<'a>) -> iced::Element<'a, Msg> {
-            if props.results_idx.is_empty() {
-                return Space::with_height(0).into();
-            }
-
-            let mut col = column![]
-                .spacing(1)
-                .padding(4)
-                .align_x(Alignment::Start)
-                .width(Length::Fill);
-
-            // Limit to 3 items for small widget mode
-            let max_items = if props.results_idx.len() > 10 { 3 } else { props.results_idx.len() };
-
-            for (row, &idx) in props.results_idx.iter().take(max_items).enumerate() {
-                let (hex, name) = props.base[idx];
-                let is_sel = props.sel_pos == Some(row);
-                let label = if is_sel {
-                    format!("▶ {}  {}", name.as_str(), hex.as_str())
-                } else {
-                    format!("{}  {}", name.as_str(), hex.as_str())
-                };
-
-                let row_body = container(text(label))
-                    .padding([4, 6])
-                    .width(Length::Fill)
-                    .style(move |_theme: &Theme| {
-                        if is_sel {
-                            container_widget::Style {
-                                background: Some(Background::Color(Color {
-                                    r: 0.20,
-                                    g: 0.40,
-                                    b: 0.80,
-                                    a: 0.20,
-                                })),
-                                border: iced::border::Border {
-                                    radius: 8.0.into(),
-                                    ..Default::default()
-                                },
-                                ..Default::default()
-                            }
-                        } else {
-                            container_widget::Style::default()
-                        }
-                    });
-
-                let click = mouse_area(row_body).on_press((props.on_click_row)(row));
-                col = col.push(click);
-            }
-
-            let dropdown_height = if max_items <= 3 { 80.0 } else { 180.0 };
-
-            scrollable(col)
-                .id(props.scroll_id.clone())
-                .height(Length::Fixed(dropdown_height))
                 .width(Length::Fill)
-                .into()
+                .style(move |_theme: &iced::Theme| {
+                    container::Style {
+                        background: Some(if is_selected {
+                            Color::from_rgb(0.9, 0.95, 1.0).into() // Light blue for selection
+                        } else {
+                            Color::from_rgb(0.95, 0.95, 0.95).into()
+                        }),
+                        border: iced::Border {
+                            radius: 4.0.into(),
+                            color: if is_selected {
+                                Color::from_rgb(0.6, 0.8, 1.0)
+                            } else {
+                                Color::from_rgb(0.8, 0.8, 0.8)
+                            },
+                            width: 1.0,
+                        },
+                        ..Default::default()
+                    }
+                });
+
+            // Make it clickable
+            let clickable_item = iced::widget::mouse_area(result_item)
+                .on_press((props.on_click_row)(row));
+
+            results_column = results_column.push(clickable_item);
         }
 
-        // Stack: search box + (optional) dropdown
-        let mut stack = column![search_box]
-            .spacing(4)
+        // Make results scrollable with the provided scroll ID for proper scroll management
+        let scrollable_results = iced::widget::scrollable(results_column)
+            .height(Length::Fixed(200.0))
             .width(Length::Fill)
-            .align_x(Alignment::Center);
+            .id(props.scroll_id.clone());
 
-        if !props.results_idx.is_empty() {
-            stack = stack.push(dropdown(&props));
-        }
+        let search_panel = column![
+            text("Search Colors").size(16),
+            search_box,
+            text(format!("{} colors", props.results_idx.len())).size(12),
+            scrollable_results
+        ]
+        .spacing(8)
+        .width(Length::Fixed(280.0));
 
-        // Reduce spacing for compact layout - use a default since max_items isn't always available
-        let spacing = 4;
+        let search_container = container(search_panel)
+            .padding(16)
+            .width(Length::Fixed(320.0))
+            .style(|_theme: &iced::Theme| {
+                container::Style {
+                    background: Some(Color::from_rgb(0.98, 0.98, 0.98).into()),
+                    border: iced::Border {
+                        radius: 8.0.into(),
+                        color: Color::from_rgb(0.9, 0.9, 0.9),
+                        width: 1.0,
+                    },
+                    ..Default::default()
+                }
+            });
 
-        container(
-            column![wheel_core, stack]
-                .spacing(spacing)
-                .align_x(Alignment::Center),
-        )
-        .padding([4, 4])
-        .width(Length::Fill)
-        .align_x(Alignment::Center)
-        .into()
+        // Combine wheel with RGB inputs and search in a vertical column
+        let combined_content = column![
+            wheel_with_inputs,
+            search_container
+        ]
+        .spacing(8)
+        .width(Length::Fixed(320.0));
+
+        combined_content.into()
     }
 }
 
@@ -808,20 +802,32 @@ where
         // Same inner radius as in `draw` (keep in sync)
         let inner_radius = (r_inner - ring_thickness * 0.40).max(24.0);
 
+        // Expand clickable area by 3 pixels beyond visual boundaries for easier interaction
+        let click_target_expansion = 3.0;
         let in_band = |dist: f32, radius: f32| {
-            dist >= (radius - ring_thickness / 2.0) && dist <= (radius + ring_thickness / 2.0)
+            dist >= (radius - ring_thickness / 2.0 - click_target_expansion)
+                && dist <= (radius + ring_thickness / 2.0 + click_target_expansion)
         };
 
         let which_ring = |dist: f32| -> Option<Channel> {
+            // With expanded click targets, we need to handle potential overlaps.
+            // Priority order: prefer the ring closest to the actual cursor position.
+            let mut candidates = Vec::new();
+
             if in_band(dist, r_outer) {
-                Some(Channel::R)
-            } else if in_band(dist, r_mid) {
-                Some(Channel::G)
-            } else if in_band(dist, r_inner) {
-                Some(Channel::B)
-            } else {
-                None
+                candidates.push((Channel::R, (dist - r_outer).abs()));
             }
+            if in_band(dist, r_mid) {
+                candidates.push((Channel::G, (dist - r_mid).abs()));
+            }
+            if in_band(dist, r_inner) {
+                candidates.push((Channel::B, (dist - r_inner).abs()));
+            }
+
+            // Return the ring with the smallest distance to its center radius
+            candidates.into_iter()
+                .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(channel, _)| channel)
         };
 
         let v = iced::Vector::new(pos.x - center.x, pos.y - center.y);
