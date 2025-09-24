@@ -15,7 +15,7 @@ impl App {
         // Check splash timer on every update
         if self.show_splash {
             if let Some(start_time) = self.splash_start_time {
-                if start_time.elapsed() >= std::time::Duration::from_secs(1) {
+                if start_time.elapsed() >= std::time::Duration::from_secs(2) {
                     self.show_splash = false;
                     self.splash_start_time = None;
                 }

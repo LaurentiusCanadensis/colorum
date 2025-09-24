@@ -96,12 +96,12 @@ impl Hash for Origin {
 impl Display for Origin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            Origin::All => "all",
-            Origin::Css => "Css",
+            Origin::All => "ALL",
+            Origin::Css => "CSS",
             Origin::Hindi => "Hindi",
             Origin::Persian => "Persian",
             Origin::Pantone => "Pantone",
-            Origin::XKCD => "Xkcd",
+            Origin::XKCD => "XKCD",
             Origin::National => "National",
             Origin::Brands => "Brands",
             Origin::ItalianBrands => "Italian Brands",

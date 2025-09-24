@@ -8,7 +8,7 @@ impl App {
 
 
     pub fn view(&self) -> Element<Msg> {
-        // Show splash screen for 1 second
+        // Show splash screen for 2 seconds
         if self.show_splash {
             return self.splash_view();
         }
@@ -81,12 +81,17 @@ impl App {
         .placeholder("Origin")
         .width(iced::Length::Shrink);
 
-        // Search box (uses your existing query + messages)
-
-        // Keep the rest of your layout as you like:
+        // Clear button next to origin dropdown
         let clear_btn = iced::widget::button("Clear")
             .on_press(Msg::Clear)
             .padding([6, 10]);
+
+        // Create a row with origin dropdown and clear button
+        let origin_row = iced::widget::Row::new()
+            .push(origin_dd)
+            .push(clear_btn)
+            .spacing(10)
+            .align_y(iced::Alignment::Center);
 
 
 
@@ -112,9 +117,9 @@ impl App {
                     .align_x(Alignment::Center)
                     .padding([4, 0]),
             )
-            // Origin selector below wheel
+            // Origin selector and clear button below wheel
             .push(
-                container(origin_dd)
+                container(origin_row)
                     .width(Length::Fill)
                     .align_x(Alignment::Center)
                     .padding([4, 0]),
@@ -137,20 +142,6 @@ impl App {
                     .padding([0, 8]),
             );
         }
-
-        // Bottom row with clear button
-        final_content = final_content.push(
-            container(
-                iced::widget::Row::new()
-                    .push(clear_btn)
-                    .spacing(10)
-                    .align_y(iced::Alignment::Center)
-                    .width(Length::Shrink),
-            )
-            .width(Length::Fill)
-            .align_x(Alignment::Center)
-            .padding([4, 0]),
-        );
 
         // Adjust spacing and padding based on window size
         let spacing = if is_very_small_window {
