@@ -2,7 +2,7 @@ use crate::colors_helper::{MAX_RESULTS, Origin};
 use crate::ui::app_gui::App;
 use crate::ui::messages::Msg;
 use crate::core::rgb::{hex_to_rgb, rgb_to_hsl, Rgb, rgb_to_hex};
-use iced::widget::{column, container, mouse_area, text, row, button, text_input, pick_list};
+use iced::widget::{column, container, text, row, button, text_input, pick_list};
 use iced::{Alignment, Background, Element, Length, Task, border, Color};
 use palette::{Srgb, Lab, IntoColor, FromColor};
 
@@ -43,7 +43,7 @@ impl App {
             };
 
             let row_body = container(text(label))
-                .padding([4, 6])
+                .padding([4, 6]) // Reverted to original padding
                 .width(Length::Fill)
                 .style(move |_theme: &iced::Theme| {
                     if is_sel {
@@ -71,7 +71,7 @@ impl App {
 
         scrollable(col)
             .id(self.dropdown_scroll_id.clone())
-            .height(Length::Fixed(150.0))
+            .height(Length::Fixed(200.0)) // Increased from 150.0 for better scroll experience
             .width(Length::Fill)
             .into()
     }
@@ -144,8 +144,8 @@ impl App {
     }
     pub fn scroll_to_selected(&self) -> Task<Msg> {
         // Must match your dropdown widget:
-        const VIEWPORT_H: f32 = 220.0; // .height(Length::Fixed(220.0))
-        const ROW_H: f32 = 30.0; // ~ text + padding; tweak 28–32 if needed
+        const VIEWPORT_H: f32 = 300.0; // .height(Length::Fixed(300.0)) - increased to show more items
+        const ROW_H: f32 = 30.0; // Original value that matches actual row height
 
         let len = self.results_idx.len();
         if len == 0 {
@@ -264,98 +264,7 @@ impl App {
         }
     }
 
-    /// Add a color to the recently used history
-    /// - Removes duplicates if the color already exists
-    /// - Adds to front of queue
-    /// - Maintains max 10 colors (FIFO)
-    pub(crate) fn add_to_color_history(&mut self, hex: &str) {
-        // Normalize the hex color (ensure it starts with #)
-        let normalized_hex = if hex.starts_with('#') {
-            hex.to_string()
-        } else {
-            format!("#{}", hex)
-        };
 
-        // Remove existing instance if present
-        if let Some(pos) = self.color_history.iter().position(|h| h == &normalized_hex) {
-            self.color_history.remove(pos);
-        }
-
-        // Add to front
-        self.color_history.push_front(normalized_hex);
-
-        // Maintain max 10 colors
-        while self.color_history.len() > 10 {
-            self.color_history.pop_back();
-        }
-    }
-
-    /// Create the recently used colors panel view
-    pub(crate) fn view_recently_used_colors(&self) -> Option<Element<'_, Msg>> {
-        // Only show if there are colors in history
-        if self.color_history.is_empty() {
-            return None;
-        }
-
-        let mut row = iced::widget::Row::new()
-            .spacing(2)
-            .align_y(iced::Alignment::Center);
-
-        // Add label
-        row = row.push(
-            iced::widget::text("Recent:")
-                .size(16)
-                .color(iced::Color::from_rgb(0.5, 0.5, 0.5))
-        );
-
-        // Add color swatches
-        for hex in self.color_history.iter() {
-            let swatch = self.create_color_swatch(hex);
-            row = row.push(swatch);
-        }
-
-        Some(
-            container(row)
-                .width(Length::Fill)
-                .align_x(Alignment::Center)
-                .padding([2, 0])
-                .into()
-        )
-    }
-
-    /// Create a single color swatch for the history panel
-    fn create_color_swatch(&self, hex: &str) -> Element<'_, Msg> {
-        // Parse hex to RGB for background color
-        let background_color = if let Some(rgb) = hex_to_rgb(hex) {
-            iced::Color::from_rgb8(rgb.r, rgb.g, rgb.b)
-        } else {
-            iced::Color::BLACK
-        };
-
-        // Create a clickable color square
-        let swatch_size = 30.0;
-        let swatch_content = iced::widget::container(
-            iced::widget::Space::with_width(Length::Fixed(swatch_size))
-        )
-        .width(Length::Fixed(swatch_size))
-        .height(Length::Fixed(swatch_size))
-        .style(move |_theme: &iced::Theme| {
-            iced::widget::container::Style {
-                background: Some(Background::Color(background_color)),
-                border: border::Border {
-                    radius: 4.0.into(),
-                    width: 1.0,
-                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                },
-                ..Default::default()
-            }
-        });
-
-        // Make it clickable
-        mouse_area(swatch_content)
-            .on_press(Msg::SelectFromHistory(hex.to_string()))
-            .into()
-    }
 
     pub(crate) fn view_color_analytics(&self) -> Element<'_, Msg> {
         self.view_color_analytics_with_width(300.0)

@@ -102,8 +102,8 @@ where
         // Geometry parameters
         let _center = size / 2.0;
         let outer_radius = size.min(size) * 0.45;
-        let ring_thickness = outer_radius * 0.18;
-        let gap = ring_thickness * 0.08;
+        let ring_thickness = outer_radius * 0.12; // Reduced from 0.18 to make rings thinner
+        let gap = ring_thickness * 0.06; // Reduced from 0.08 to bring rings closer together
 
         let r_outer = outer_radius; // R
         let r_mid = r_outer - (ring_thickness + gap); // G
@@ -149,8 +149,8 @@ where
             // Calculate ring positions
             let center = size / 2.0;
             let outer_radius = size.min(size) * 0.45;
-            let ring_thickness = outer_radius * 0.18;
-            let gap = ring_thickness * 0.08;
+            let ring_thickness = outer_radius * 0.12; // Reduced from 0.18 to make rings thinner
+            let gap = ring_thickness * 0.06; // Reduced from 0.08 to bring rings closer together
             let r_outer = outer_radius; // R ring
             let r_mid = r_outer - (ring_thickness + gap); // G ring
             let r_inner = r_mid - (ring_thickness + gap); // B ring
@@ -261,7 +261,7 @@ where
                 };
 
                 let row_body = container(text(label))
-                    .padding([6, 8])
+                    .padding([6, 8]) // Reverted to original padding
                     .width(Length::Fill)
                     .style(move |_theme: &Theme| {
                         if is_sel {
@@ -289,7 +289,7 @@ where
 
             scrollable(col)
                 .id(app.dropdown_scroll_id.clone())
-                .height(Length::Fixed(220.0))
+                .height(Length::Fixed(300.0)) // Increased from 220.0 to show more items
                 .width(Length::Fill)
                 .into()
         }
@@ -460,7 +460,7 @@ where
 
         // Search results with proper selection and scrolling
         let mut results_column = column![].spacing(4);
-        for (row, &idx) in props.results_idx.iter().take(8).enumerate() {
+        for (row, &idx) in props.results_idx.iter().enumerate() {
             let (hex, name) = props.base[idx];
             let is_selected = props.sel_pos == Some(row);
             let color_text = if is_selected {
@@ -470,7 +470,7 @@ where
             };
 
             let result_item = container(text(color_text).size(12))
-                .padding(4)
+                .padding(4) // Reverted to original padding
                 .width(Length::Fill)
                 .style(move |_theme: &iced::Theme| {
                     container::Style {
@@ -562,8 +562,8 @@ where
                 let center = Point::new(bounds.width / 2.0, bounds.height / 2.0);
                 let outer_radius = bounds.width.min(bounds.height) * 0.45;
 
-                let ring_thickness = outer_radius * 0.18;
-                let gap = ring_thickness * 0.08;
+                let ring_thickness = outer_radius * 0.12; // Reduced from 0.18 to make rings thinner
+                let gap = ring_thickness * 0.06; // Reduced from 0.08 to bring rings closer together
 
                 let r_outer = outer_radius;
                 let r_mid = r_outer - (ring_thickness + gap);
@@ -611,15 +611,15 @@ where
         let mut overlay = Frame::new(renderer, bounds.size());
         let center = Point::new(bounds.width / 2.0, bounds.height / 2.0);
         let outer_radius = bounds.width.min(bounds.height) * 0.45;
-        let ring_thickness = outer_radius * 0.18;
-        let gap = ring_thickness * 0.08;
+        let ring_thickness = outer_radius * 0.12; // Reduced from 0.18 to make rings thinner
+        let gap = ring_thickness * 0.06; // Reduced from 0.08 to bring rings closer together
 
         let r_outer = outer_radius;
         let r_mid = r_outer - (ring_thickness + gap);
         let r_inner = r_mid - (ring_thickness + gap);
 
-        // Make the inner circle smaller to not interfere with RGB inputs
-        let inner_radius = (r_inner - ring_thickness * 1.0).max(16.0);
+        // Add more space between inner ring and center color
+        let inner_radius = (r_inner - ring_thickness * 1.2).max(20.0);
         let circle = Path::circle(center, inner_radius);
         let combined = Color::from_rgb8(self.r, self.g, self.b);
         overlay.fill(&circle, combined);
@@ -754,15 +754,15 @@ where
 
         let center = Point::new(bounds.width / 2.0, bounds.height / 2.0);
         let outer_radius = bounds.width.min(bounds.height) * 0.45;
-        let ring_thickness = outer_radius * 0.18;
-        let gap = ring_thickness * 0.08;
+        let ring_thickness = outer_radius * 0.12; // Reduced from 0.18 to make rings thinner
+        let gap = ring_thickness * 0.06; // Reduced from 0.08 to bring rings closer together
 
         let r_outer = outer_radius;
         let r_mid = r_outer - (ring_thickness + gap);
         let r_inner = r_mid - (ring_thickness + gap);
 
         // Same inner radius as in `draw` (keep in sync)
-        let inner_radius = (r_inner - ring_thickness * 0.40).max(24.0);
+        let inner_radius = (r_inner - ring_thickness * 1.2).max(20.0);
 
         // Expand clickable area by 3 pixels beyond visual boundaries for easier interaction
         let click_target_expansion = 3.0;

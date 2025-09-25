@@ -1,5 +1,5 @@
 use iced::widget::scrollable;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use crate::core::color_types::{HexCode, ColorName};
 use crate::core::rgb::CopyFormat;
 
@@ -51,8 +51,6 @@ pub struct App {
     pub copy_format: CopyFormat,
     pub format_feedback: Option<(String, std::time::Instant)>, // (message, timestamp)
 
-    // Recently used colors history (max 10 colors, FIFO)
-    pub color_history: VecDeque<String>, // Store hex colors as strings like "#FF0000"
 }
 
 impl Default for App {
@@ -105,8 +103,6 @@ impl Default for App {
             copy_format: CopyFormat::default(),
             format_feedback: None,
 
-            // Initialize empty color history
-            color_history: VecDeque::new(),
         };
         // populate lowercase cache and hex without pound once at startup
         s.base_names_lc = s

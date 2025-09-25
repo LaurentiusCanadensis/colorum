@@ -140,10 +140,6 @@ impl App {
             );
         }
 
-        // Add recently used colors panel if there are any
-        if let Some(recent_colors) = self.view_recently_used_colors() {
-            content = content.push(recent_colors);
-        }
 
         let final_content = content;
 

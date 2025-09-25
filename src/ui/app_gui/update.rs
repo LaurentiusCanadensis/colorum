@@ -82,9 +82,6 @@ impl App {
                 // Clear selected name if the new color doesn't match
                 self.clear_name_if_color_mismatch();
 
-                // Add current color to history when wheel is manually changed
-                let current_hex = crate::core::hex::combine_hex(&self.rr, &self.gg, &self.bb);
-                self.add_to_color_history(&current_hex);
 
                 Task::none()
             }
@@ -105,8 +102,6 @@ impl App {
                 self.apply_selected_name(name);
                 if let Some(hex) = self.hex_for_name_in_origin(&name) {
                     self.set_from_hex(hex);
-                    // Add to color history when a color is picked from search
-                    self.add_to_color_history(hex);
                 }
                 Task::none()
             }
@@ -123,8 +118,6 @@ impl App {
                 // Get the current color as hex first
                 let hex = combine_hex(&self.rr, &self.gg, &self.bb);
 
-                // Add current color to history when copied
-                self.add_to_color_history(&hex);
 
                 // Convert to RGB and then format according to the current copy format
                 let text = if let Some(rgb) = hex_to_rgb(&hex) {
@@ -566,24 +559,6 @@ impl App {
                 Task::none()
             }
 
-            Msg::SelectFromHistory(hex) => {
-                // Set color from history and copy it
-                self.set_from_hex(&hex);
-                self.clear_name_if_color_mismatch();
-
-                // Copy the color using current format
-                let text = if let Some(rgb) = hex_to_rgb(&hex) {
-                    format_rgb(rgb, self.copy_format)
-                } else {
-                    hex.clone()
-                };
-
-                // Set format feedback message
-                let feedback_msg = format!("Selected from history and copied as {}: {}", self.copy_format.display_name(), text);
-                self.format_feedback = Some((feedback_msg, std::time::Instant::now()));
-
-                clipboard::write(text)
-            }
 
             _ => Task::none(),
         }

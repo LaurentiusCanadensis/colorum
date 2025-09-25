@@ -45,6 +45,4 @@ pub enum Msg {
     CopyCurrentColor,   // Ctrl+C - Copy current color
     AdjustColorWheel(Channel, i8), // Arrow keys - Fine color adjustments
 
-    // Recently used colors
-    SelectFromHistory(String), // Select a color from history by hex string
 }
