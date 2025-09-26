@@ -624,6 +624,16 @@ where
         let combined = Color::from_rgb8(self.r, self.g, self.b);
         overlay.fill(&circle, combined);
 
+        // Add thin black border around inner circle for contrast
+        overlay.stroke(
+            &circle,
+            Stroke {
+                width: 1.0,
+                style: stroke::Style::Solid(Color::BLACK),
+                ..Default::default()
+            },
+        );
+
         // Thumbs
         let thumb = |frame: &mut Frame, radius: f32, value: u8| {
             let angle = (value as f32 / 255.0) * std::f32::consts::TAU;

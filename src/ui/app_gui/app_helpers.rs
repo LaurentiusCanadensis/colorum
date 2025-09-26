@@ -1,10 +1,9 @@
 use crate::colors_helper::{MAX_RESULTS, Origin};
 use crate::ui::app_gui::App;
 use crate::ui::messages::Msg;
-use crate::core::rgb::{hex_to_rgb, rgb_to_hsl, Rgb, rgb_to_hex};
-use iced::widget::{column, container, text, row, button, text_input, pick_list};
-use iced::{Alignment, Background, Element, Length, Task, border, Color};
-use palette::{Srgb, Lab, IntoColor, FromColor};
+use crate::core::rgb::hex_to_rgb;
+use iced::widget::{column, container, mouse_area, scrollable, text};
+use iced::{Alignment, Background, Color, Element, Length, Task, border};
 
 impl App {
     pub(crate) fn apply_selected_name(&mut self, name: &str) {
@@ -18,7 +17,7 @@ impl App {
         }
     }
 
-    pub(crate) fn view_dropdown(&self) -> iced::Element<'_, Msg> {
+    pub(crate) fn view_dropdown(&self) -> iced::Element<Msg> {
         use iced::border;
         use iced::widget::{Space, column, container, mouse_area, scrollable, text};
         use iced::{Alignment, Background, Color, Length};
@@ -28,10 +27,10 @@ impl App {
         }
 
         let mut col = column![]
-            .spacing(1)
-            .padding(3)
+            .spacing(2)
+            .padding(4)
             .align_x(Alignment::Start)
-            .width(Length::Shrink);
+            .width(Length::Fill);
 
         for (row, &idx) in self.results_idx.iter().enumerate() {
             let (hex, name) = self.base[idx];
@@ -43,7 +42,7 @@ impl App {
             };
 
             let row_body = container(text(label))
-                .padding([4, 6]) // Reverted to original padding
+                .padding([6, 8])
                 .width(Length::Fill)
                 .style(move |_theme: &iced::Theme| {
                     if is_sel {
@@ -71,7 +70,7 @@ impl App {
 
         scrollable(col)
             .id(self.dropdown_scroll_id.clone())
-            .height(Length::Fixed(200.0)) // Increased from 150.0 for better scroll experience
+            .height(Length::Fixed(320.0))  // Increased from 220 to 320 for more results
             .width(Length::Fill)
             .into()
     }
@@ -144,8 +143,8 @@ impl App {
     }
     pub fn scroll_to_selected(&self) -> Task<Msg> {
         // Must match your dropdown widget:
-        const VIEWPORT_H: f32 = 300.0; // .height(Length::Fixed(300.0)) - increased to show more items
-        const ROW_H: f32 = 30.0; // Original value that matches actual row height
+        const VIEWPORT_H: f32 = 220.0; // .height(Length::Fixed(220.0))
+        const ROW_H: f32 = 30.0; // ~ text + padding; tweak 28–32 if needed
 
         let len = self.results_idx.len();
         if len == 0 {
@@ -153,7 +152,7 @@ impl App {
         }
 
         // Keep 1 row of margin so the selection never hides under the top edge
-        let sel = self.sel_pos.unwrap_or(0).min(len - 1);
+        let sel = self.sel_pos.unwrap_or(0).min(len.saturating_sub(1));
         let target_row = sel.saturating_sub(1);
 
         let content_h = (len as f32) * ROW_H;
@@ -264,376 +263,271 @@ impl App {
         }
     }
 
+    /// Create a color analytics block showing closest colors, contrast ratios, and color information
+    pub(crate) fn view_color_analytics_with_width(&self, width: Length) -> Element<Msg> {
+        use iced::widget::{button, column, container, text};
+        use iced::{Color, Length};
 
+        // Get current RGB values
+        let r = u8::from_str_radix(&self.rr, 16).unwrap_or(0);
+        let g = u8::from_str_radix(&self.gg, 16).unwrap_or(0);
+        let b = u8::from_str_radix(&self.bb, 16).unwrap_or(0);
 
-    pub(crate) fn view_color_analytics(&self) -> Element<'_, Msg> {
-        self.view_color_analytics_with_width(300.0)
+        let current_hex = format!("#{:02X}{:02X}{:02X}", r, g, b);
+
+        // Convert to other color spaces
+        let hsl = rgb_to_hsl(r, g, b);
+        let cmyk = rgb_to_cmyk(r, g, b);
+
+        // Find closest color
+        let closest_color = self.get_closest_color_name();
+
+        // Calculate contrast ratios
+        let white_contrast = contrast_ratio((r, g, b), (255, 255, 255));
+        let black_contrast = contrast_ratio((r, g, b), (0, 0, 0));
+
+        let mut analytics_column = column![]
+            .spacing(2)
+            .padding(6)
+            .width(width);
+
+        // Color info section
+        analytics_column = analytics_column
+            .push(text("Color Analytics").size(15))
+            .push(iced::widget::Space::with_height(Length::Fixed(2.0)))
+            .push(text(format!("Window: {}×{}", self.window_width as u32, self.window_height as u32)).size(10).color(iced::Color::from_rgb(0.5, 0.5, 0.5)));
+
+        // Closest color section FIRST (clickable)
+        if let Some(closest) = closest_color {
+            let closest_button = button(text(format!("{}", closest)).size(11))
+                .on_press(Msg::CopyHex(closest.to_string()))
+                .style(|_theme, _status| iced::widget::button::Style {
+                    background: None,
+                    text_color: Color::from_rgb(0.2, 0.4, 0.8),
+                    border: iced::border::Border::default(),
+                    shadow: iced::Shadow::default(),
+                })
+                .padding([1, 3]);
+
+            analytics_column = analytics_column
+                .push(iced::widget::Space::with_height(Length::Fixed(4.0)))
+                .push(text("Closest Color").size(13).font(iced::Font {
+                    weight: iced::font::Weight::Bold,
+                    ..Default::default()
+                }))
+                .push(closest_button);
+        }
+
+        // HEX section (clickable)
+        let hex_button = button(text(format!("{}", current_hex)).size(11))
+            .on_press(Msg::CopyHex(current_hex.clone()))
+            .style(|_theme, _status| iced::widget::button::Style {
+                background: None,
+                text_color: Color::from_rgb(0.2, 0.4, 0.8),
+                border: iced::border::Border::default(),
+                shadow: iced::Shadow::default(),
+            })
+            .padding([1, 3]);
+
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(3.0)))
+            .push(text("HEX").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(hex_button);
+
+        // RGB section
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(3.0)))
+            .push(text("RGB").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(text(format!("{}, {}, {}", r, g, b)).size(11));
+
+        // HSL section
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(3.0)))
+            .push(text("HSL").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(text(format!("{}°, {}%, {}%", hsl.0, hsl.1, hsl.2)).size(11));
+
+        // CMYK section
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(3.0)))
+            .push(text("CMYK").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(text(format!("{}%, {}%, {}%, {}%", cmyk.0, cmyk.1, cmyk.2, cmyk.3)).size(11));
+
+        // Contrast ratios section - more compact
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(4.0)))
+            .push(text("Contrast").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(text(format!("White: {:.1} | Black: {:.1}", white_contrast, black_contrast)).size(11));
+
+        // WCAG compliance section - more compact
+        let wcag_aa = white_contrast >= 4.5 || black_contrast >= 4.5;
+        let wcag_aaa = white_contrast >= 7.0 || black_contrast >= 7.0;
+
+        analytics_column = analytics_column
+            .push(iced::widget::Space::with_height(Length::Fixed(2.0)))
+            .push(text("WCAG").size(13).font(iced::Font {
+                weight: iced::font::Weight::Bold,
+                ..Default::default()
+            }))
+            .push(text(format!("AA: {} | AAA: {}",
+                if wcag_aa { "✓" } else { "✗" },
+                if wcag_aaa { "✓" } else { "✗" }
+            )).size(11));
+
+        container(analytics_column)
+            .style(|_theme| iced::widget::container::Style {
+                background: Some(iced::Background::Color(Color {
+                    r: 0.95,
+                    g: 0.95,
+                    b: 0.95,
+                    a: 0.8,
+                })),
+                border: iced::border::Border {
+                    radius: 8.0.into(),
+                    width: 1.0,
+                    color: Color {
+                        r: 0.8,
+                        g: 0.8,
+                        b: 0.8,
+                        a: 1.0,
+                    },
+                },
+                ..Default::default()
+            })
+            .into()
     }
 
-    pub(crate) fn view_color_analytics_with_width(&self, width: f32) -> Element<'_, Msg> {
-        fn u8_from_hex2(s: &str) -> u8 {
-            if s.len() == 2 {
-                u8::from_str_radix(s, 16).unwrap_or(0)
-            } else {
-                0
+    /// Get the closest color name from the current color palette
+    fn get_closest_color_name(&self) -> Option<&'static str> {
+        let r = u8::from_str_radix(&self.rr, 16).unwrap_or(0);
+        let g = u8::from_str_radix(&self.gg, 16).unwrap_or(0);
+        let b = u8::from_str_radix(&self.bb, 16).unwrap_or(0);
+
+        let colors = crate::colors_helper::origin_slice(self.selected_origin);
+        let mut closest_name = None;
+        let mut min_distance = f64::MAX;
+
+        for (hex, name) in colors {
+            if let Some(rgb) = crate::core::rgb::hex_to_rgb(hex.as_str()) {
+                let distance = color_distance((r, g, b), (rgb.r, rgb.g, rgb.b));
+                if distance < min_distance {
+                    min_distance = distance;
+                    closest_name = Some(name.as_str());
+                }
             }
         }
 
-        let r = u8_from_hex2(&self.rr);
-        let g = u8_from_hex2(&self.gg);
-        let b = u8_from_hex2(&self.bb);
-
-        let _hsl = rgb_to_hsl(Rgb { r, g, b });
-
-        // Try to get exact name first, then find closest name from COMBINED_NAMES
-        let exact_name = crate::core::hex::name_for_hex(rgb_to_hex(Rgb { r, g, b }));
-
-        let closest_name = if exact_name.is_none() {
-            // Find closest color name from COMBINED_NAMES
-            crate::colors_helper::find_closest_color_name(Rgb { r, g, b })
-        } else {
-            exact_name
-        };
-
-        let color_name = self.selected_name.as_deref()
-            .or(closest_name)
-            .unwrap_or("Unnamed Color");
-
-        // Calculate color distance using CIEDE2000 in Lab color space
-        let current_rgb = Srgb::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
-        let current_lab: Lab = current_rgb.into_color();
-
-        // Calculate distance from white (as a reference point)
-        let white_rgb = Srgb::new(1.0, 1.0, 1.0);
-        let white_lab: Lab = white_rgb.into_color();
-
-        // Simple Euclidean distance in Lab space
-        let distance = ((current_lab.l - white_lab.l).powi(2) +
-                       (current_lab.a - white_lab.a).powi(2) +
-                       (current_lab.b - white_lab.b).powi(2)).sqrt();
-
-        // Calculate WCAG contrast ratios for text readability
-        fn relative_luminance(r: u8, g: u8, b: u8) -> f32 {
-            let to_linear = |c: u8| {
-                let c = c as f32 / 255.0;
-                if c <= 0.03928 {
-                    c / 12.92
-                } else {
-                    ((c + 0.055) / 1.055).powf(2.4)
-                }
-            };
-            0.2126 * to_linear(r) + 0.7152 * to_linear(g) + 0.0722 * to_linear(b)
-        }
-
-        fn contrast_ratio(l1: f32, l2: f32) -> f32 {
-            let lighter = l1.max(l2);
-            let darker = l1.min(l2);
-            (lighter + 0.05) / (darker + 0.05)
-        }
-
-        let current_luminance = relative_luminance(r, g, b);
-        let white_luminance = relative_luminance(255, 255, 255);
-        let black_luminance = relative_luminance(0, 0, 0);
-
-        let contrast_white = contrast_ratio(current_luminance, white_luminance);
-        let contrast_black = contrast_ratio(current_luminance, black_luminance);
-
-        // CMYK conversion (simple RGB to CMYK)
-        let r_norm = r as f32 / 255.0;
-        let g_norm = g as f32 / 255.0;
-        let b_norm = b as f32 / 255.0;
-
-        let k = 1.0 - r_norm.max(g_norm).max(b_norm);
-        let c = if k == 1.0 { 0.0 } else { (1.0 - r_norm - k) / (1.0 - k) };
-        let m = if k == 1.0 { 0.0 } else { (1.0 - g_norm - k) / (1.0 - k) };
-        let y = if k == 1.0 { 0.0 } else { (1.0 - b_norm - k) / (1.0 - k) };
-
-        let c_percent = (c * 100.0) as u8;
-        let m_percent = (m * 100.0) as u8;
-        let y_percent = (y * 100.0) as u8;
-        let k_percent = (k * 100.0) as u8;
-
-        let analytics_content = column![]
-            .spacing(6)
-            .padding([10, 12])
-            .push(
-                text("Color Analytics")
-                    .size(18)
-                    .color(Color::from_rgb(0.1, 0.1, 0.1))
-            )
-            .push(
-                // Color name row
-                row![]
-                    .spacing(3)
-                    .push(
-                        button(
-                            text(color_name)
-                                .size(16)
-                                .color(Color::from_rgb(0.2, 0.2, 0.2))
-                        )
-                        .padding([4, 8])
-                        .on_press(Msg::CopyHex(color_name.to_string()))
-                        .style(|_theme: &iced::Theme, _status| {
-                            iced::widget::button::Style {
-                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
-                                border: border::Border {
-                                    radius: 4.0.into(),
-                                    width: 1.0,
-                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                                },
-                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
-                                ..Default::default()
-                            }
-                        })
-                    )
-            )
-            .push(
-                // Hex color row
-                row![]
-                    .spacing(3)
-                    .push(
-                        button(
-                            text(format!("#{:02X}{:02X}{:02X}", r, g, b))
-                                .size(16)
-                                .color(Color::from_rgb(0.2, 0.2, 0.2))
-                        )
-                        .padding([4, 8])
-                        .on_press(Msg::CopyHex(format!("#{:02X}{:02X}{:02X}", r, g, b)))
-                        .style(|_theme: &iced::Theme, _status| {
-                            iced::widget::button::Style {
-                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
-                                border: border::Border {
-                                    radius: 4.0.into(),
-                                    width: 1.0,
-                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                                },
-                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
-                                ..Default::default()
-                            }
-                        })
-                    )
-            )
-            .push(
-                // Color distance row
-                row![]
-                    .spacing(3)
-                    .push(
-                        button(
-                            text(format!("Distance: {:.1}", distance))
-                                .size(16)
-                                .color(Color::from_rgb(0.2, 0.2, 0.2))
-                        )
-                        .padding([4, 8])
-                        .on_press(Msg::CopyHex(format!("{:.1}", distance)))
-                        .style(|_theme: &iced::Theme, _status| {
-                            iced::widget::button::Style {
-                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
-                                border: border::Border {
-                                    radius: 4.0.into(),
-                                    width: 1.0,
-                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                                },
-                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
-                                ..Default::default()
-                            }
-                        })
-                    )
-            )
-            .push(
-                // Text readability row
-                row![]
-                    .spacing(3)
-                    .push(
-                        button(
-                            text(format!("Text: {:.1}:1 / {:.1}:1", contrast_white, contrast_black))
-                                .size(16)
-                                .color(Color::from_rgb(0.2, 0.2, 0.2))
-                        )
-                        .padding([4, 8])
-                        .on_press(Msg::CopyHex(format!("White: {:.1}:1, Black: {:.1}:1", contrast_white, contrast_black)))
-                        .style(|_theme: &iced::Theme, _status| {
-                            iced::widget::button::Style {
-                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
-                                border: border::Border {
-                                    radius: 4.0.into(),
-                                    width: 1.0,
-                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                                },
-                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
-                                ..Default::default()
-                            }
-                        })
-                    )
-            )
-            .push(
-                // CMYK preview row
-                row![]
-                    .spacing(3)
-                    .push(
-                        button(
-                            text(format!("C{} M{} Y{} K{}", c_percent, m_percent, y_percent, k_percent))
-                                .size(16)
-                                .color(Color::from_rgb(0.2, 0.2, 0.2))
-                        )
-                        .padding([4, 8])
-                        .on_press(Msg::CopyHex(format!("C{} M{} Y{} K{}", c_percent, m_percent, y_percent, k_percent)))
-                        .style(|_theme: &iced::Theme, _status| {
-                            iced::widget::button::Style {
-                                background: Some(Background::Color(Color::from_rgb(0.85, 0.85, 0.85))),
-                                border: border::Border {
-                                    radius: 4.0.into(),
-                                    width: 1.0,
-                                    color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                                },
-                                text_color: Color::from_rgb(0.2, 0.2, 0.2),
-                                ..Default::default()
-                            }
-                        })
-                    )
-            );
-
-        container(analytics_content)
-            .style(|_theme: &iced::Theme| {
-                iced::widget::container::Style {
-                    background: Some(Background::Color(Color::from_rgb(0.95, 0.95, 0.95))),
-                    border: border::rounded(8),
-                    ..Default::default()
-                }
-            })
-            .width(Length::Fixed(width))
-            .into()
+        closest_name
     }
 
-    pub(crate) fn view_search_block(&self) -> Element<'_, Msg> {
-        self.view_search_block_with_width(300.0)
+
+}
+
+// Helper functions for color analytics
+fn rgb_to_hsl(r: u8, g: u8, b: u8) -> (u16, u8, u8) {
+    let r = r as f32 / 255.0;
+    let g = g as f32 / 255.0;
+    let b = b as f32 / 255.0;
+
+    let max = r.max(g.max(b));
+    let min = r.min(g.min(b));
+    let delta = max - min;
+
+    let lightness = (max + min) / 2.0;
+
+    if delta == 0.0 {
+        return (0, 0, (lightness * 100.0) as u8);
     }
 
-    pub(crate) fn view_search_block_with_width(&self, width: f32) -> Element<'_, Msg> {
-        let origins_list = origins_vec();
+    let saturation = if lightness < 0.5 {
+        delta / (max + min)
+    } else {
+        delta / (2.0 - max - min)
+    };
 
-        // Create the search UI elements
-        let create_search_elements = || {
-            let origin_dd = pick_list(
-                origins_list.clone(),
-                Some(self.selected_origin),
-                Msg::OriginPicked,
-            )
-            .placeholder("Origin")
-            .width(Length::Fill);
+    let hue = if max == r {
+        (g - b) / delta + if g < b { 6.0 } else { 0.0 }
+    } else if max == g {
+        (b - r) / delta + 2.0
+    } else {
+        (r - g) / delta + 4.0
+    };
 
-            let clear_btn = button("Clear")
-                .on_press(Msg::Clear)
-                .padding([2, 4]);
+    (
+        ((hue * 60.0) as u16) % 360,
+        (saturation * 100.0) as u8,
+        (lightness * 100.0) as u8,
+    )
+}
 
-            let search_box = text_input("Search color name…", &self.query)
-                .id(self.search_input_id.clone())
-                .on_input(Msg::QueryChanged)
-                .on_submit(Msg::PressedEnter)
-                .padding(3)
-                .width(Length::Fill);
+fn rgb_to_cmyk(r: u8, g: u8, b: u8) -> (u8, u8, u8, u8) {
+    let r = r as f32 / 255.0;
+    let g = g as f32 / 255.0;
+    let b = b as f32 / 255.0;
 
-            let search_row = row![]
-                .push(search_box)
-                .push(clear_btn)
-                .spacing(3)
-                .align_y(Alignment::Center);
-
-            (origin_dd, search_row)
-        };
-
-        // Build the final content based on whether dropdown is open
-        let final_content = if self.dropdown_open && !self.results_idx.is_empty() {
-            let (origin_dd, search_row) = create_search_elements();
-            let dropdown = self.view_dropdown();
-
-            column![]
-                .spacing(4)
-                .padding([8, 10])
-                .push(
-                    text("Search")
-                        .size(18)
-                        //.color(Color::from_rgb(0.1, 0.1, 0.1))
-                )
-                .push(
-                    container(
-                        column![]
-                            .spacing(4)
-                            .push(origin_dd)
-                            .push(search_row)
-                            .push(
-                                container(dropdown)
-                                    .style(|_theme: &iced::Theme| {
-                                        iced::widget::container::Style {
-                                           // background: Some(Background::Color(Color::from_rgb(0.05, 0.05, 0.05))),
-                                            border: border::Border {
-                                                radius: 4.0.into(),
-                                                width: 1.0,
-                                                color: iced::Color::from_rgb(0.2, 0.2, 0.2),
-                                            },
-                                            ..Default::default()
-                                        }
-                                    })
-                                    .padding([2, 2])
-                            )
-                    )
-                    .style(|_theme: &iced::Theme| {
-                        iced::widget::container::Style {
-                            //background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
-                            border: border::Border {
-                                radius: 4.0.into(),
-                                width: 1.0,
-                                color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                            },
-                            ..Default::default()
-                        }
-                    })
-                    .padding([4, 6])
-                )
-        } else {
-            let (origin_dd, search_row) = create_search_elements();
-
-            column![]
-                .spacing(4)
-                .padding([8, 10])
-                .push(
-                    text("Search")
-                        .size(18)
-                        .color(Color::from_rgb(0.1, 0.1, 0.1))
-                )
-                .push(
-                    container(
-                        column![]
-                            .spacing(4)
-                            .push(origin_dd)
-                            .push(search_row)
-                    )
-                    .style(|_theme: &iced::Theme| {
-                        iced::widget::container::Style {
-                            background: Some(Background::Color(Color::from_rgb(0.9, 0.9, 0.9))),
-                            border: border::Border {
-                                radius: 4.0.into(),
-                                width: 1.0,
-                                color: iced::Color::from_rgb(0.7, 0.7, 0.7),
-                            },
-                            ..Default::default()
-                        }
-                    })
-                    .padding([4, 6])
-                )
-        };
-
-        container(final_content)
-            .style(|_theme: &iced::Theme| {
-                iced::widget::container::Style {
-                    background: Some(Background::Color(Color::from_rgb(0.95, 0.95, 0.95))),
-                    border: border::rounded(8),
-                    ..Default::default()
-                }
-            })
-            .width(Length::Fixed(width))
-            .into()
+    let k = 1.0 - r.max(g.max(b));
+    if k == 1.0 {
+        return (0, 0, 0, 100);
     }
 
+    let c = (1.0 - r - k) / (1.0 - k);
+    let m = (1.0 - g - k) / (1.0 - k);
+    let y = (1.0 - b - k) / (1.0 - k);
+
+    (
+        (c * 100.0) as u8,
+        (m * 100.0) as u8,
+        (y * 100.0) as u8,
+        (k * 100.0) as u8,
+    )
+}
+
+fn contrast_ratio(color1: (u8, u8, u8), color2: (u8, u8, u8)) -> f64 {
+    let l1 = relative_luminance(color1);
+    let l2 = relative_luminance(color2);
+
+    let lighter = l1.max(l2);
+    let darker = l1.min(l2);
+
+    (lighter + 0.05) / (darker + 0.05)
+}
+
+fn relative_luminance(color: (u8, u8, u8)) -> f64 {
+    let r = srgb_to_linear(color.0 as f64 / 255.0);
+    let g = srgb_to_linear(color.1 as f64 / 255.0);
+    let b = srgb_to_linear(color.2 as f64 / 255.0);
+
+    0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+fn srgb_to_linear(c: f64) -> f64 {
+    if c <= 0.03928 {
+        c / 12.92
+    } else {
+        ((c + 0.055) / 1.055).powf(2.4)
+    }
+}
+
+fn color_distance(color1: (u8, u8, u8), color2: (u8, u8, u8)) -> f64 {
+    let dr = color1.0 as f64 - color2.0 as f64;
+    let dg = color1.1 as f64 - color2.1 as f64;
+    let db = color1.2 as f64 - color2.2 as f64;
+
+    (dr * dr + dg * dg + db * db).sqrt()
 }
 
 pub fn origins_vec() -> Vec<Origin> {
