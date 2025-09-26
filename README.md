@@ -7,6 +7,9 @@ A comprehensive Rust color management application with an interactive GUI built 
 
 ## Features
 
+<img width="744" height="542" alt="image" src="https://github.com/user-attachments/assets/7fd6dac7-da4f-4ef7-ae72-486b190fd2f4" />
+
+
 ### 🎨 **Multiple Color Palettes**
 - **CSS Colors**: Standard web colors (140+ colors)
 - **XKCD Colors**: Community-sourced color names (900+ colors)
@@ -326,13 +329,7 @@ ColorWheel::new(r: u8, g: u8, b: u8, on_change: F) -> Self
 
 *GitHub colors require the `github-colors` feature flag.
 
-## Screenshots
 
-![img.png](img.png)
-
-![img_1.png](img_1.png)
-
-![img_2.png](img_2.png)
 
 ## Development
 
